@@ -96,12 +96,15 @@ walk_plot_reach <- function(reach,
   # Sort ascending so highest values draw on top
   valid_edges <- valid_edges[order(valid_edges$plot_val), ]
 
-  cutoff_min <- round(reach$cutoff_s / 60)
+  cutoff_min <- if (!is.null(reach$time_min)) reach$time_min else (reach$cutoff_s / 60.0)
+  speed_kmh <- reach$network$walk_speed_kmh
+  budget_m <- round(reach$cutoff_s * (speed_kmh / 3.6))
+
   if (is.null(title)) {
-    title <- paste0("Reachable Walkable Network Length (", cutoff_min, "-Minute Walk)")
+    title <- paste0("Reachable Walkable Network Length (", round(cutoff_min, 1), "-Minute Walk)")
   }
   if (is.null(subtitle)) {
-    subtitle <- paste0("Modeled walk speed: ", reach$network$walk_speed_kmh, " km/h (~750 m budget). Yellow = high connectivity.")
+    subtitle <- paste0("Modeled walk speed: ", speed_kmh, " km/h (~", budget_m, " m budget). Yellow = high connectivity.")
   }
 
   na_color <- if (dark) "#334155" else "#e2e8f0"

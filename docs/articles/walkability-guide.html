@@ -91,48 +91,91 @@ escrito en <strong>Rust</strong> paralelizado a nivel de CPU.</p>
 <div class="section level2">
 <h2 id="flujo-de-trabajo-con-datos-del-usuario">1. Flujo de Trabajo con Datos del Usuario<a class="anchor" aria-label="anchor" href="#flujo-de-trabajo-con-datos-del-usuario"></a>
 </h2>
-<p>Una de las grandes ventajas de <code>walkability</code> es que
-permite procesar redes viales propias (Shapefiles, GeoPackages, GeoJSON)
-con total control sobre la topología.</p>
+<p>Una de las principales ventajas de <code>walkability</code> es que
+permite procesar redes viales propias (archivos Shapefile, GeoPackage,
+GeoJSON u objetos <code>sf</code>) con total control y transparencia
+sobre el diagnóstico y la reparación topológica.</p>
+<p>Para este tutorial utilizaremos la red sintética de ejemplo
+<strong><code>datos_viales.gpkg</code></strong>, distribuida junto con
+el paquete en la carpeta <code>inst/extdata</code>. Contiene una
+cuadrícula urbana con dos anomalías deliberadas para fines didácticos: -
+Un callejón que termina a 3 metros de una avenida (<em>undershoot</em>).
+- Un sendero peatonal en un parque aislado no conectado a la red
+principal (<em>isla desconectada</em>).</p>
 <div class="section level3">
-<h3 id="paso-1-carga-y-diagnóstico-de-la-red">Paso 1: Carga y Diagnóstico de la Red<a class="anchor" aria-label="anchor" href="#paso-1-carga-y-diagn%C3%B3stico-de-la-red"></a>
+<h3 id="paso-1-carga-y-diagnóstico-no-invasivo-de-la-red">Paso 1: Carga y Diagnóstico No Invasivo de la Red<a class="anchor" aria-label="anchor" href="#paso-1-carga-y-diagn%C3%B3stico-no-invasivo-de-la-red"></a>
 </h3>
-<p>Antes de modificar geometrías, se realiza una inspección no invasiva
-de la salud de la red:</p>
+<p>Antes de modificar o corregir geometrías,
+<code><a href="../reference/walk_diagnose_network.html">walk_diagnose_network()</a></code> realiza una inspección no invasiva
+de la salud topológica de la red:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://paulesantos.github.io/walkability">walkability</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; Linking to GEOS 3.13.1, GDAL 3.10.2, PROJ 9.5.1; sf_use_s2() is TRUE</span></span>
 <span></span>
-<span><span class="co"># Cargar capa de calles del usuario</span></span>
-<span><span class="va">mis_calles</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">st_read</a></span><span class="op">(</span><span class="st">"datos_viales.gpkg"</span><span class="op">)</span></span>
+<span><span class="co"># Cargar la capa sintética de ejemplo incluida en el paquete</span></span>
+<span><span class="va">archivo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"datos_viales.gpkg"</span>, package <span class="op">=</span> <span class="st">"walkability"</span><span class="op">)</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nzchar</a></span><span class="op">(</span><span class="va">archivo</span><span class="op">)</span> <span class="op">||</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="va">archivo</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">archivo</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="st">"inst/extdata/datos_viales.gpkg"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="st">"inst/extdata/datos_viales.gpkg"</span></span>
+<span>  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>    <span class="st">"../inst/extdata/datos_viales.gpkg"</span></span>
+<span>  <span class="op">}</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">mis_calles</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">st_read</a></span><span class="op">(</span><span class="va">archivo</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Diagnóstico de conectividad y detección de undershoots</span></span>
-<span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/walk_diagnose_network.html">walk_diagnose_network</a></span><span class="op">(</span><span class="va">mis_calles</span>, snap_search_radius_m <span class="op">=</span> <span class="fl">5.0</span>, crs <span class="op">=</span> <span class="fl">32722</span><span class="op">)</span></span>
+<span><span class="co"># Diagnóstico de conectividad y detección de undershoots en un radio de 5 metros</span></span>
+<span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/walk_diagnose_network.html">walk_diagnose_network</a></span><span class="op">(</span><span class="va">mis_calles</span>, snap_search_radius_m <span class="op">=</span> <span class="fl">5.0</span>, crs <span class="op">=</span> <span class="fl">32719</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Imprimir resumen de componentes e islas</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">diag</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Visualizar segmentos aislados y posibles errores</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">diag</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Walkability Network Health Diagnosis</span> <span style="color: #00BBBB;">────────────────────────────────────────</span></span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Total network analyzed: <span style="color: #0000BB;">11</span> segments (2.7 km)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Total components detected: <span style="color: #BBBB00;">8</span></span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> Giant (main) component: <span style="color: #00BB00;">45.0%</span> of network (1.2 km)</span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Detected 7 disconnected components / islands (1.47 km, 55.0% of network).</span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Identified <span style="color: #BB0000;">1</span> potential undershoots (dangling ends located &lt;= 5 m from another street).</span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> Recommendation: You can fix these by running walk_build_network(..., repair =</span></span>
+<span><span class="co">#&gt;   TRUE, snap_tolerance_m =</span></span>
+<span><span class="co">#&gt; 5</span></span>
+<span><span class="co">#&gt; ).</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Run `plot(diagnosis)` to inspect isolated segments and undershoots on a map.</span></span></code></pre></div>
+<p>Para inspeccionar visualmente los tramos desconectados y la ubicación
+exacta de los <em>undershoots</em>:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">diag</span><span class="op">)</span></span></code></pre></div>
+<p><img src="walkability-guide_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="576" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level3">
 <h3 id="paso-2-construcción-del-grafo-y-reparación-opcional">Paso 2: Construcción del Grafo y Reparación Opcional<a class="anchor" aria-label="anchor" href="#paso-2-construcci%C3%B3n-del-grafo-y-reparaci%C3%B3n-opcional"></a>
 </h3>
-<p>Una vez revisado el diagnóstico, el usuario decide si aplicar o no
-reparaciones:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Construir grafo peatonal</span></span>
+<p>Una vez revisado el diagnóstico, el usuario decide libremente si
+aplicar reparaciones geométricas mediante los argumentos
+<code>repair</code>, <code>snap_tolerance_m</code> y
+<code>planarize</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Construir grafo peatonal limpio y estructurado</span></span>
 <span><span class="va">red_limpia</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/walk_build_network.html">walk_build_network</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">mis_calles</span>,</span>
-<span>  crs <span class="op">=</span> <span class="fl">32722</span>,</span>
+<span>  crs <span class="op">=</span> <span class="fl">32719</span>,                   <span class="co"># Proyección métrica local (UTM 19S)</span></span>
 <span>  walk_speed_kmh <span class="op">=</span> <span class="fl">4.5</span>,          <span class="co"># Velocidad de diseño (4.5 km/h = 1.25 m/s)</span></span>
-<span>  repair <span class="op">=</span> <span class="cn">TRUE</span>,                 <span class="co"># Decisión del usuario de reparar</span></span>
+<span>  repair <span class="op">=</span> <span class="cn">TRUE</span>,                 <span class="co"># Decisión explícita del usuario de reparar</span></span>
+<span>  snap_tolerance_m <span class="op">=</span> <span class="fl">5.0</span>,        <span class="co"># Conectar extremos a &lt;= 5 metros (corrige el undershoot)</span></span>
 <span>  planarize <span class="op">=</span> <span class="cn">TRUE</span>,              <span class="co"># Dividir líneas en intersecciones</span></span>
-<span>  snap_tolerance_m <span class="op">=</span> <span class="fl">5.0</span>,        <span class="co"># Conectar extremos a &lt;= 5 metros</span></span>
-<span>  keep_components <span class="op">=</span> <span class="st">"largest"</span>    <span class="co"># Analizar la componente gigante</span></span>
+<span>  keep_components <span class="op">=</span> <span class="st">"largest"</span>,   <span class="co"># Conservar la componente gigante conectada</span></span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">red_limpia</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">red_limpia</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Walkability Network</span> <span style="color: #00BBBB;">─────────────────────────────────────────────────────────</span></span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Total nodes: <span style="color: #0000BB;">22</span> (Giant component: <span style="color: #00BB00;">20</span>)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Total edges: <span style="color: #0000BB;">29</span> segments (2.6 km)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Walking speed: <span style="color: #00BBBB;">4.5 km/h</span> (1.25 m/s)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Connected components: <span style="color: #BBBB00;">2</span></span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> CRS: <span style="color: #BB00BB;">EPSG:32719</span></span></span></code></pre></div>
 <hr>
 </div>
 </div>
@@ -143,49 +186,60 @@ reparaciones:</p>
 <strong>crédito parcial de aristas</strong> (<em>partial-edge
 rule</em>), ejecutado en paralelo en Rust con la librería
 <code>rayon</code>:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Calcular la métrica (por defecto: 600 segundos = 10 minutos)</span></span>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Por defecto se calcula para 10 minutos (time_min = 10.0).</span></span>
+<span><span class="co"># Para redes barriales o ciudades intermedias/pequeñas, el usuario puede</span></span>
+<span><span class="co"># ajustar libremente el parámetro (por ejemplo, time_min = 5.0 o 7.5):</span></span>
 <span><span class="va">metricas</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/walk_compute_reach.html">walk_compute_reach</a></span><span class="op">(</span></span>
 <span>  network <span class="op">=</span> <span class="va">red_limpia</span>,</span>
-<span>  cutoff_s <span class="op">=</span> <span class="fl">600.0</span>,</span>
-<span>  n_threads <span class="op">=</span> <span class="fl">0</span>                  <span class="co"># 0 = usar todos los núcleos del procesador</span></span>
+<span>  time_min <span class="op">=</span> <span class="fl">10.0</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">metricas</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">metricas</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Walkability Reachable Network Length</span> <span style="color: #00BBBB;">────────────────────────────────────────</span></span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Isochrone Budget: <span style="color: #0000BB;">10.0 minutes</span> (~750 m at 4.5 km/h)</span></span>
+<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Evaluated Nodes: <span style="color: #00BB00;">20</span></span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> Average Reach: <span style="color: #BBBB00;">2.57 km</span></span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> Highest Reach: <span style="color: #00BB00;">2.57 km</span></span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> Lowest Reach: <span style="color: #BB0000;">2.57 km</span></span></span>
+<span><span class="co">#&gt; <span style="color: #00BBBB;">•</span> 5th-95th percentile: 2.6 - 2.6 km</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="visualización-cartográfica-con-ggplot2">3. Visualización Cartográfica con ggplot2<a class="anchor" aria-label="anchor" href="#visualizaci%C3%B3n-cartogr%C3%A1fica-con-ggplot2"></a>
 </h2>
-<p>Las herramientas de visualización están integradas con
-<code>ggplot2</code> y usan la escala perceptualmente uniforme
-<code>viridis</code>:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p>Las funciones cartográficas de <code>walkability</code> están
+construidas sobre <code>ggplot2</code> y utilizan paletas
+perceptualmente continuas como <code>viridis</code>:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Mapa temático de caminabilidad</span></span>
 <span><span class="va">mapa</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/walk_plot_reach.html">walk_plot_reach</a></span><span class="op">(</span></span>
 <span>  reach <span class="op">=</span> <span class="va">metricas</span>,</span>
 <span>  palette <span class="op">=</span> <span class="st">"viridis"</span>,</span>
 <span>  title <span class="op">=</span> <span class="st">"Caminabilidad Peatonal en 10 Minutos"</span>,</span>
-<span>  subtitle <span class="op">=</span> <span class="st">"Longitud de red accesible a pie desde cada intersección"</span>,</span>
+<span>  subtitle <span class="op">=</span> <span class="st">"Longitud de red accesible a pie desde cada intersección (Red de ejemplo)"</span>,</span>
 <span>  dark <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">mapa</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Guardar en alta resolución</span></span>
-<span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsave.html" class="external-link">ggsave</a></span><span class="op">(</span><span class="st">"mapa_caminabilidad.png"</span>, plot <span class="op">=</span> <span class="va">mapa</span>, width <span class="op">=</span> <span class="fl">10</span>, height <span class="op">=</span> <span class="fl">10</span>, dpi <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">mapa</span><span class="op">)</span></span></code></pre></div>
+<p><img src="walkability-guide_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="576" style="display: block; margin: auto;"></p>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="análisis-de-circuidad-y-desvío-de-rutas">4. Análisis de Circuidad y Desvío de Rutas<a class="anchor" aria-label="anchor" href="#an%C3%A1lisis-de-circuidad-y-desv%C3%ADo-de-rutas"></a>
 </h2>
-<p>Para evaluar qué tan directas o laberínticas son las calles de un
-sector:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">circuidad</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/walk_compute_circuity.html">walk_compute_circuity</a></span><span class="op">(</span><span class="va">red_limpia</span>, sample_size <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">circuidad</span><span class="op">$</span><span class="va">mean_circuity</span><span class="op">)</span></span></code></pre></div>
-<p>Valores cercanos a <code>1.0</code> indican calles rectas y directas;
-valores altos indican rodeos y baja permeabilidad urbana.</p>
+<p>Para evaluar la permeabilidad y qué tan directos son los trayectos
+peatonales frente a distancias euclidianas:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">circuidad</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/walk_compute_circuity.html">walk_compute_circuity</a></span><span class="op">(</span><span class="va">red_limpia</span>, sample_size <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">circuidad</span><span class="op">$</span><span class="va">mean_circuity</span><span class="op">)</span></span>
+<span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
+<span><span class="co">#&gt;   1.207   1.238   1.264   1.301   1.278   1.917</span></span></code></pre></div>
+<p>Valores cercanos a <code>1.0</code> reflejan una retícula directa y
+eficiente; valores sustancialmente superiores evidencian rodeos
+obligados por cul-de-sacs o barreras físicas.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

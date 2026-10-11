@@ -87,13 +87,23 @@ test_that("End-to-end walk_build_network and walk_compute_reach work on syntheti
   expect_s3_class(net, "walk_network")
   expect_equal(nrow(net$nodes), 4L)
 
-  # Compute reach
-  reach <- walk_compute_reach(net, cutoff_s = 600.0, verbose = FALSE)
+  # Compute reach with default 10 minutes
+  reach <- walk_compute_reach(net, time_min = 10.0, verbose = FALSE)
   expect_s3_class(reach, "walk_reach")
+  expect_equal(reach$time_min, 10.0)
+  expect_equal(reach$cutoff_s, 600.0)
   expect_true(all(!is.na(reach$nodes$reachable_length_km)))
   expect_gt(reach$summary$mean_km, 0)
+
+  # Compute reach with 1 minute for small local scale
+  reach_1m <- walk_compute_reach(net, time_min = 1.0, verbose = FALSE)
+  expect_equal(reach_1m$time_min, 1.0)
+  expect_equal(reach_1m$cutoff_s, 60.0)
+  expect_lt(reach_1m$summary$mean_km, reach$summary$mean_km)
 
   # Plot reach
   p <- walk_plot_reach(reach)
   expect_s3_class(p, "ggplot")
+  p_1m <- walk_plot_reach(reach_1m)
+  expect_s3_class(p_1m, "ggplot")
 })

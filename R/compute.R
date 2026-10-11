@@ -6,7 +6,11 @@
 #' crediting crossing frontier edges for only their reachable fraction.
 #'
 #' @param network A `walk_network` object produced by [walk_build_network()].
-#' @param cutoff_s Walking time budget in seconds (default is 600.0 seconds = 10 minutes).
+#' @param time_min Walking time budget in minutes (default is 10.0 minutes).
+#'   Users can freely customize this parameter; for smaller neighborhoods, compact districts,
+#'   or localized analyses, values like 5.0 or 7.5 minutes can be used.
+#' @param cutoff_s Optional walking time budget in seconds (e.g. 600.0). If specified,
+#'   it overrides `time_min`.
 #' @param target Character string. Either `"largest_component"` (default) to compute
 #'   only for nodes in the primary connected component, or `"all"`.
 #' @param n_threads Number of CPU threads to use in parallel (0 = auto-detect all available cores).
@@ -16,18 +20,24 @@
 #'   \item{nodes}{`sf` points table augmented with `reachable_length_m` and `reachable_length_km`.}
 #'   \item{edges}{`sf` lines table augmented with `reachable_length_km` (mean of endpoints).}
 #'   \item{summary}{Summary statistics (min, mean, max, 5th, 95th percentiles).}
-#'   \item{cutoff_s}{The time cutoff used.}
+#'   \item{time_min}{The time cutoff in minutes.}
+#'   \item{cutoff_s}{The time cutoff in seconds.}
 #'   \item{network}{The input `walk_network` object.}
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' reach <- walk_compute_reach(net, cutoff_s = 600)
-#' print(reach)
-#' plot(reach)
+#' # Standard 10-minute walk reach
+#' reach <- walk_compute_reach(net, time_min = 10)
+#'
+#' # Short 5-minute neighborhood reach
+#' reach_5m <- walk_compute_reach(net, time_min = 5)
+#' print(reach_5m)
+#' plot(reach_5m)
 #' }
 walk_compute_reach <- function(network,
-                               cutoff_s = 600.0,
+                               time_min = 10.0,
+                               cutoff_s = NULL,
                                target = c("largest_component", "all"),
                                n_threads = 0,
                                verbose = TRUE) {
@@ -35,6 +45,19 @@ walk_compute_reach <- function(network,
 
   if (!inherits(network, "walk_network")) {
     cli::cli_abort("{.arg network} must be a {.cls walk_network} object.")
+  }
+
+  # Resolve time cutoff in seconds
+  if (!is.null(cutoff_s)) {
+    if (cutoff_s <= 0) {
+      cli::cli_abort("{.arg cutoff_s} must be strictly positive.")
+    }
+    actual_cutoff_s <- as.numeric(cutoff_s)
+  } else {
+    if (time_min <= 0) {
+      cli::cli_abort("{.arg time_min} must be strictly positive.")
+    }
+    actual_cutoff_s <- as.numeric(time_min * 60.0)
   }
 
   csr <- network$csr
@@ -47,9 +70,9 @@ walk_compute_reach <- function(network,
     target_indices <- seq_len(n_nodes) - 1L
   }
 
+  cutoff_min <- actual_cutoff_s / 60.0
   if (verbose) {
-    cutoff_min <- cutoff_s / 60
-    cli::cli_alert_info("Computing reachable network length for {length(target_indices)} nodes ({cutoff_min} min walk)...")
+    cli::cli_alert_info("Computing reachable network length for {length(target_indices)} nodes ({sprintf('%.1f', cutoff_min)} min walk)...")
   }
 
   t0 <- Sys.time()
@@ -62,7 +85,7 @@ walk_compute_reach <- function(network,
     wt = as.numeric(csr$wt),
     wl = as.numeric(csr$wl),
     target_nodes = as.integer(target_indices),
-    cutoff = as.numeric(cutoff_s),
+    cutoff = as.numeric(actual_cutoff_s),
     num_threads = as.integer(n_threads)
   )
 
@@ -106,7 +129,8 @@ walk_compute_reach <- function(network,
       nodes = nodes_aug,
       edges = edges_aug,
       summary = stats,
-      cutoff_s = cutoff_s,
+      time_min = actual_cutoff_s / 60.0,
+      cutoff_s = actual_cutoff_s,
       runtime_s = runtime_s,
       network = network
     ),
@@ -127,9 +151,13 @@ walk_compute_reach <- function(network,
 #' @export
 print.walk_reach <- function(x, ...) {
   s <- x$summary
+  time_m <- if (!is.null(x$time_min)) x$time_min else (x$cutoff_s / 60.0)
+  speed_kmh <- x$network$walk_speed_kmh
+  approx_dist_m <- round(x$cutoff_s * (speed_kmh / 3.6))
+
   cli::cli_h1("Walkability Reachable Network Length")
   cli::cli_bullets(c(
-    "v" = paste0("Isochrone Budget: ", cli::col_blue(sprintf("%.1f minutes", x$cutoff_s / 60)), " (~750 m at 4.5 km/h)"),
+    "v" = paste0("Isochrone Budget: ", cli::col_blue(sprintf("%.1f minutes", time_m)), " (~", approx_dist_m, " m at ", speed_kmh, " km/h)"),
     "v" = paste0("Evaluated Nodes: ", cli::col_green(format(s$count, big.mark = ","))),
     "*" = paste0("Average Reach: ", cli::col_yellow(sprintf("%.2f km", s$mean_km))),
     "*" = paste0("Highest Reach: ", cli::col_green(sprintf("%.2f km", s$max_km))),
@@ -157,13 +185,27 @@ plot.walk_reach <- function(x, ...) {
 #'
 #' @param network A `walk_network` object.
 #' @param sample_size Number of random junctions to sample. Default is 500.
-#' @param cutoff_s Walking time budget in seconds (default is 600.0).
+#' @param time_min Walking time budget in minutes (default is 10.0 minutes).
+#' @param cutoff_s Optional walking time budget in seconds (default is `NULL`).
+#'   If provided, it overrides `time_min`.
 #'
 #' @return A `tibble` with node IDs and calculated detour ratios.
 #' @export
-walk_compute_circuity <- function(network, sample_size = 500, cutoff_s = 600.0) {
+walk_compute_circuity <- function(network, sample_size = 500, time_min = 10.0, cutoff_s = NULL) {
   if (!inherits(network, "walk_network")) {
     cli::cli_abort("{.arg network} must be a {.cls walk_network} object.")
+  }
+
+  if (!is.null(cutoff_s)) {
+    if (cutoff_s <= 0) {
+      cli::cli_abort("{.arg cutoff_s} must be strictly positive.")
+    }
+    actual_cutoff_s <- as.numeric(cutoff_s)
+  } else {
+    if (time_min <= 0) {
+      cli::cli_abort("{.arg time_min} must be strictly positive.")
+    }
+    actual_cutoff_s <- as.numeric(time_min * 60.0)
   }
 
   csr <- network$csr
@@ -185,7 +227,7 @@ walk_compute_circuity <- function(network, sample_size = 500, cutoff_s = 600.0) 
     coords_x = as.numeric(coords[, 1]),
     coords_y = as.numeric(coords[, 2]),
     sample_nodes = as.integer(sample_nodes),
-    cutoff = as.numeric(cutoff_s)
+    cutoff = as.numeric(actual_cutoff_s)
   )
 
   tibble::as_tibble(res)

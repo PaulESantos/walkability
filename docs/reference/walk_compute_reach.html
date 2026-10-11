@@ -61,7 +61,8 @@ crediting crossing frontier edges for only their reachable fraction.</p>
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">walk_compute_reach</span><span class="op">(</span></span>
 <span>  <span class="va">network</span>,</span>
-<span>  cutoff_s <span class="op">=</span> <span class="fl">600</span>,</span>
+<span>  time_min <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  cutoff_s <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  target <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"largest_component"</span>, <span class="st">"all"</span><span class="op">)</span>,</span>
 <span>  n_threads <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -76,8 +77,15 @@ crediting crossing frontier edges for only their reachable fraction.</p>
 <dd><p>A <code>walk_network</code> object produced by <code><a href="walk_build_network.html">walk_build_network()</a></code>.</p></dd>
 
 
+<dt id="arg-time-min">time_min<a class="anchor" aria-label="anchor" href="#arg-time-min"></a></dt>
+<dd><p>Walking time budget in minutes (default is 10.0 minutes).
+Users can freely customize this parameter; for smaller neighborhoods, compact districts,
+or localized analyses, values like 5.0 or 7.5 minutes can be used.</p></dd>
+
+
 <dt id="arg-cutoff-s">cutoff_s<a class="anchor" aria-label="anchor" href="#arg-cutoff-s"></a></dt>
-<dd><p>Walking time budget in seconds (default is 600.0 seconds = 10 minutes).</p></dd>
+<dd><p>Optional walking time budget in seconds (e.g. 600.0). If specified,
+it overrides <code>time_min</code>.</p></dd>
 
 
 <dt id="arg-target">target<a class="anchor" aria-label="anchor" href="#arg-target"></a></dt>
@@ -105,8 +113,11 @@ only for nodes in the primary connected component, or <code>"all"</code>.</p></d
 <dt>summary</dt>
 <dd><p>Summary statistics (min, mean, max, 5th, 95th percentiles).</p></dd>
 
+<dt>time_min</dt>
+<dd><p>The time cutoff in minutes.</p></dd>
+
 <dt>cutoff_s</dt>
-<dd><p>The time cutoff used.</p></dd>
+<dd><p>The time cutoff in seconds.</p></dd>
 
 <dt>network</dt>
 <dd><p>The input <code>walk_network</code> object.</p></dd>
@@ -116,9 +127,13 @@ only for nodes in the primary connected component, or <code>"all"</code>.</p></d
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="va">reach</span> <span class="op">&lt;-</span> <span class="fu">walk_compute_reach</span><span class="op">(</span><span class="va">net</span>, cutoff_s <span class="op">=</span> <span class="fl">600</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">reach</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">reach</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Standard 10-minute walk reach</span></span></span>
+<span class="r-in"><span><span class="va">reach</span> <span class="op">&lt;-</span> <span class="fu">walk_compute_reach</span><span class="op">(</span><span class="va">net</span>, time_min <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Short 5-minute neighborhood reach</span></span></span>
+<span class="r-in"><span><span class="va">reach_5m</span> <span class="op">&lt;-</span> <span class="fu">walk_compute_reach</span><span class="op">(</span><span class="va">net</span>, time_min <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">reach_5m</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">reach_5m</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

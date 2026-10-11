@@ -114,15 +114,16 @@ walk_build_network <- function(data,
 
   # Optional topological repair (user decision)
   if (repair) {
-    if (planarize) {
-      if (verbose) cli::cli_alert_info("Planarizing intersections...")
-      # Planarize crossing segments
-      lines <- sf::st_node(lines)
-    }
-
     if (snap_tolerance_m > 0) {
       if (verbose) cli::cli_alert_info("Snapping endpoint gaps within {snap_tolerance_m} meters...")
       lines <- sf::st_snap(lines, lines, tolerance = snap_tolerance_m)
+    }
+
+    if (planarize) {
+      if (verbose) cli::cli_alert_info("Planarizing intersections...")
+      # Planarize crossing segments by combining into a multilinestring and noding
+      noded <- sf::st_node(sf::st_combine(sf::st_geometry(lines)))
+      lines <- sf::st_as_sf(sf::st_cast(noded, "LINESTRING", warn = FALSE))
     }
   }
 

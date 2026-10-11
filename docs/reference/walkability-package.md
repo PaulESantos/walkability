@@ -11,6 +11,8 @@ credits, and publication-ready ggplot2 visualizations.
 
 Useful links:
 
+- <https://paulesantos.github.io/walkability>
+
 - <https://github.com/PaulESantos/walkability>
 
 - Report bugs at <https://github.com/PaulESantos/walkability/issues>

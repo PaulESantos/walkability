@@ -4,14 +4,22 @@
 \alias{walk_compute_circuity}
 \title{Compute Network Circuity (Detour Ratio) for Sampled Junctions}
 \usage{
-walk_compute_circuity(network, sample_size = 500, cutoff_s = 600)
+walk_compute_circuity(
+  network,
+  sample_size = 500,
+  time_min = 10,
+  cutoff_s = NULL
+)
 }
 \arguments{
 \item{network}{A \code{walk_network} object.}
 
 \item{sample_size}{Number of random junctions to sample. Default is 500.}
 
-\item{cutoff_s}{Walking time budget in seconds (default is 600.0).}
+\item{time_min}{Walking time budget in minutes (default is 10.0 minutes).}
+
+\item{cutoff_s}{Optional walking time budget in seconds (default is \code{NULL}).
+If provided, it overrides \code{time_min}.}
 }
 \value{
 A \code{tibble} with node IDs and calculated detour ratios.

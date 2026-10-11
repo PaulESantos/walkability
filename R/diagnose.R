@@ -121,7 +121,8 @@ walk_diagnose_network <- function(data, snap_search_radius_m = 10.0, crs = NULL)
 
     # Spatial distance from dangles to street lines
     # Sample or search nearest
-    dist_matrix <- sf::st_distance(dangle_sf, lines)
+    raw_dist <- sf::st_distance(dangle_sf, lines)
+    dist_matrix <- matrix(as.numeric(raw_dist), nrow = nrow(dangle_sf))
     # Exclude distance to the incident line itself (which is 0)
     # Replace zeros with Inf
     dist_matrix[dist_matrix < 0.001] <- Inf

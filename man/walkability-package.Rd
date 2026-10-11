@@ -11,6 +11,7 @@ High-performance geospatial graph analysis for urban street networks, walkabilit
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://paulesantos.github.io/walkability}
   \item \url{https://github.com/PaulESantos/walkability}
   \item Report bugs at \url{https://github.com/PaulESantos/walkability/issues}
 }

@@ -6,7 +6,8 @@
 \usage{
 walk_compute_reach(
   network,
-  cutoff_s = 600,
+  time_min = 10,
+  cutoff_s = NULL,
   target = c("largest_component", "all"),
   n_threads = 0,
   verbose = TRUE
@@ -15,7 +16,12 @@ walk_compute_reach(
 \arguments{
 \item{network}{A \code{walk_network} object produced by \code{\link[=walk_build_network]{walk_build_network()}}.}
 
-\item{cutoff_s}{Walking time budget in seconds (default is 600.0 seconds = 10 minutes).}
+\item{time_min}{Walking time budget in minutes (default is 10.0 minutes).
+Users can freely customize this parameter; for smaller neighborhoods, compact districts,
+or localized analyses, values like 5.0 or 7.5 minutes can be used.}
+
+\item{cutoff_s}{Optional walking time budget in seconds (e.g. 600.0). If specified,
+it overrides \code{time_min}.}
 
 \item{target}{Character string. Either \code{"largest_component"} (default) to compute
 only for nodes in the primary connected component, or \code{"all"}.}
@@ -29,7 +35,8 @@ A \code{walk_reach} S3 object containing:
 \item{nodes}{\code{sf} points table augmented with \code{reachable_length_m} and \code{reachable_length_km}.}
 \item{edges}{\code{sf} lines table augmented with \code{reachable_length_km} (mean of endpoints).}
 \item{summary}{Summary statistics (min, mean, max, 5th, 95th percentiles).}
-\item{cutoff_s}{The time cutoff used.}
+\item{time_min}{The time cutoff in minutes.}
+\item{cutoff_s}{The time cutoff in seconds.}
 \item{network}{The input \code{walk_network} object.}
 }
 \description{
@@ -40,8 +47,12 @@ crediting crossing frontier edges for only their reachable fraction.
 }
 \examples{
 \dontrun{
-reach <- walk_compute_reach(net, cutoff_s = 600)
-print(reach)
-plot(reach)
+# Standard 10-minute walk reach
+reach <- walk_compute_reach(net, time_min = 10)
+
+# Short 5-minute neighborhood reach
+reach_5m <- walk_compute_reach(net, time_min = 5)
+print(reach_5m)
+plot(reach_5m)
 }
 }
