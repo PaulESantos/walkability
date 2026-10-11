@@ -7,7 +7,12 @@ indirect, circuitous street patterns and cul-de-sacs.
 ## Usage
 
 ``` r
-walk_compute_circuity(network, sample_size = 500, cutoff_s = 600)
+walk_compute_circuity(
+  network,
+  sample_size = 500,
+  time_min = 10,
+  cutoff_s = NULL
+)
 ```
 
 ## Arguments
@@ -20,9 +25,14 @@ walk_compute_circuity(network, sample_size = 500, cutoff_s = 600)
 
   Number of random junctions to sample. Default is 500.
 
+- time_min:
+
+  Walking time budget in minutes (default is 10.0 minutes).
+
 - cutoff_s:
 
-  Walking time budget in seconds (default is 600.0).
+  Optional walking time budget in seconds (default is `NULL`). If
+  provided, it overrides `time_min`.
 
 ## Value
 

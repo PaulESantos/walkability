@@ -47,9 +47,9 @@ lines <- st_sfc(
 )
 streets <- st_as_sf(data.frame(id = 1:4), geometry = lines)
 
-# 2. Build graph network & compute 10-minute pedestrian reach (Rust)
+# 2. Build graph network & compute pedestrian reach (Rust)
 net   <- walk_build_network(streets, walk_speed_kmh = 4.5, verbose = FALSE)
-reach <- walk_compute_reach(net, cutoff_s = 600.0, verbose = FALSE)
+reach <- walk_compute_reach(net, time_min = 10, verbose = FALSE)
 
 # 3. View results
 reach

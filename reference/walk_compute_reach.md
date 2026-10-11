@@ -11,7 +11,8 @@ their reachable fraction.
 ``` r
 walk_compute_reach(
   network,
-  cutoff_s = 600,
+  time_min = 10,
+  cutoff_s = NULL,
   target = c("largest_component", "all"),
   n_threads = 0,
   verbose = TRUE
@@ -25,10 +26,17 @@ walk_compute_reach(
   A `walk_network` object produced by
   [`walk_build_network()`](https://paulesantos.github.io/walkability/reference/walk_build_network.md).
 
+- time_min:
+
+  Walking time budget in minutes (default is 10.0 minutes). Users can
+  freely customize this parameter; for smaller neighborhoods, compact
+  districts, or localized analyses, values like 5.0 or 7.5 minutes can
+  be used.
+
 - cutoff_s:
 
-  Walking time budget in seconds (default is 600.0 seconds = 10
-  minutes).
+  Optional walking time budget in seconds (e.g. 600.0). If specified, it
+  overrides `time_min`.
 
 - target:
 
@@ -62,9 +70,13 @@ A `walk_reach` S3 object containing:
 
   Summary statistics (min, mean, max, 5th, 95th percentiles).
 
+- time_min:
+
+  The time cutoff in minutes.
+
 - cutoff_s:
 
-  The time cutoff used.
+  The time cutoff in seconds.
 
 - network:
 
@@ -74,8 +86,12 @@ A `walk_reach` S3 object containing:
 
 ``` r
 if (FALSE) { # \dontrun{
-reach <- walk_compute_reach(net, cutoff_s = 600)
-print(reach)
-plot(reach)
+# Standard 10-minute walk reach
+reach <- walk_compute_reach(net, time_min = 10)
+
+# Short 5-minute neighborhood reach
+reach_5m <- walk_compute_reach(net, time_min = 5)
+print(reach_5m)
+plot(reach_5m)
 } # }
 ```

@@ -108,9 +108,9 @@
 <span><span class="op">)</span></span>
 <span><span class="va">streets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span>, geometry <span class="op">=</span> <span class="va">lines</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 2. Build graph network &amp; compute 10-minute pedestrian reach (Rust)</span></span>
+<span><span class="co"># 2. Build graph network &amp; compute pedestrian reach (Rust)</span></span>
 <span><span class="va">net</span>   <span class="op">&lt;-</span> <span class="fu"><a href="reference/walk_build_network.html">walk_build_network</a></span><span class="op">(</span><span class="va">streets</span>, walk_speed_kmh <span class="op">=</span> <span class="fl">4.5</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">reach</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/walk_compute_reach.html">walk_compute_reach</a></span><span class="op">(</span><span class="va">net</span>, cutoff_s <span class="op">=</span> <span class="fl">600.0</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">reach</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/walk_compute_reach.html">walk_compute_reach</a></span><span class="op">(</span><span class="va">net</span>, time_min <span class="op">=</span> <span class="fl">10</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 3. View results</span></span>
 <span><span class="va">reach</span></span></code></pre></div>
