@@ -1,0 +1,71 @@
+/* Custom pkgdown styling for walkability */
+/* Adapted from Desirée De Leon's tidymodels / palmerpenguins pkgdown CSS */
+
+:root {
+  --bunker: #001219;
+  --ziggurat: #94D2BD;
+  --wedgewood: #005F73;
+  --teal-accent: #0A9396;
+  --sand-accent: #E9D8A6;
+}
+
+/* Spacing ----------------------------------------------- */
+
+.contents h2, .contents h3, .contents h4 {
+  margin-bottom: 1.25rem;
+  margin-top: 2rem;
+  font-weight: 600;
+}
+
+.row {
+  margin-top: 1.25em;
+}
+
+@media (min-width: 768px) {
+  .contents {
+    padding-right: 3.5em;
+  }
+}
+
+/* Navbar ----------------------------------------------- */
+
+.navbar {
+  padding-bottom: 0.85em;
+  padding-top: 0.85em;
+  border-bottom: 1px solid rgba(0, 95, 115, 0.15);
+}
+
+/* Active behavior for navbar */
+.navbar-light .navbar-nav .nav-link:focus,
+.navbar-light .navbar-nav .active > .nav-link {
+  background: var(--ziggurat);
+  color: var(--bunker) !important;
+  border-radius: 0.35rem;
+  font-weight: 600;
+}
+
+/* Hover behavior for navbar */
+.navbar-light .navbar-nav .nav-item > .nav-link:hover {
+  color: var(--teal-accent) !important;
+}
+
+/* Code and link styling -------------------------------- */
+
+code a {
+  color: var(--wedgewood);
+  text-decoration: none;
+}
+
+code a:hover {
+  color: var(--teal-accent);
+  text-decoration: underline;
+}
+
+/* Badges and pills */
+.badge.bg-primary {
+  background-color: var(--wedgewood) !important;
+}
+
+.badge.bg-secondary {
+  background-color: var(--teal-accent) !important;
+}

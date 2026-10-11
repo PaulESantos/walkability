@@ -26,7 +26,7 @@ walk_plot_reach(
 - reach:
 
   A `walk_reach` object produced by
-  [`walk_compute_reach()`](https://walkability.github.io/walkability/reference/walk_compute_reach.md).
+  [`walk_compute_reach()`](https://paulesantos.github.io/walkability/reference/walk_compute_reach.md).
 
 - boundary:
 

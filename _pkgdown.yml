@@ -1,28 +1,104 @@
-url: https://walkability.github.io/walkability
+url: https://paulesantos.github.io/walkability
+
+home:
+  title: walkability R package
+  description: High-performance geospatial graph analysis for urban street networks, walkability, and active transitability. Powered by multi-threaded Rust kernels with exact partial-edge credits and publication-ready ggplot2 visualizations.
+
+authors:
+  Paul E. Santos Andrade:
+    href: https://orcid.org/0000-0002-6635-0375
+
 template:
   bootstrap: 5
+  bootswatch: cosmo
+  bslib:
+    bg: "#F9F9F9"
+    fg: "#001219"
+    primary: "#005F73"
+    secondary: "#0A9396"
+    tertiary: "#94D2BD"
+    info: "#E9D8A6"
+    base_font: {google: "Nunito Sans"}
+    heading_font: {google: "Nunito Sans"}
+    code_font: {google: "Fira Code"}
+    headings-font-weight: 500
+    navbar-bg: "#DEF1EB"
+    nav-link-color: "#005F73"
+  theme: pygments
+
+  opengraph:
+    image:
+      src: man/figures/cusco_reach.png
+      alt: "10-minute reachable walkable network length map for Cusco"
+    twitter:
+      creator: "@paulefrens"
+      card: summary_large_image
 
 navbar:
+  type: light
+  bg: "#DEF1EB"
   structure:
-    left: [intro, reference, articles, news]
-    right: [github]
+    left: [home, intro, reference, articles, news]
+    right: [search, github]
   components:
+    home:
+      icon: fa-home
+      aria-label: "Home"
+      href: index.html
+    intro:
+      text: "Get Started"
+      href: articles/walkability-guide.html
     articles:
-      text: Guías y Metodología
+      text: Articles
       menu:
-        - text: "Guía de Inicio Rápido"
+        - text: "Tutorials & Workflows"
+        - text: "Guía de Inicio Rápido (Get Started)"
           href: articles/walkability-guide.html
-        - text: "Metodología y Supuestos"
+        - text: "-------"
+        - text: "Theory & Empirical Results"
+        - text: "Metodología, Motor Rust y Supuestos"
           href: articles/metodologia-y-supuestos.html
         - text: "Resultados en Ciudades de Referencia"
           href: articles/ciudades-referencia.html
 
-articles:
-  - title: "Guías de Uso"
-    navbar: "Guía de Inicio Rápido"
+reference:
+  - title: "Topological Diagnostics"
+    desc: "Inspect user-supplied street networks for connectivity, dead ends, and undershoots without mutating geometries."
     contents:
-      - walkability-guide
-  - title: "Fundamentos y Resultados"
+      - walk_diagnose_network
+      - print.walk_diagnosis
+      - plot.walk_diagnosis
+
+  - title: "Network Construction & Repair"
+    desc: "Convert spatial vector data into pedestrian routing graphs with user-controlled snapping and planarization."
     contents:
-      - metodologia-y-supuestos
-      - ciudades-referencia
+      - walk_build_network
+      - print.walk_network
+
+  - title: "Walkability & Reach Metrics"
+    desc: "Multi-threaded isochrone reachable length calculations and route directness evaluation."
+    contents:
+      - walk_compute_reach
+      - print.walk_reach
+      - plot.walk_reach
+      - walk_compute_circuity
+
+  - title: "Cartographic Visualizations"
+    desc: "Publication-grade ggplot2 maps and minimalist cartographic themes."
+    contents:
+      - walk_plot_reach
+      - walk_plot_diagnosis
+      - theme_walkability
+
+  - title: "Data Ingestion"
+    desc: "Automated street network acquisition from OpenStreetMap and Overture Maps."
+    contents:
+      - walk_download_osm
+      - walk_download_overture_bbox
+
+  - title: "Rust Acceleration Kernels"
+    desc: "Low-level compiled Rust routines for CSR conversion and parallel Dijkstra search."
+    contents:
+      - rust_build_csr
+      - rust_compute_reachable_length
+      - rust_compute_circuity_sample

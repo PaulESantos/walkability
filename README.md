@@ -5,7 +5,7 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://img.shields.io/badge/R--CMD--check-passing-brightgreen)](https://github.com/walkability/walkability)
+[![R-CMD-check](https://img.shields.io/badge/R--CMD--check-passing-brightgreen)](https://github.com/PaulESantos/walkability)
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust
@@ -26,23 +26,23 @@ graphs and geometric digitization biases, using a multi-threaded
 
 <p align="center">
 
-<img src="man/figures/curitiba_reach.png" width="600" alt="Reachable walkable network length in Curitiba rendered with viridis colormap">
-<br> <em>Reachable network length in Curitiba. Yellow highlights dense,
-highly permeable pedestrian districts; dark purple marks cul-de-sacs and
-fragmented outskirts.</em>
+<img src="man/figures/cusco_reach.png" width="600" alt="Reachable walkable network length in Cusco rendered with viridis colormap">
+<br> <em>Reachable network length in Cusco. Yellow highlights dense,
+highly permeable pedestrian districts (Historic Center); dark purple
+marks fragmented outskirts and steep hillsides.</em>
 </p>
 
 ------------------------------------------------------------------------
 
-## Quickstart (60 Seconds)
+## Quickstart
 
 ### Installation
 
-Install the development version from GitHub or local source:
+Install the development version from GitHub:
 
 ``` r
 # install.packages("pak")
-pak::pak("walkability/walkability")
+pak::pak("PaulESantos/walkability")
 ```
 
 ### Reproducible Minimal Example
@@ -83,24 +83,20 @@ v Evaluated Nodes: 4
 
 ## Key Capabilities
 
-- **[Non-destructive Topological
-  Diagnosis](vignettes/walkability-guide.Rmd)**:
-  `walk_diagnose_network()` inspects user street files, flags isolated
-  islands, and locates near-miss *undershoots* without mutating
-  geometries.
-- **[Controlled Geometric Repair](vignettes/walkability-guide.Rmd)**:
-  `walk_build_network()` empowers users to choose whether to planarize
-  crossings and snap dangling endpoints at specified tolerances.
-- **[Exact Partial-Edge Dijkstra in
-  Rust](vignettes/metodologia-y-supuestos.Rmd)**: `walk_compute_reach()`
+- **Non-destructive Topological Diagnosis**: `walk_diagnose_network()`
+  inspects user street files, flags isolated islands, and locates
+  near-miss *undershoots* without mutating geometries.
+- **Controlled Geometric Repair**: `walk_build_network()` empowers users
+  to choose whether to planarize crossings and snap dangling endpoints
+  at specified tolerances.
+- **Exact Partial-Edge Dijkstra in Rust**: `walk_compute_reach()`
   computes exact fractional contributions for boundary edges across all
   CPU cores with zero heap reallocations.
-- **[Publication-Ready Maps](vignettes/walkability-guide.Rmd)**:
-  `walk_plot_reach()` renders clean `ggplot2` visualizations with
-  2nd–98th percentile scaling and ascending layer stacking.
-- **[Route Directness & Circuity](vignettes/walkability-guide.Rmd)**:
-  `walk_compute_circuity()` evaluates detour ratios between network
-  shortest paths and Euclidean distance.
+- **Publication-Ready Maps**: `walk_plot_reach()` renders clean
+  `ggplot2` visualizations with 2nd–98th percentile scaling and
+  ascending layer stacking.
+- **Route Directness & Circuity**: `walk_compute_circuity()` evaluates
+  detour ratios between network shortest paths and Euclidean distance.
 
 ------------------------------------------------------------------------
 
@@ -115,22 +111,25 @@ v Evaluated Nodes: 4
   treated as planar unless explicit elevation tags exist.
 
 *Read the complete [Methodology and Model
-Assumptions](vignettes/metodologia-y-supuestos.Rmd) guide for details.*
+Assumptions](https://paulesantos.github.io/walkability/articles/metodologia-y-supuestos.html)
+guide for details.*
 
 ------------------------------------------------------------------------
 
 ## Documentation & Vignettes
 
-- **[Guía de Inicio Rápido](vignettes/walkability-guide.Rmd)**: Complete
-  step-by-step workflow with user-provided datasets and diagnostic
-  plots.
+- **[Guía de Inicio
+  Rápido](https://paulesantos.github.io/walkability/articles/walkability-guide.html)**:
+  Complete step-by-step workflow with user-provided datasets, network
+  repair, and diagnostic plots.
 - **[Metodología, Algoritmo Dijkstra en Rust y
-  Supuestos](vignettes/metodologia-y-supuestos.Rmd)**: Mathematical
-  derivation of the partial-edge rule, CSR representation, and 11
-  modeling limitations.
+  Supuestos](https://paulesantos.github.io/walkability/articles/metodologia-y-supuestos.html)**:
+  Mathematical derivation of the partial-edge rule, CSR representation,
+  and 11 modeling limitations.
 - **[Resultados de Referencia en
-  Ciudades](vignettes/ciudades-referencia.Rmd)**: Benchmark findings and
-  verified network statistics for Curitiba, Maringá, and São Paulo.
+  Ciudades](https://paulesantos.github.io/walkability/articles/ciudades-referencia.html)**:
+  Benchmark findings and verified network statistics for Cusco,
+  Arequipa, and Lima.
 
 ------------------------------------------------------------------------
 
@@ -139,8 +138,8 @@ Assumptions](vignettes/metodologia-y-supuestos.Rmd) guide for details.*
 To cite `walkability` in publications:
 
 ``` text
-Walkability Authors (2026). walkability: Urban Walkability and Active Transit Network Analysis. 
-R package version 0.1.0. https://github.com/walkability/walkability
+Santos Andrade, P. E. (2026). walkability: Urban Walkability and Active Transit Network Analysis. 
+R package version 0.1.0. https://github.com/PaulESantos/walkability
 ```
 
 Distributed under the [MIT License](LICENSE).

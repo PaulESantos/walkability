@@ -17,3 +17,5 @@
 ^Meta$
 ^README\.Rmd$
 ^README\.html$
+^codecov\.yml$
+^docs$

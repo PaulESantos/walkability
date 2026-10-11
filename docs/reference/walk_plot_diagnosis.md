@@ -19,7 +19,7 @@ walk_plot_diagnosis(
 - diagnosis:
 
   A `walk_diagnosis` object produced by
-  [`walk_diagnose_network()`](https://walkability.github.io/walkability/reference/walk_diagnose_network.md).
+  [`walk_diagnose_network()`](https://paulesantos.github.io/walkability/reference/walk_diagnose_network.md).
 
 - title:
 

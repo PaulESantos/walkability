@@ -18,7 +18,7 @@ plot(x, ...)
 - ...:
 
   Additional arguments passed to
-  [`walk_plot_reach()`](https://walkability.github.io/walkability/reference/walk_plot_reach.md).
+  [`walk_plot_reach()`](https://paulesantos.github.io/walkability/reference/walk_plot_reach.md).
 
 ## Value
 

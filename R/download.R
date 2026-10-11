@@ -77,7 +77,7 @@ walk_download_overture_bbox <- function(bbox, output_file = NULL) {
       subtype,
       class,
       ST_AsText(geometry) as wkt
-    FROM read_parquet('s3://overturemaps-us-west-2/release/2024-08-20.0/theme=transportation/type=segment/*', hive_partitioning = 1)
+    FROM read_parquet('s3://overturemaps-us-west-2/release/2026-09-23.1/theme=transportation/type=segment/*', hive_partitioning = 1)
     WHERE bbox.xmin <= %f AND bbox.xmax >= %f
       AND bbox.ymin <= %f AND bbox.ymax >= %f
       AND subtype = 'road'

@@ -23,7 +23,7 @@ walk_compute_reach(
 - network:
 
   A `walk_network` object produced by
-  [`walk_build_network()`](https://walkability.github.io/walkability/reference/walk_build_network.md).
+  [`walk_build_network()`](https://paulesantos.github.io/walkability/reference/walk_build_network.md).
 
 - cutoff_s:
 
