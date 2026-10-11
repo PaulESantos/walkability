@@ -1,0 +1,224 @@
+# walkability
+
+> **Quantify, diagnose, and map 10-minute pedestrian reach across urban
+> street networks at native CPU speed.**
+
+`walkability` computes the **reachable walkable network length within a
+10-minute walk** (~750 m at 4.5 km/h) for every junction in a city.
+Designed for urban planners and researchers, it solves two major
+bottlenecks in pedestrian analytics: slow routing over massive street
+graphs and geometric digitization biases, using a multi-threaded
+**Rust** kernel with exact partial-edge credits.
+
+![Reachable walkable network length in Cusco rendered with viridis
+colormap](reference/figures/cusco_reach.png)  
+*Reachable network length in Cusco. Yellow highlights dense, highly
+permeable pedestrian districts (Historic Center); dark purple marks
+fragmented outskirts and steep hillsides.*
+
+------------------------------------------------------------------------
+
+## Quickstart
+
+### Installation
+
+Install the development version from GitHub:
+
+``` r
+
+# install.packages("pak")
+pak::pak("PaulESantos/walkability")
+```
+
+### Reproducible Minimal Example
+
+``` r
+
+library(walkability)
+library(sf)
+
+# 1. Create a minimal 2x2 street grid (100 m spacing)
+lines <- st_sfc(
+  st_linestring(rbind(c(0, 0), c(100, 0))),
+  st_linestring(rbind(c(100, 0), c(100, 100))),
+  st_linestring(rbind(c(100, 100), c(0, 100))),
+  st_linestring(rbind(c(0, 100), c(0, 0))),
+  crs = 32722
+)
+streets <- st_as_sf(data.frame(id = 1:4), geometry = lines)
+
+# 2. Build graph network & compute 10-minute pedestrian reach (Rust)
+net   <- walk_build_network(streets, walk_speed_kmh = 4.5, verbose = FALSE)
+reach <- walk_compute_reach(net, cutoff_s = 600.0, verbose = FALSE)
+
+# 3. View results
+reach
+```
+
+``` text
+── Walkability Reachable Network Length ─────────────────────────────
+v Isochrone Budget: 10.0 minutes (~750 m at 4.5 km/h)
+v Evaluated Nodes: 4
+* Average Reach: 0.40 km
+* Highest Reach: 0.40 km
+* Lowest Reach: 0.40 km
+* 5th-95th percentile: 0.4 - 0.4 km
+```
+
+------------------------------------------------------------------------
+
+## Key Capabilities
+
+- **Non-destructive Topological Diagnosis**:
+  [`walk_diagnose_network()`](https://paulesantos.github.io/walkability/reference/walk_diagnose_network.md)
+  inspects user street files, flags isolated islands, and locates
+  near-miss *undershoots* without mutating geometries.
+- **Controlled Geometric Repair**:
+  [`walk_build_network()`](https://paulesantos.github.io/walkability/reference/walk_build_network.md)
+  empowers users to choose whether to planarize crossings and snap
+  dangling endpoints at specified tolerances.
+- **Exact Partial-Edge Dijkstra in Rust**:
+  [`walk_compute_reach()`](https://paulesantos.github.io/walkability/reference/walk_compute_reach.md)
+  computes exact fractional contributions for boundary edges across all
+  CPU cores with zero heap reallocations.
+- **Publication-Ready Maps**:
+  [`walk_plot_reach()`](https://paulesantos.github.io/walkability/reference/walk_plot_reach.md)
+  renders clean `ggplot2` visualizations with 2nd–98th percentile
+  scaling and ascending layer stacking.
+- **Route Directness & Circuity**:
+  [`walk_compute_circuity()`](https://paulesantos.github.io/walkability/reference/walk_compute_circuity.md)
+  evaluates detour ratios between network shortest paths and Euclidean
+  distance.
+
+------------------------------------------------------------------------
+
+## Scope & Limitations
+
+- **Modeled speed**: Assumes a design walking speed of 4.5 km/h (1.25
+  m/s). It measures structural street connectivity, not observed GPS
+  pedestrian speeds.
+- **Footway availability**: All non-motorway and non-trunk roads are
+  modeled as walkable unless tagged as closed to pedestrians.
+- **Planar topology**: Grade-separated intersections (overpasses) are
+  treated as planar unless explicit elevation tags exist.
+
+*Read the complete [Methodology and Model
+Assumptions](https://paulesantos.github.io/walkability/articles/metodologia-y-supuestos.html)
+guide for details.*
+
+------------------------------------------------------------------------
+
+## Documentation & Vignettes
+
+- **[Guía de Inicio
+  Rápido](https://paulesantos.github.io/walkability/articles/walkability-guide.html)**:
+  Complete step-by-step workflow with user-provided datasets, network
+  repair, and diagnostic plots.
+- **[Metodología, Algoritmo Dijkstra en Rust y
+  Supuestos](https://paulesantos.github.io/walkability/articles/metodologia-y-supuestos.html)**:
+  Mathematical derivation of the partial-edge rule, CSR representation,
+  and 11 modeling limitations.
+- **[Resultados de Referencia en
+  Ciudades](https://paulesantos.github.io/walkability/articles/ciudades-referencia.html)**:
+  Benchmark findings and verified network statistics for Cusco,
+  Arequipa, and Lima.
+
+------------------------------------------------------------------------
+
+## Citation & License
+
+To cite `walkability` in publications:
+
+``` text
+Santos Andrade, P. E. (2026). walkability: Urban Walkability and Active Transit Network Analysis.
+R package version 0.1.0. https://github.com/PaulESantos/walkability
+```
+
+Distributed under the [MIT
+License](https://paulesantos.github.io/walkability/LICENSE).
+
+# Package index
+
+## Topological Diagnostics
+
+Inspect user-supplied street networks for connectivity, dead ends, and
+undershoots without mutating geometries.
+
+- [`walk_diagnose_network()`](https://paulesantos.github.io/walkability/reference/walk_diagnose_network.md)
+  : Topological and Health Diagnosis for Street Networks
+- [`print(`*`<walk_diagnosis>`*`)`](https://paulesantos.github.io/walkability/reference/print.walk_diagnosis.md)
+  : Print Method for Street Network Diagnosis
+- [`plot(`*`<walk_diagnosis>`*`)`](https://paulesantos.github.io/walkability/reference/plot.walk_diagnosis.md)
+  : Plot Method for Street Network Diagnosis
+
+## Network Construction & Repair
+
+Convert spatial vector data into pedestrian routing graphs with
+user-controlled snapping and planarization.
+
+- [`walk_build_network()`](https://paulesantos.github.io/walkability/reference/walk_build_network.md)
+  : Build Walkable Graph Network from Street Data
+- [`print(`*`<walk_network>`*`)`](https://paulesantos.github.io/walkability/reference/print.walk_network.md)
+  : Print Method for Walk Network
+
+## Walkability & Reach Metrics
+
+Multi-threaded isochrone reachable length calculations and route
+directness evaluation.
+
+- [`walk_compute_reach()`](https://paulesantos.github.io/walkability/reference/walk_compute_reach.md)
+  : Compute Reachable Walkable Network Length Metric
+- [`print(`*`<walk_reach>`*`)`](https://paulesantos.github.io/walkability/reference/print.walk_reach.md)
+  : Print Method for Walk Reach Metric
+- [`plot(`*`<walk_reach>`*`)`](https://paulesantos.github.io/walkability/reference/plot.walk_reach.md)
+  : Plot Method for Walk Reach Object
+- [`walk_compute_circuity()`](https://paulesantos.github.io/walkability/reference/walk_compute_circuity.md)
+  : Compute Network Circuity (Detour Ratio) for Sampled Junctions
+
+## Cartographic Visualizations
+
+Publication-grade ggplot2 maps and minimalist cartographic themes.
+
+- [`walk_plot_reach()`](https://paulesantos.github.io/walkability/reference/walk_plot_reach.md)
+  : Plot Reachable Walkable Network Length Map
+- [`walk_plot_diagnosis()`](https://paulesantos.github.io/walkability/reference/walk_plot_diagnosis.md)
+  : Plot Street Network Topological Diagnosis
+- [`theme_walkability()`](https://paulesantos.github.io/walkability/reference/theme_walkability.md)
+  : Modern Minimalist Cartographic Theme for Walkability
+
+## Data Ingestion
+
+Automated street network acquisition from OpenStreetMap and Overture
+Maps.
+
+- [`walk_download_osm()`](https://paulesantos.github.io/walkability/reference/walk_download_osm.md)
+  : Download OpenStreetMap Street Network Data
+- [`walk_download_overture_bbox()`](https://paulesantos.github.io/walkability/reference/walk_download_overture_bbox.md)
+  : Query Overture Maps Data via DuckDB
+
+## Rust Acceleration Kernels
+
+Low-level compiled Rust routines for CSR conversion and parallel
+Dijkstra search.
+
+- [`rust_build_csr()`](https://paulesantos.github.io/walkability/reference/rust_build_csr.md)
+  : Build Compressed Sparse Row (CSR) graph representation. Drops
+  self-loops, collapses parallel edges to minimum travel time, and
+  returns CSR structures along with connected component analysis.
+- [`rust_compute_reachable_length()`](https://paulesantos.github.io/walkability/reference/rust_compute_reachable_length.md)
+  : Compute reachable walkable network length in parallel for a set of
+  target nodes.
+- [`rust_compute_circuity_sample()`](https://paulesantos.github.io/walkability/reference/rust_compute_circuity_sample.md)
+  : Compute detour ratio (circuity) for sampled origin-destination
+  pairs.
+
+# Articles
+
+### All vignettes
+
+- [Resultados de Referencia: Cusco, Arequipa y
+  Lima](https://paulesantos.github.io/walkability/articles/ciudades-referencia.md):
+- [Metodología, Algoritmo Dijkstra en Rust y Supuestos del
+  Modelo](https://paulesantos.github.io/walkability/articles/metodologia-y-supuestos.md):
+- [Guía de Inicio Rápido: Análisis de Caminabilidad Urbana con
+  walkability](https://paulesantos.github.io/walkability/articles/walkability-guide.md):

@@ -1,0 +1,124 @@
+# Guía de Inicio Rápido: Análisis de Caminabilidad Urbana con walkability
+
+## Introducción
+
+El paquete **`walkability`** es un sistema de análisis geoespacial y
+teoría de grafos diseñado para modelar y medir la **caminabilidad urbana
+y transitabilidad activa** a nivel de calle.
+
+Implementa el cálculo de la **longitud de red caminable alcanzable en 10
+minutos a pie** (*10-minute reachable walkable network length*),
+utilizando un motor de alto rendimiento escrito en **Rust** paralelizado
+a nivel de CPU.
+
+------------------------------------------------------------------------
+
+## 1. Flujo de Trabajo con Datos del Usuario
+
+Una de las grandes ventajas de `walkability` es que permite procesar
+redes viales propias (Shapefiles, GeoPackages, GeoJSON) con total
+control sobre la topología.
+
+### Paso 1: Carga y Diagnóstico de la Red
+
+Antes de modificar geometrías, se realiza una inspección no invasiva de
+la salud de la red:
+
+``` r
+
+library(walkability)
+library(sf)
+
+# Cargar capa de calles del usuario
+mis_calles <- st_read("datos_viales.gpkg")
+
+# Diagnóstico de conectividad y detección de undershoots
+diag <- walk_diagnose_network(mis_calles, snap_search_radius_m = 5.0, crs = 32722)
+
+# Imprimir resumen de componentes e islas
+print(diag)
+
+# Visualizar segmentos aislados y posibles errores
+plot(diag)
+```
+
+### Paso 2: Construcción del Grafo y Reparación Opcional
+
+Una vez revisado el diagnóstico, el usuario decide si aplicar o no
+reparaciones:
+
+``` r
+
+# Construir grafo peatonal
+red_limpia <- walk_build_network(
+  data = mis_calles,
+  crs = 32722,
+  walk_speed_kmh = 4.5,          # Velocidad de diseño (4.5 km/h = 1.25 m/s)
+  repair = TRUE,                 # Decisión del usuario de reparar
+  planarize = TRUE,              # Dividir líneas en intersecciones
+  snap_tolerance_m = 5.0,        # Conectar extremos a <= 5 metros
+  keep_components = "largest"    # Analizar la componente gigante
+)
+
+print(red_limpia)
+```
+
+------------------------------------------------------------------------
+
+## 2. Cálculo de la Métrica de Caminabilidad (Rust)
+
+El cálculo del isócrono utiliza el algoritmo de Dijkstra con **crédito
+parcial de aristas** (*partial-edge rule*), ejecutado en paralelo en
+Rust con la librería `rayon`:
+
+``` r
+
+# Calcular la métrica (por defecto: 600 segundos = 10 minutos)
+metricas <- walk_compute_reach(
+  network = red_limpia,
+  cutoff_s = 600.0,
+  n_threads = 0                  # 0 = usar todos los núcleos del procesador
+)
+
+print(metricas)
+```
+
+------------------------------------------------------------------------
+
+## 3. Visualización Cartográfica con ggplot2
+
+Las herramientas de visualización están integradas con `ggplot2` y usan
+la escala perceptualmente uniforme `viridis`:
+
+``` r
+
+# Mapa temático de caminabilidad
+mapa <- walk_plot_reach(
+  reach = metricas,
+  palette = "viridis",
+  title = "Caminabilidad Peatonal en 10 Minutos",
+  subtitle = "Longitud de red accesible a pie desde cada intersección",
+  dark = TRUE
+)
+
+print(mapa)
+
+# Guardar en alta resolución
+ggplot2::ggsave("mapa_caminabilidad.png", plot = mapa, width = 10, height = 10, dpi = 300)
+```
+
+------------------------------------------------------------------------
+
+## 4. Análisis de Circuidad y Desvío de Rutas
+
+Para evaluar qué tan directas o laberínticas son las calles de un
+sector:
+
+``` r
+
+circuidad <- walk_compute_circuity(red_limpia, sample_size = 500)
+summary(circuidad$mean_circuity)
+```
+
+Valores cercanos a `1.0` indican calles rectas y directas; valores altos
+indican rodeos y baja permeabilidad urbana.
