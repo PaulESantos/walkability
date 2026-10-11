@@ -1,0 +1,28 @@
+url: https://walkability.github.io/walkability
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left: [intro, reference, articles, news]
+    right: [github]
+  components:
+    articles:
+      text: Guías y Metodología
+      menu:
+        - text: "Guía de Inicio Rápido"
+          href: articles/walkability-guide.html
+        - text: "Metodología y Supuestos"
+          href: articles/metodologia-y-supuestos.html
+        - text: "Resultados en Ciudades de Referencia"
+          href: articles/ciudades-referencia.html
+
+articles:
+  - title: "Guías de Uso"
+    navbar: "Guía de Inicio Rápido"
+    contents:
+      - walkability-guide
+  - title: "Fundamentos y Resultados"
+    contents:
+      - metodologia-y-supuestos
+      - ciudades-referencia

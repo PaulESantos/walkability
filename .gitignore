@@ -1,0 +1,13 @@
+.venv/
+data/
+src/rust/vendor
+src/Makevars
+src/Makevars.win
+/doc/
+/Meta/
+.Rproj.user
+.Rhistory
+.RData
+.httr-oauth
+.DS_Store
+.quarto
