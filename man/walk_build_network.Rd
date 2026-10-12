@@ -64,14 +64,7 @@ snapping) at the user's discretion, and prepares Compressed Sparse Row (CSR)
 topology via compiled Rust.
 }
 \examples{
-\dontrun{
-# Standard usage with user data:
-net <- walk_build_network(
-  data = mis_calles,
-  crs = 3116,
-  repair = TRUE,
-  snap_tolerance_m = 5.0,
-  keep_components = "largest"
-)
-}
+data(streets_cusco)
+net <- walk_build_network(streets_cusco, verbose = FALSE)
+print(net)
 }

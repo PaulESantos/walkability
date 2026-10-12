@@ -28,6 +28,8 @@ decisions to the user."><meta property="og:image" content="https://paulesantos.g
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><h6 class="dropdown-header" data-toc-skip>Tutorials &amp; Workflows</h6></li>
     <li><a class="dropdown-item" href="../articles/walkability-guide.html">Guía de Inicio Rápido (Get Started)</a></li>
+    <li><a class="dropdown-item" href="../articles/analisis-avanzado.html">Análisis Avanzado: Ruteo, Isócronas y Accesibilidad</a></li>
+    <li><a class="dropdown-item" href="../articles/visualizacion-avanzada.html">Visualización Avanzada con ggplot2 y patchwork</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Theory &amp; Empirical Results</h6></li>
     <li><a class="dropdown-item" href="../articles/metodologia-y-supuestos.html">Metodología, Motor Rust y Supuestos</a></li>
@@ -105,11 +107,22 @@ undershoots (unconnected ends located near another segment). Default is 10.0 met
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu">walk_diagnose_network</span><span class="op">(</span><span class="va">mis_calles</span>, snap_search_radius_m <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">streets_cusco</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu">walk_diagnose_network</span><span class="op">(</span><span class="va">streets_cusco</span>, snap_search_radius_m <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">diag</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">diag</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Walkability Network Health Diagnosis</span> <span style="color: #00BBBB;">────────────────────────────────────────</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Total network analyzed: <span style="color: #0000BB;">484</span> segments (40.0 km)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Total components detected: <span style="color: #BBBB00;">125</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Giant (main) component: <span style="color: #00BB00;">68.3%</span> of network (27.3 km)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> Detected 124 disconnected components / islands (12.69 km, 31.7% of network).</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Identified <span style="color: #BB0000;">81</span> potential undershoots (dangling ends located &lt;= 5 m from another street).</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> Recommendation: You can fix these by running walk_build_network(..., repair =</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   TRUE, snap_tolerance_m =</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 5</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> ).</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Run `plot(diagnosis)` to inspect isolated segments and undershoots on a map.</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

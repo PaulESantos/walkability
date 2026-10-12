@@ -23,7 +23,30 @@
   and
   [`walk_plot_diagnosis()`](https://paulesantos.github.io/walkability/reference/walk_plot_diagnosis.md)
   for publication-grade cartography using `ggplot2` and `viridis`.
-- Added automated data ingestion tools
-  ([`walk_download_osm()`](https://paulesantos.github.io/walkability/reference/walk_download_osm.md)
+- Added
+  [`walk_shortest_path()`](https://paulesantos.github.io/walkability/reference/walk_shortest_path.md)
+  with compiled Rust Dijkstra for single-pair routing, path geometry
+  reconstruction, travel time, and detour circuity.
+- Added
+  [`walk_isochrone()`](https://paulesantos.github.io/walkability/reference/walk_isochrone.md)
+  for multi-threshold walkable polygon envelopes (concave hull and
+  corridor buffers) and sub-network extraction.
+- Added
+  [`walk_intersection_density()`](https://paulesantos.github.io/walkability/reference/walk_intersection_density.md)
+  for junction valence morphology (cul-de-sacs, T-junctions, crossroads)
+  and intersection density per km².
+- Added
+  [`walk_compute_access()`](https://paulesantos.github.io/walkability/reference/walk_compute_access.md)
+  for multi-threaded cumulative accessibility to urban facilities/POIs
+  (schools, clinics, transport) in parallel Rust.
+- Added
+  [`walk_scenario_close()`](https://paulesantos.github.io/walkability/reference/walk_scenario_close.md)
   and
-  [`walk_download_overture_bbox()`](https://paulesantos.github.io/walkability/reference/walk_download_overture_bbox.md)).
+  [`walk_compare_scenarios()`](https://paulesantos.github.io/walkability/reference/walk_compare_scenarios.md)
+  for evaluating street pedestrianization and closure impacts.
+- Added
+  [`as_sfnetwork()`](https://paulesantos.github.io/walkability/reference/as_sfnetwork.md)
+  and
+  [`as_tidygraph()`](https://paulesantos.github.io/walkability/reference/as_tidygraph.md)
+  for seamless interoperability with the `sfnetworks` and `tidygraph`
+  spatial network ecosystems.

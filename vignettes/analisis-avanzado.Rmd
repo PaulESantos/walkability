@@ -1,0 +1,237 @@
+---
+title: "Análisis Avanzado de Redes Peatonales: Ruteo, Isócronas, Accesibilidad y Simulación"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Análisis Avanzado de Redes Peatonales: Ruteo, Isócronas, Accesibilidad y Simulación}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 5,
+  fig.align = "center"
+)
+```
+
+## Introducción
+
+El paquete **`walkability`** ofrece un conjunto integral de herramientas de alto rendimiento para el análisis cuantitativo de la movilidad peatonal, la transitabilidad activa y la morfología del espacio urbano.
+
+Respaldado por un núcleo computacional en **Rust** paralelizado a nivel de hilos de CPU con `rayon`, `walkability` incorpora capacidades analíticas avanzadas:
+
+1. **Ruteo peatonal individual y análisis de circuidad** (`walk_shortest_path`).
+2. **Generación de polígonos de isócronas y subredes alcanzables** (`walk_isochrone`).
+3. **Métricas morfológicas de intersecciones y conectividad urbana** (`walk_intersection_density`).
+4. **Accesibilidad acumulativa a equipamientos urbanos (POIs)** (`walk_compute_access`).
+5. **Simulación de intervenciones urbanas y análisis de escenarios** (`walk_scenario_close`, `walk_compare_scenarios`).
+6. **Interoperabilidad con grafos espaciales** (`as_sfnetwork`, `as_tidygraph`).
+
+En esta viñeta demostraremos el uso de cada una de estas funciones utilizando los conjuntos de datos reales de calles incluidos en el paquete.
+
+---
+
+## 1. Carga de Datos y Preparación de la Red
+
+Cargamos la red vial del Centro Histórico de Cusco (`streets_cusco`), proyectada en coordenadas métricas UTM Zona 19S (`EPSG:32719`):
+
+```{r}
+library(walkability)
+library(sf)
+
+# Cargar dataset real empaquetado
+data(streets_cusco)
+
+# Construir grafo peatonal limpio y estructurado
+net <- walk_build_network(
+  data = streets_cusco,
+  walk_speed_kmh = 4.5,
+  repair = TRUE,
+  snap_tolerance_m = 5.0,
+  keep_components = "largest",
+  verbose = FALSE
+)
+
+print(net)
+```
+
+---
+
+## 2. Ruteo Peatonal Origen-Destino y Circuidad (`walk_shortest_path`)
+
+La función `walk_shortest_path()` calcula el camino óptimo entre dos coordenadas geográficas o índices de nodo. Utiliza una implementación de Dijkstra en Rust que reconstruye el trayecto mediante un arreglo de predecesores `prev_node` y `prev_edge`, devolviendo la geometría exacta de la ruta (`LINESTRING`), el tiempo de viaje a velocidad de diseño peatonal y el ratio de circuidad:
+
+$$\text{Circuidad} = \frac{\text{Distancia sobre la red (m)}}{\text{Distancia euclidiana en línea recta (m)}}$$
+
+Un ratio cercano a $1.0$ indica un trayecto prácticamente rectilíneo, mientras que valores superiores a $1.3$ reflejan desvíos obligados por la trama urbana.
+
+```{r}
+# Seleccionar dos puntos extremos dentro del componente conectado
+nodos_principales <- net$nodes[net$nodes$is_giant, ]
+coords <- st_coordinates(nodos_principales)
+
+origen  <- coords[1, 1:2]
+destino <- coords[50, 1:2]
+
+ruta <- walk_shortest_path(net, from = origen, to = destino)
+print(ruta)
+```
+
+Podemos visualizar la ruta sobre la red vial usando el método S3 `plot()`:
+
+```{r}
+plot(ruta)
+```
+
+---
+
+## 3. Polígonos de Isócronas y Subredes Alcanzables (`walk_isochrone`)
+
+Las isócronas peatonales delimitan el área y los tramos de calle que un peatón puede recorrer partiendo de un punto determinado en un presupuesto de tiempo (por ejemplo, 5 o 10 minutos).
+
+`walk_isochrone()` extrae la subred peatonal alcanzable con **corte fraccional de aristas perimetrales** (*partial-edge truncation*) y sintetiza los polígonos envolventes mediante dos metodologías:
+* `"concave"`: Envolvente cóncava (*concave hull / alpha shape*) calculada con `sf::st_concave_hull()`.
+* `"buffer"`: Disolución de buffers aplicados a lo largo de los ejes de calle transitables.
+
+```{r}
+# Calcular isócrona a 5 minutos a pie desde el punto de origen
+iso_5m <- walk_isochrone(net, origin = origen, time_min = 5.0, method = "concave")
+print(iso_5m)
+```
+
+Visualización del polígono de isócrona y de los tramos de red alcanzables:
+
+```{r}
+plot(iso_5m)
+```
+
+---
+
+## 4. Morfología Urbana y Tipología de Intersecciones (`walk_intersection_density`)
+
+La caminabilidad de un barrio depende estrechamente de la conectividad de su red de calles. Calles sin salida (*cul-de-sacs*) obstaculizan el tránsito y obligan a rodeos, mientras que intersecciones en cuadrícula de 4 o más direcciones multiplican las rutas alternativas.
+
+`walk_intersection_density()` analiza la valencia topológica de cada nodo de la red y reporta:
+* **Cul-de-sacs (grado 1):** Extremos ciegos y calles sin salida.
+* **Nodos de paso (grado 2):** Vértices intermedios de curvatura o continuidad.
+* **Intersecciones en T (grado 3):** Bifurcaciones de tres direcciones.
+* **Cruces ortogonales (grado 4+):** Cruces regulares en cuadrícula.
+* **Densidad de intersecciones:** Número de cruces ($\ge 3$ direcciones) por $\text{km}^2$.
+* **Ratio de Cul-de-sacs:** Proporción de extremos ciegos respecto al total de cruces reales.
+* **Ratio de Ortogonalidad:** Proporción de cruces de 4 o más vías.
+
+```{r}
+morfologia <- walk_intersection_density(net)
+print(morfologia)
+```
+
+Visualización espacial de los tipos de cruce e intersecciones:
+
+```{r}
+plot(morfologia)
+```
+
+---
+
+## 5. Accesibilidad Acumulativa a Equipamientos Urbanos (`walk_compute_access`)
+
+En planificación urbana orientada a la proximidad (la «ciudad de los 15 minutos»), una métrica fundamental es cuántos equipamientos esenciales (paradas de transporte, farmacias, colegios, centros de salud) son alcanzables a pie desde cada esquina de la ciudad.
+
+`walk_compute_access()` evalúa esta accesibilidad de forma multi-hilo en Rust para todos los cruces de la red de manera simultánea:
+
+```{r}
+# Simular 5 equipamientos urbanos (p. ej. paradas de transporte público o farmacias)
+# ubicados en nodos de la red
+set.seed(42)
+pois_muestra <- nodos_principales[c(5, 25, 45, 65, 85), ]
+pois_muestra$tipo <- c("Salud", "Educación", "Transporte", "Comercio", "Salud")
+
+# Calcular accesibilidad acumulativa en 5 minutos a pie
+acc <- walk_compute_access(
+  network = net,
+  pois = pois_muestra,
+  time_min = 5.0,
+  category_col = "tipo",
+  verbose = FALSE
+)
+
+print(acc)
+```
+
+La tabla resultante `acc$nodes` incluye el conteo de equipamientos alcanzables y el tiempo mínimo de acceso a pie por cada categoría (`access_salud_count`, `access_educacion_count`, etc.):
+
+```{r}
+cols_acc <- grep("^access_", names(acc$nodes), value = TRUE)
+head(sf::st_drop_geometry(acc$nodes)[, c("node_id", head(cols_acc, 4))])
+```
+
+Visualización cartográfica del gradiente de accesibilidad:
+
+```{r}
+plot(acc)
+```
+
+---
+
+## 6. Simulación de Intervenciones Urbanas y Análisis de Escenarios
+
+Los planificadores a menudo necesitan responder a preguntas como: *¿Qué sucede con la transitabilidad si se peatonaliza un tramo vial?* o *¿Cuál es el impacto en la red si se clausura una calle por obras o emergencias?*
+
+`walkability` permite modelar estos escenarios con `walk_scenario_close()` y comparar rigurosamente el impacto frente al escenario base mediante `walk_compare_scenarios()`:
+
+```{r}
+# Simular el cierre de dos tramos viales (por ejemplo, para paseo peatonal o mantenimiento)
+aristas_cierre <- c(5, 12)
+net_proyecto <- walk_scenario_close(
+  network = net,
+  edge_indices = aristas_cierre,
+  name = "Peatonalización Eje Central"
+)
+
+# Comparar ambos escenarios en un horizonte de 5 minutos
+comparacion <- walk_compare_scenarios(
+  base = net,
+  scenario = net_proyecto,
+  time_min = 5.0,
+  verbose = FALSE
+)
+
+print(comparacion)
+```
+
+Visualización del impacto y deltas de accesibilidad entre ambos escenarios:
+
+```{r}
+plot(comparacion)
+```
+
+---
+
+## 7. Interoperabilidad con `sfnetworks` y `tidygraph`
+
+Para integrar `walkability` con paquetes avanzados de análisis de redes espaciales como `sfnetworks` y `tidygraph`:
+
+```{r}
+# Conversión a objeto sfnetwork
+if (requireNamespace("sfnetworks", quietly = TRUE)) {
+  sfn <- as_sfnetwork(net)
+  print(sfn)
+}
+
+# Conversión a objeto tidygraph tbl_graph
+if (requireNamespace("tidygraph", quietly = TRUE)) {
+  tg <- as_tidygraph(net)
+  print(tg)
+}
+```
+
+Esta interoperabilidad bidireccional permite utilizar algoritmos de centralidad (`tidygraph`), flujo de tráfico y ruteo multimodal sobre la red construida y optimizada por `walkability`.
+
+---
+
+## Conclusión
+
+El conjunto de módulos implementados en `walkability` proporciona un ecosistema completo para el análisis de transitabilidad activa en ciudades. Al combinar la velocidad nativa de **Rust** con la flexibilidad analítica y cartográfica del ecosistema espacial de **R**, el paquete permite evaluar desde trayectos puntuales hasta planes maestros urbanos con precisión métrica y respaldo teórico.

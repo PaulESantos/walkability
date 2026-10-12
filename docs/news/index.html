@@ -22,6 +22,8 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><h6 class="dropdown-header" data-toc-skip>Tutorials &amp; Workflows</h6></li>
     <li><a class="dropdown-item" href="../articles/walkability-guide.html">Guía de Inicio Rápido (Get Started)</a></li>
+    <li><a class="dropdown-item" href="../articles/analisis-avanzado.html">Análisis Avanzado: Ruteo, Isócronas y Accesibilidad</a></li>
+    <li><a class="dropdown-item" href="../articles/visualizacion-avanzada.html">Visualización Avanzada con ggplot2 y patchwork</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Theory &amp; Empirical Results</h6></li>
     <li><a class="dropdown-item" href="../articles/metodologia-y-supuestos.html">Metodología, Motor Rust y Supuestos</a></li>
@@ -52,7 +54,12 @@
 <li>Added <code><a href="../reference/walk_compute_reach.html">walk_compute_reach()</a></code> for 10-minute walkable network length calculations.</li>
 <li>Added <code><a href="../reference/walk_compute_circuity.html">walk_compute_circuity()</a></code> for detour ratio evaluation.</li>
 <li>Added <code><a href="../reference/walk_plot_reach.html">walk_plot_reach()</a></code> and <code><a href="../reference/walk_plot_diagnosis.html">walk_plot_diagnosis()</a></code> for publication-grade cartography using <code>ggplot2</code> and <code>viridis</code>.</li>
-<li>Added automated data ingestion tools (<code><a href="../reference/walk_download_osm.html">walk_download_osm()</a></code> and <code><a href="../reference/walk_download_overture_bbox.html">walk_download_overture_bbox()</a></code>).</li>
+<li>Added <code><a href="../reference/walk_shortest_path.html">walk_shortest_path()</a></code> with compiled Rust Dijkstra for single-pair routing, path geometry reconstruction, travel time, and detour circuity.</li>
+<li>Added <code><a href="../reference/walk_isochrone.html">walk_isochrone()</a></code> for multi-threshold walkable polygon envelopes (concave hull and corridor buffers) and sub-network extraction.</li>
+<li>Added <code><a href="../reference/walk_intersection_density.html">walk_intersection_density()</a></code> for junction valence morphology (cul-de-sacs, T-junctions, crossroads) and intersection density per km².</li>
+<li>Added <code><a href="../reference/walk_compute_access.html">walk_compute_access()</a></code> for multi-threaded cumulative accessibility to urban facilities/POIs (schools, clinics, transport) in parallel Rust.</li>
+<li>Added <code><a href="../reference/walk_scenario_close.html">walk_scenario_close()</a></code> and <code><a href="../reference/walk_compare_scenarios.html">walk_compare_scenarios()</a></code> for evaluating street pedestrianization and closure impacts.</li>
+<li>Added <code><a href="../reference/as_sfnetwork.html">as_sfnetwork()</a></code> and <code><a href="../reference/as_tidygraph.html">as_tidygraph()</a></code> for seamless interoperability with the <code>sfnetworks</code> and <code>tidygraph</code> spatial network ecosystems.</li>
 </ul></div>
   </main></div>
 

@@ -85,13 +85,16 @@ A `walk_reach` S3 object containing:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-# Standard 10-minute walk reach
-reach <- walk_compute_reach(net, time_min = 10)
-
-# Short 5-minute neighborhood reach
-reach_5m <- walk_compute_reach(net, time_min = 5)
-print(reach_5m)
-plot(reach_5m)
-} # }
+data(streets_cusco)
+net <- walk_build_network(streets_cusco, verbose = FALSE)
+reach <- walk_compute_reach(net, time_min = 5, verbose = FALSE)
+print(reach)
+#> 
+#> ── Walkability Reachable Network Length ────────────────────────────────────────
+#> ✔ Isochrone Budget: 5.0 minutes (~375 m at 4.5 km/h)
+#> ✔ Evaluated Nodes: 249
+#> • Average Reach: 2.29 km
+#> • Highest Reach: 4.91 km
+#> • Lowest Reach: 0.37 km
+#> • 5th-95th percentile: 0.4 - 4.4 km
 ```

@@ -14,6 +14,7 @@ License: MIT + file LICENSE
 URL: https://paulesantos.github.io/walkability, https://github.com/PaulESantos/walkability
 BugReports: https://github.com/PaulESantos/walkability/issues
 Encoding: UTF-8
+LazyData: true
 Roxygen: list(markdown = TRUE)
 SystemRequirements: Cargo (Rust's package manager), rustc
 Depends:
@@ -26,14 +27,20 @@ Imports:
     tibble
 Suggests:
     arrow,
+    bslib,
     DBI,
     dplyr,
     duckdb,
     knitr,
+    mapgl,
     osmdata,
+    patchwork,
     rmarkdown,
     scales,
-    testthat (>= 3.0.0)
+    sfnetworks,
+    shiny,
+    testthat (>= 3.0.0),
+    tidygraph
 VignetteBuilder: knitr
 Config/rextendr/version: 0.5.0
 Config/roxygen2/version: 8.1.0

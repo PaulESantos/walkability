@@ -36,16 +36,9 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' # Standard usage with user data:
-#' net <- walk_build_network(
-#'   data = mis_calles,
-#'   crs = 3116,
-#'   repair = TRUE,
-#'   snap_tolerance_m = 5.0,
-#'   keep_components = "largest"
-#' )
-#' }
+#' data(streets_cusco)
+#' net <- walk_build_network(streets_cusco, verbose = FALSE)
+#' print(net)
 walk_build_network <- function(data,
                                crs = NULL,
                                walk_speed_kmh = 4.5,
@@ -178,17 +171,15 @@ walk_build_network <- function(data,
   node_coord_mat <- do.call(rbind, strsplit(unique_nodes, "_"))
   node_coord_mat <- matrix(as.numeric(node_coord_mat), ncol = 2)
 
-  nodes_sf <- sf::st_as_sf(
-    data.frame(
-      node_id = 0L:(n_nodes - 1L),
-      component = comp_ids,
-      is_giant = (comp_ids == giant_id)
-    ),
-    coords = c(1, 2),
+  nodes_geom <- sf::st_sfc(
+    lapply(seq_len(nrow(node_coord_mat)), function(i) sf::st_point(node_coord_mat[i, ])),
     crs = sf::st_crs(data)
   )
-  sf::st_geometry(nodes_sf) <- sf::st_sfc(
-    lapply(seq_len(nrow(node_coord_mat)), function(i) sf::st_point(node_coord_mat[i, ])),
+  nodes_sf <- sf::st_sf(
+    node_id = 0L:(n_nodes - 1L),
+    component = comp_ids,
+    is_giant = (comp_ids == giant_id),
+    geometry = nodes_geom,
     crs = sf::st_crs(data)
   )
 

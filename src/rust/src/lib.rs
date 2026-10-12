@@ -500,10 +500,493 @@ fn rust_compute_circuity_sample(
     )
 }
 
+/// Compute shortest path between source and target nodes using Dijkstra.
+///
+/// @param n_nodes Total number of nodes.
+/// @param head_num CSR head array.
+/// @param to CSR destination array.
+/// @param wt CSR travel time array (seconds).
+/// @param wl CSR length array (meters).
+/// @param src_node Origin node (0-indexed).
+/// @param dst_node Destination node (0-indexed).
+/// @export
+#[extendr]
+fn rust_shortest_path(
+    n_nodes: i32,
+    head_num: Vec<f64>,
+    to: Vec<i32>,
+    wt: Vec<f64>,
+    wl: Vec<f64>,
+    src_node: i32,
+    dst_node: i32,
+) -> List {
+    let n = n_nodes as usize;
+    let head: Vec<usize> = head_num.into_iter().map(|x| x as usize).collect();
+    let to_u: Vec<usize> = to.into_iter().map(|x| x as usize).collect();
+
+    let src = src_node as usize;
+    let dst = dst_node as usize;
+
+    if src >= n || dst >= n {
+        return list!(
+            found = false,
+            node_path = Vec::<i32>::new(),
+            edge_indices = Vec::<i32>::new(),
+            total_time_s = f64::NAN,
+            total_length_m = f64::NAN
+        );
+    }
+
+    if src == dst {
+        return list!(
+            found = true,
+            node_path = vec![src_node],
+            edge_indices = Vec::<i32>::new(),
+            total_time_s = 0.0,
+            total_length_m = 0.0
+        );
+    }
+
+    let mut dist = vec![f64::INFINITY; n];
+    let mut dist_len = vec![0.0f64; n];
+    let mut prev_node = vec![usize::MAX; n];
+    let mut prev_edge = vec![usize::MAX; n];
+    let mut done = vec![false; n];
+
+    let mut ht: Vec<f64> = Vec::with_capacity(1024);
+    let mut hv: Vec<usize> = Vec::with_capacity(1024);
+
+    let push_heap = |ht: &mut Vec<f64>, hv: &mut Vec<usize>, time: f64, node: usize| {
+        let mut j = ht.len();
+        ht.push(time);
+        hv.push(node);
+        while j > 0 {
+            let p = (j - 1) / 2;
+            if ht[p] <= ht[j] {
+                break;
+            }
+            ht.swap(p, j);
+            hv.swap(p, j);
+            j = p;
+        }
+    };
+
+    let pop_heap = |ht: &mut Vec<f64>, hv: &mut Vec<usize>| -> (f64, usize) {
+        let min_t = ht[0];
+        let min_v = hv[0];
+        let last_idx = ht.len() - 1;
+        if last_idx > 0 {
+            ht[0] = ht[last_idx];
+            hv[0] = hv[last_idx];
+            ht.truncate(last_idx);
+            hv.truncate(last_idx);
+
+            let size = ht.len();
+            let mut i = 0;
+            loop {
+                let l = 2 * i + 1;
+                let r = 2 * i + 2;
+                let mut k = i;
+                if l < size && ht[l] < ht[k] {
+                    k = l;
+                }
+                if r < size && ht[r] < ht[k] {
+                    k = r;
+                }
+                if k == i {
+                    break;
+                }
+                ht.swap(i, k);
+                hv.swap(i, k);
+                i = k;
+            }
+        } else {
+            ht.clear();
+            hv.clear();
+        }
+        (min_t, min_v)
+    };
+
+    dist[src] = 0.0;
+    push_heap(&mut ht, &mut hv, 0.0, src);
+
+    let mut found = false;
+
+    while !ht.is_empty() {
+        let (t, u) = pop_heap(&mut ht, &mut hv);
+        if done[u] {
+            continue;
+        }
+        done[u] = true;
+
+        if u == dst {
+            found = true;
+            break;
+        }
+
+        let start = head[u];
+        let end = head[u + 1];
+
+        for i in start..end {
+            let v = to_u[i];
+            let w = wt[i];
+            let l = wl[i];
+
+            if done[v] {
+                continue;
+            }
+
+            let nt = t + w;
+            if nt < dist[v] {
+                dist[v] = nt;
+                dist_len[v] = dist_len[u] + l;
+                prev_node[v] = u;
+                prev_edge[v] = i;
+                push_heap(&mut ht, &mut hv, nt, v);
+            }
+        }
+    }
+
+    if !found {
+        return list!(
+            found = false,
+            node_path = Vec::<i32>::new(),
+            edge_indices = Vec::<i32>::new(),
+            total_time_s = f64::NAN,
+            total_length_m = f64::NAN
+        );
+    }
+
+    // Trace path from dst back to src
+    let mut node_path: Vec<i32> = Vec::new();
+    let mut edge_indices: Vec<i32> = Vec::new();
+    let mut curr = dst;
+    while curr != src {
+        node_path.push(curr as i32);
+        edge_indices.push(prev_edge[curr] as i32);
+        curr = prev_node[curr];
+    }
+    node_path.push(src as i32);
+    node_path.reverse();
+    edge_indices.reverse();
+
+    list!(
+        found = true,
+        node_path = node_path,
+        edge_indices = edge_indices,
+        total_time_s = dist[dst],
+        total_length_m = dist_len[dst]
+    )
+}
+
+/// Extract reachable edges and nodes within cutoff time from an origin node.
+///
+/// @param n_nodes Total number of nodes.
+/// @param head_num CSR head array.
+/// @param to CSR destination array.
+/// @param wt CSR travel time array (seconds).
+/// @param wl CSR length array (meters).
+/// @param src_node Origin node (0-indexed).
+/// @param cutoff Travel time cutoff in seconds.
+/// @export
+#[extendr]
+fn rust_isochrone_subgraph(
+    n_nodes: i32,
+    head_num: Vec<f64>,
+    to: Vec<i32>,
+    wt: Vec<f64>,
+    wl: Vec<f64>,
+    src_node: i32,
+    cutoff: f64,
+) -> List {
+    let n = n_nodes as usize;
+    let head: Vec<usize> = head_num.into_iter().map(|x| x as usize).collect();
+    let to_u: Vec<usize> = to.into_iter().map(|x| x as usize).collect();
+    let src = src_node as usize;
+
+    if src >= n {
+        return list!(
+            reached_nodes = Vec::<i32>::new(),
+            node_times = Vec::<f64>::new(),
+            edge_from = Vec::<i32>::new(),
+            edge_to = Vec::<i32>::new(),
+            edge_fraction = Vec::<f64>::new()
+        );
+    }
+
+    let mut dist = vec![f64::INFINITY; n];
+    let mut done = vec![false; n];
+    let mut ht: Vec<f64> = Vec::with_capacity(1024);
+    let mut hv: Vec<usize> = Vec::with_capacity(1024);
+
+    let push_heap = |ht: &mut Vec<f64>, hv: &mut Vec<usize>, time: f64, node: usize| {
+        let mut j = ht.len();
+        ht.push(time);
+        hv.push(node);
+        while j > 0 {
+            let p = (j - 1) / 2;
+            if ht[p] <= ht[j] {
+                break;
+            }
+            ht.swap(p, j);
+            hv.swap(p, j);
+            j = p;
+        }
+    };
+
+    let pop_heap = |ht: &mut Vec<f64>, hv: &mut Vec<usize>| -> (f64, usize) {
+        let min_t = ht[0];
+        let min_v = hv[0];
+        let last_idx = ht.len() - 1;
+        if last_idx > 0 {
+            ht[0] = ht[last_idx];
+            hv[0] = hv[last_idx];
+            ht.truncate(last_idx);
+            hv.truncate(last_idx);
+
+            let size = ht.len();
+            let mut i = 0;
+            loop {
+                let l = 2 * i + 1;
+                let r = 2 * i + 2;
+                let mut k = i;
+                if l < size && ht[l] < ht[k] {
+                    k = l;
+                }
+                if r < size && ht[r] < ht[k] {
+                    k = r;
+                }
+                if k == i {
+                    break;
+                }
+                ht.swap(i, k);
+                hv.swap(i, k);
+                i = k;
+            }
+        } else {
+            ht.clear();
+            hv.clear();
+        }
+        (min_t, min_v)
+    };
+
+    dist[src] = 0.0;
+    push_heap(&mut ht, &mut hv, 0.0, src);
+
+    while !ht.is_empty() {
+        let (t, u) = pop_heap(&mut ht, &mut hv);
+        if done[u] {
+            continue;
+        }
+        done[u] = true;
+
+        let start = head[u];
+        let end = head[u + 1];
+
+        for i in start..end {
+            let v = to_u[i];
+            let w = wt[i];
+
+            let nt = t + w;
+            if nt <= cutoff && nt < dist[v] {
+                dist[v] = nt;
+                push_heap(&mut ht, &mut hv, nt, v);
+            }
+        }
+    }
+
+    let mut reached_nodes: Vec<i32> = Vec::new();
+    let mut node_times: Vec<f64> = Vec::new();
+    for i in 0..n {
+        if dist[i] <= cutoff {
+            reached_nodes.push(i as i32);
+            node_times.push(dist[i]);
+        }
+    }
+
+    // Collect edges with partial or full reach (undirected: only a <= b)
+    let mut edge_from: Vec<i32> = Vec::new();
+    let mut edge_to: Vec<i32> = Vec::new();
+    let mut edge_fraction: Vec<f64> = Vec::new();
+    let mut edge_length: Vec<f64> = Vec::new();
+    let mut edge_reached_length: Vec<f64> = Vec::new();
+
+    for u in 0..n {
+        let t_u = dist[u];
+        let rem_u = (cutoff - t_u).max(0.0);
+
+        let start = head[u];
+        let end = head[u + 1];
+        for i in start..end {
+            let v = to_u[i];
+            if u <= v {
+                let t_v = dist[v];
+                let rem_v = (cutoff - t_v).max(0.0);
+                let w = wt[i];
+                let l = wl[i];
+
+                let frac = if w <= 0.0 {
+                    if t_u <= cutoff || t_v <= cutoff { 1.0 } else { 0.0 }
+                } else {
+                    let fu = if t_u <= cutoff { rem_u / w } else { 0.0 };
+                    let fv = if t_v <= cutoff { rem_v / w } else { 0.0 };
+                    (fu + fv).min(1.0)
+                };
+
+                if frac > 0.0 {
+                    edge_from.push(u as i32);
+                    edge_to.push(v as i32);
+                    edge_fraction.push(frac);
+                    edge_length.push(l);
+                    edge_reached_length.push(l * frac);
+                }
+            }
+        }
+    }
+
+    list!(
+        reached_nodes = reached_nodes,
+        node_times = node_times,
+        edge_from = edge_from,
+        edge_to = edge_to,
+        edge_fraction = edge_fraction,
+        edge_length = edge_length,
+        edge_reached_length = edge_reached_length
+    )
+}
+
+/// Compute cumulative POI accessibility for target nodes in parallel.
+///
+/// @param n_nodes Total number of nodes.
+/// @param head_num CSR head array.
+/// @param to CSR destination array.
+/// @param wt CSR travel time array (seconds).
+/// @param target_nodes Indices of nodes to compute accessibility for (0-indexed).
+/// @param poi_nodes Vector of node indices where POIs are situated.
+/// @param poi_weights Vector of weights/counts for each POI node.
+/// @param cutoff Travel time cutoff in seconds.
+/// @param num_threads Number of worker threads (0 = auto-detect).
+/// @export
+#[extendr]
+fn rust_compute_access_multi(
+    n_nodes: i32,
+    head_num: Vec<f64>,
+    to: Vec<i32>,
+    wt: Vec<f64>,
+    target_nodes: Vec<i32>,
+    poi_nodes: Vec<i32>,
+    poi_weights: Vec<f64>,
+    cutoff: f64,
+    num_threads: i32,
+) -> List {
+    let n = n_nodes as usize;
+    let head: Vec<usize> = head_num.into_iter().map(|x| x as usize).collect();
+    let to_u: Vec<usize> = to.into_iter().map(|x| x as usize).collect();
+    let targets: Vec<usize> = target_nodes.into_iter().map(|x| x as usize).collect();
+
+    // Build dense POI weight map
+    let mut poi_map = vec![0.0f64; n];
+    for (&node_idx, &weight) in poi_nodes.iter().zip(poi_weights.iter()) {
+        let u = node_idx as usize;
+        if u < n {
+            poi_map[u] += weight;
+        }
+    }
+
+    let compute_fn = || {
+        targets
+            .par_iter()
+            .map_init(
+                || DijkstraScratch::new(n),
+                |scratch, &src| {
+                    if src >= n {
+                        return (f64::NAN, f64::NAN);
+                    }
+                    scratch.next_run();
+                    let run = scratch.run;
+
+                    scratch.dt[src] = 0.0;
+                    scratch.stamp[src] = run;
+                    scratch.ht.clear();
+                    scratch.hv.clear();
+                    scratch.push_heap(0.0, src);
+
+                    let inf = f64::INFINITY;
+                    let mut cum_weight = 0.0f64;
+                    let mut min_time_s = f64::NAN;
+
+                    while !scratch.ht.is_empty() {
+                        let (t, u) = scratch.pop_heap();
+                        if scratch.done[u] == run {
+                            continue;
+                        }
+                        scratch.done[u] = run;
+
+                        let w_poi = poi_map[u];
+                        if w_poi > 0.0 {
+                            cum_weight += w_poi;
+                            if min_time_s.is_nan() {
+                                min_time_s = t;
+                            }
+                        }
+
+                        let start = head[u];
+                        let end = head[u + 1];
+
+                        for i in start..end {
+                            let v = to_u[i];
+                            let w = wt[i];
+                            let nt = t + w;
+                            if nt > cutoff {
+                                continue;
+                            }
+                            let cur = if scratch.stamp[v] == run { scratch.dt[v] } else { inf };
+                            if nt < cur {
+                                scratch.dt[v] = nt;
+                                scratch.stamp[v] = run;
+                                scratch.push_heap(nt, v);
+                            }
+                        }
+                    }
+
+                    (cum_weight, min_time_s)
+                },
+            )
+            .collect::<Vec<(f64, f64)>>()
+    };
+
+    let results = if num_threads > 0 {
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(num_threads as usize)
+            .build();
+        match pool {
+            Ok(p) => p.install(compute_fn),
+            Err(_) => compute_fn(),
+        }
+    } else {
+        compute_fn()
+    };
+
+    let mut counts = Vec::with_capacity(results.len());
+    let mut min_times = Vec::with_capacity(results.len());
+    for (cnt, tm) in results {
+        counts.push(cnt);
+        min_times.push(tm);
+    }
+
+    list!(
+        accessible_count = counts,
+        min_time_s = min_times
+    )
+}
+
 // Module definition
 extendr_module! {
     mod walkability;
     fn rust_build_csr;
     fn rust_compute_reachable_length;
     fn rust_compute_circuity_sample;
+    fn rust_shortest_path;
+    fn rust_isochrone_subgraph;
+    fn rust_compute_access_multi;
 }

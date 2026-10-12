@@ -29,9 +29,7 @@ Implementa el cálculo de la **longitud de red caminable alcanzable en 10 minuto
 
 Una de las principales ventajas de `walkability` es que permite procesar redes viales propias (archivos Shapefile, GeoPackage, GeoJSON u objetos `sf`) con total control y transparencia sobre el diagnóstico y la reparación topológica.
 
-Para este tutorial utilizaremos la red sintética de ejemplo **`datos_viales.gpkg`**, distribuida junto con el paquete en la carpeta `inst/extdata`. Contiene una cuadrícula urbana con dos anomalías deliberadas para fines didácticos:
-- Un callejón que termina a 3 metros de una avenida (*undershoot*).
-- Un sendero peatonal en un parque aislado no conectado a la red principal (*isla desconectada*).
+Para este tutorial utilizaremos la red vial del **Centro Histórico de Cusco** (`streets_cusco`), distribuida como dataset oficial del paquete en formato proyectado (UTM 19S, `EPSG:32719`). También se incluyen datasets para Lima (`streets_lima`) y Arequipa (`streets_arequipa`).
 
 ### Paso 1: Carga y Diagnóstico No Invasivo de la Red
 
@@ -41,19 +39,12 @@ Antes de modificar o corregir geometrías, `walk_diagnose_network()` realiza una
 library(walkability)
 library(sf)
 
-# Cargar la capa sintética de ejemplo incluida en el paquete
-archivo <- system.file("extdata", "datos_viales.gpkg", package = "walkability")
-if (!nzchar(archivo) || !file.exists(archivo)) {
-  archivo <- if (file.exists("inst/extdata/datos_viales.gpkg")) {
-    "inst/extdata/datos_viales.gpkg"
-  } else {
-    "../inst/extdata/datos_viales.gpkg"
-  }
-}
-mis_calles <- st_read(archivo, quiet = TRUE)
+# Cargar la capa real de Cusco incluida en el paquete
+data(streets_cusco)
+mis_calles <- streets_cusco
 
 # Diagnóstico de conectividad y detección de undershoots en un radio de 5 metros
-diag <- walk_diagnose_network(mis_calles, snap_search_radius_m = 5.0, crs = 32719)
+diag <- walk_diagnose_network(mis_calles, snap_search_radius_m = 5.0)
 
 # Imprimir resumen de componentes e islas
 print(diag)
@@ -116,7 +107,7 @@ mapa <- walk_plot_reach(
   reach = metricas,
   palette = "viridis",
   title = "Caminabilidad Peatonal en 10 Minutos",
-  subtitle = "Longitud de red accesible a pie desde cada intersección (Red de ejemplo)",
+  subtitle = "Longitud de red accesible a pie desde cada intersección (Centro Histórico de Cusco)",
   dark = TRUE
 )
 

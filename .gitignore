@@ -1,5 +1,4 @@
 .venv/
-data/
 src/rust/vendor
 src/Makevars
 src/Makevars.win
@@ -11,3 +10,5 @@ src/Makevars.win
 .httr-oauth
 .DS_Store
 .quarto
+CONSIDERACIONES_TECNICAS.md
+docs/CONSIDERACIONES_TECNICAS.html

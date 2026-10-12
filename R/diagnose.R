@@ -21,11 +21,9 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' diag <- walk_diagnose_network(mis_calles, snap_search_radius_m = 5)
+#' data(streets_cusco)
+#' diag <- walk_diagnose_network(streets_cusco, snap_search_radius_m = 5)
 #' print(diag)
-#' plot(diag)
-#' }
 walk_diagnose_network <- function(data, snap_search_radius_m = 10.0, crs = NULL) {
   if (!inherits(data, "sf")) {
     cli::cli_abort("{.arg data} must be an {.cls sf} object.")

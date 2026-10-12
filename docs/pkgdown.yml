@@ -2,10 +2,12 @@ pandoc: '3.10'
 pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
+  analisis-avanzado: analisis-avanzado.html
   ciudades-referencia: ciudades-referencia.html
   metodologia-y-supuestos: metodologia-y-supuestos.html
+  visualizacion-avanzada: visualizacion-avanzada.html
   walkability-guide: walkability-guide.html
-last_built: 2026-10-11T05:13Z
+last_built: 2026-10-12T02:01Z
 urls:
   reference: https://paulesantos.github.io/walkability/reference
   article: https://paulesantos.github.io/walkability/articles

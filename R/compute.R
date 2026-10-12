@@ -26,15 +26,10 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' # Standard 10-minute walk reach
-#' reach <- walk_compute_reach(net, time_min = 10)
-#'
-#' # Short 5-minute neighborhood reach
-#' reach_5m <- walk_compute_reach(net, time_min = 5)
-#' print(reach_5m)
-#' plot(reach_5m)
-#' }
+#' data(streets_cusco)
+#' net <- walk_build_network(streets_cusco, verbose = FALSE)
+#' reach <- walk_compute_reach(net, time_min = 5, verbose = FALSE)
+#' print(reach)
 walk_compute_reach <- function(network,
                                time_min = 10.0,
                                cutoff_s = NULL,

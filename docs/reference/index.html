@@ -22,6 +22,8 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><h6 class="dropdown-header" data-toc-skip>Tutorials &amp; Workflows</h6></li>
     <li><a class="dropdown-item" href="../articles/walkability-guide.html">Guía de Inicio Rápido (Get Started)</a></li>
+    <li><a class="dropdown-item" href="../articles/analisis-avanzado.html">Análisis Avanzado: Ruteo, Isócronas y Accesibilidad</a></li>
+    <li><a class="dropdown-item" href="../articles/visualizacion-avanzada.html">Visualización Avanzada con ggplot2 y patchwork</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Theory &amp; Empirical Results</h6></li>
     <li><a class="dropdown-item" href="../articles/metodologia-y-supuestos.html">Metodología, Motor Rust y Supuestos</a></li>
@@ -43,6 +45,36 @@
     </div>
 
     <div class="section level2">
+      <h2 id="sample-street-networks">Sample Street Networks<a class="anchor" aria-label="anchor" href="#sample-street-networks"></a></h2>
+
+      <div class="section-desc"><p>Real-world OpenStreetMap walkable networks for benchmark cities in Peru.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="streets_cusco.html">streets_cusco</a></code>
+
+        </dt>
+        <dd>Walkable Street Network of Cusco (Historic Center)</dd>
+
+        <dt>
+
+          <code><a href="streets_lima.html">streets_lima</a></code>
+
+        </dt>
+        <dd>Walkable Street Network of Lima (Historic Center / Damero de Pizarro)</dd>
+
+        <dt>
+
+          <code><a href="streets_arequipa.html">streets_arequipa</a></code>
+
+        </dt>
+        <dd>Walkable Street Network of Arequipa (Historic Center / Yanahuara)</dd>
+      </dl></div><div class="section level2">
       <h2 id="topological-diagnostics">Topological Diagnostics<a class="anchor" aria-label="anchor" href="#topological-diagnostics"></a></h2>
 
       <div class="section-desc"><p>Inspect user-supplied street networks for connectivity, dead ends, and undershoots without mutating geometries.</p></div>
@@ -133,6 +165,202 @@
         </dt>
         <dd>Compute Network Circuity (Detour Ratio) for Sampled Junctions</dd>
       </dl></div><div class="section level2">
+      <h2 id="optimal-pedestrian-routing">Optimal Pedestrian Routing<a class="anchor" aria-label="anchor" href="#optimal-pedestrian-routing"></a></h2>
+
+      <div class="section-desc"><p>Single-pair point-to-point shortest path routing across the street network using compiled Rust Dijkstra.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="walk_shortest_path.html">walk_shortest_path()</a></code>
+
+        </dt>
+        <dd>Compute Shortest Pedestrian Path Between Two Locations</dd>
+
+        <dt>
+
+          <code><a href="print.walk_path.html">print(<i>&lt;walk_path&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print Method for Walk Path</dd>
+
+        <dt>
+
+          <code><a href="plot.walk_path.html">plot(<i>&lt;walk_path&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot Method for Walk Path</dd>
+      </dl></div><div class="section level2">
+      <h2 id="isochrones-reachable-envelopes">Isochrones &amp; Reachable Envelopes<a class="anchor" aria-label="anchor" href="#isochrones-reachable-envelopes"></a></h2>
+
+      <div class="section-desc"><p>Multi-threshold concave hull polygons and corridor envelopes for walkable service areas.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="walk_isochrone.html">walk_isochrone()</a></code>
+
+        </dt>
+        <dd>Compute Pedestrian Isochrone Polygons and Reachable Subgraphs</dd>
+
+        <dt>
+
+          <code><a href="print.walk_isochrone.html">print(<i>&lt;walk_isochrone&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print Method for Walk Isochrone</dd>
+
+        <dt>
+
+          <code><a href="plot.walk_isochrone.html">plot(<i>&lt;walk_isochrone&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot Method for Walk Isochrone</dd>
+      </dl></div><div class="section level2">
+      <h2 id="network-morphology-intersection-density">Network Morphology &amp; Intersection Density<a class="anchor" aria-label="anchor" href="#network-morphology-intersection-density"></a></h2>
+
+      <div class="section-desc"><p>Node valence classification, cul-de-sacs, T-junctions, crossroads, and intersection density.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="walk_intersection_density.html">walk_intersection_density()</a></code>
+
+        </dt>
+        <dd>Compute Intersection Density and Street Network Morphology</dd>
+
+        <dt>
+
+          <code><a href="print.walk_morphology.html">print(<i>&lt;walk_morphology&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print Method for Walk Morphology</dd>
+
+        <dt>
+
+          <code><a href="plot.walk_morphology.html">plot(<i>&lt;walk_morphology&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot Method for Walk Morphology</dd>
+      </dl></div><div class="section level2">
+      <h2 id="facility-poi-accessibility">Facility &amp; POI Accessibility<a class="anchor" aria-label="anchor" href="#facility-poi-accessibility"></a></h2>
+
+      <div class="section-desc"><p>Multi-threaded cumulative accessibility to urban amenities (schools, health, transit) within walking time budgets.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="walk_compute_access.html">walk_compute_access()</a></code>
+
+        </dt>
+        <dd>Compute Cumulative Walkable Accessibility to Points of Interest (POIs)</dd>
+
+        <dt>
+
+          <code><a href="print.walk_access.html">print(<i>&lt;walk_access&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print Method for Walk Access</dd>
+
+        <dt>
+
+          <code><a href="plot.walk_access.html">plot(<i>&lt;walk_access&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot Method for Walk Access</dd>
+      </dl></div><div class="section level2">
+      <h2 id="intervention-scenarios-street-closures">Intervention Scenarios &amp; Street Closures<a class="anchor" aria-label="anchor" href="#intervention-scenarios-street-closures"></a></h2>
+
+      <div class="section-desc"><p>Simulate pedestrianization, street cuts, and compare before/after walkability metrics.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="walk_scenario_close.html">walk_scenario_close()</a></code>
+
+        </dt>
+        <dd>Simulate Street Closure or Pedestrianization Intervention Scenario</dd>
+
+        <dt>
+
+          <code><a href="walk_compare_scenarios.html">walk_compare_scenarios()</a></code>
+
+        </dt>
+        <dd>Compare Baseline and Intervention Scenarios</dd>
+
+        <dt>
+
+          <code><a href="print.walk_comparison.html">print(<i>&lt;walk_comparison&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print Method for Walk Comparison</dd>
+
+        <dt>
+
+          <code><a href="plot.walk_comparison.html">plot(<i>&lt;walk_comparison&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot Method for Walk Comparison</dd>
+      </dl></div><div class="section level2">
+      <h2 id="graph-interoperability">Graph Interoperability<a class="anchor" aria-label="anchor" href="#graph-interoperability"></a></h2>
+
+      <div class="section-desc"><p>Seamless conversion to standard R spatial graph classes (sfnetworks, tidygraph).</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="as_sfnetwork.html">as_sfnetwork()</a></code>
+
+        </dt>
+        <dd>Convert Walk Network to sfnetworks Graph</dd>
+
+        <dt>
+
+          <code><a href="as_tidygraph.html">as_tidygraph()</a></code>
+
+        </dt>
+        <dd>Convert Walk Network to tidygraph tbl_graph</dd>
+      </dl></div><div class="section level2">
+      <h2 id="interactive-web-application-mapgl-">Interactive Web Application (mapgl)<a class="anchor" aria-label="anchor" href="#interactive-web-application-mapgl-"></a></h2>
+
+      <div class="section-desc"><p>GPU-accelerated MapLibre GL interactive dashboard for real-time reach, isochrones, routing, and scenario analysis.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="walk_app.html">walk_app()</a></code>
+
+        </dt>
+        <dd>Launch the Interactive Walkability Application</dd>
+      </dl></div><div class="section level2">
       <h2 id="cartographic-visualizations">Cartographic Visualizations<a class="anchor" aria-label="anchor" href="#cartographic-visualizations"></a></h2>
 
       <div class="section-desc"><p>Publication-grade ggplot2 maps and minimalist cartographic themes.</p></div>
@@ -215,6 +443,27 @@
 
         </dt>
         <dd>Compute detour ratio (circuity) for sampled origin-destination pairs.</dd>
+
+        <dt>
+
+          <code><a href="rust_shortest_path.html">rust_shortest_path()</a></code>
+
+        </dt>
+        <dd>Compute shortest path between source and target nodes using Dijkstra.</dd>
+
+        <dt>
+
+          <code><a href="rust_isochrone_subgraph.html">rust_isochrone_subgraph()</a></code>
+
+        </dt>
+        <dd>Extract reachable edges and nodes within cutoff time from an origin node.</dd>
+
+        <dt>
+
+          <code><a href="rust_compute_access_multi.html">rust_compute_access_multi()</a></code>
+
+        </dt>
+        <dd>Compute cumulative POI accessibility for target nodes in parallel.</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

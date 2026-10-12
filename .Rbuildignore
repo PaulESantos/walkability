@@ -1,6 +1,5 @@
 ^scripts$
 ^outputs$
-^data$
 ^\.venv$
 ^\.github$
 ^_pkgdown\.yml$
@@ -19,3 +18,5 @@
 ^README\.html$
 ^codecov\.yml$
 ^docs$
+^CONSIDERACIONES_TECNICAS\.md$
+^docs/CONSIDERACIONES_TECNICAS\.html$

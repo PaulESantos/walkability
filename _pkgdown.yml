@@ -54,6 +54,10 @@ navbar:
         - text: "Tutorials & Workflows"
         - text: "Guía de Inicio Rápido (Get Started)"
           href: articles/walkability-guide.html
+        - text: "Análisis Avanzado: Ruteo, Isócronas y Accesibilidad"
+          href: articles/analisis-avanzado.html
+        - text: "Visualización Avanzada con ggplot2 y patchwork"
+          href: articles/visualizacion-avanzada.html
         - text: "-------"
         - text: "Theory & Empirical Results"
         - text: "Metodología, Motor Rust y Supuestos"
@@ -62,6 +66,13 @@ navbar:
           href: articles/ciudades-referencia.html
 
 reference:
+  - title: "Sample Street Networks"
+    desc: "Real-world OpenStreetMap walkable networks for benchmark cities in Peru."
+    contents:
+      - streets_cusco
+      - streets_lima
+      - streets_arequipa
+
   - title: "Topological Diagnostics"
     desc: "Inspect user-supplied street networks for connectivity, dead ends, and undershoots without mutating geometries."
     contents:
@@ -83,6 +94,53 @@ reference:
       - plot.walk_reach
       - walk_compute_circuity
 
+  - title: "Optimal Pedestrian Routing"
+    desc: "Single-pair point-to-point shortest path routing across the street network using compiled Rust Dijkstra."
+    contents:
+      - walk_shortest_path
+      - print.walk_path
+      - plot.walk_path
+
+  - title: "Isochrones & Reachable Envelopes"
+    desc: "Multi-threshold concave hull polygons and corridor envelopes for walkable service areas."
+    contents:
+      - walk_isochrone
+      - print.walk_isochrone
+      - plot.walk_isochrone
+
+  - title: "Network Morphology & Intersection Density"
+    desc: "Node valence classification, cul-de-sacs, T-junctions, crossroads, and intersection density."
+    contents:
+      - walk_intersection_density
+      - print.walk_morphology
+      - plot.walk_morphology
+
+  - title: "Facility & POI Accessibility"
+    desc: "Multi-threaded cumulative accessibility to urban amenities (schools, health, transit) within walking time budgets."
+    contents:
+      - walk_compute_access
+      - print.walk_access
+      - plot.walk_access
+
+  - title: "Intervention Scenarios & Street Closures"
+    desc: "Simulate pedestrianization, street cuts, and compare before/after walkability metrics."
+    contents:
+      - walk_scenario_close
+      - walk_compare_scenarios
+      - print.walk_comparison
+      - plot.walk_comparison
+
+  - title: "Graph Interoperability"
+    desc: "Seamless conversion to standard R spatial graph classes (sfnetworks, tidygraph)."
+    contents:
+      - as_sfnetwork
+      - as_tidygraph
+
+  - title: "Interactive Web Application (mapgl)"
+    desc: "GPU-accelerated MapLibre GL interactive dashboard for real-time reach, isochrones, routing, and scenario analysis."
+    contents:
+      - walk_app
+
   - title: "Cartographic Visualizations"
     desc: "Publication-grade ggplot2 maps and minimalist cartographic themes."
     contents:
@@ -102,3 +160,6 @@ reference:
       - rust_build_csr
       - rust_compute_reachable_length
       - rust_compute_circuity_sample
+      - rust_shortest_path
+      - rust_isochrone_subgraph
+      - rust_compute_access_multi

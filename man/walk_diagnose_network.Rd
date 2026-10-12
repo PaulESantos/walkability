@@ -31,9 +31,7 @@ the routing graph. This function does not alter geometries, leaving repair
 decisions to the user.
 }
 \examples{
-\dontrun{
-diag <- walk_diagnose_network(mis_calles, snap_search_radius_m = 5)
+data(streets_cusco)
+diag <- walk_diagnose_network(streets_cusco, snap_search_radius_m = 5)
 print(diag)
-plot(diag)
-}
 }

@@ -45,24 +45,19 @@ Install the development version from GitHub:
 pak::pak("PaulESantos/walkability")
 ```
 
-### Reproducible Minimal Example
+### Reproducible Example with Real Urban Data
+
+`walkability` includes real, curated street network datasets from OpenStreetMap for **Cusco**, **Lima**, and **Arequipa**:
 
 ```r
 library(walkability)
 library(sf)
 
-# 1. Create a minimal 2x2 street grid (100 m spacing)
-lines <- st_sfc(
-  st_linestring(rbind(c(0, 0), c(100, 0))),
-  st_linestring(rbind(c(100, 0), c(100, 100))),
-  st_linestring(rbind(c(100, 100), c(0, 100))),
-  st_linestring(rbind(c(0, 100), c(0, 0))),
-  crs = 32722
-)
-streets <- st_as_sf(data.frame(id = 1:4), geometry = lines)
+# 1. Load real street network from Cusco (Historic Center, UTM 19S)
+data(streets_cusco)
 
 # 2. Build graph network & compute pedestrian reach (Rust)
-net   <- walk_build_network(streets, walk_speed_kmh = 4.5, verbose = FALSE)
+net   <- walk_build_network(streets_cusco, walk_speed_kmh = 4.5, verbose = FALSE)
 reach <- walk_compute_reach(net, time_min = 10, verbose = FALSE)
 
 # 3. View results
@@ -70,24 +65,46 @@ reach
 ```
 
 ```text
-── Walkability Reachable Network Length ─────────────────────────────
-v Isochrone Budget: 10.0 minutes (~750 m at 4.5 km/h)
-v Evaluated Nodes: 4
-* Average Reach: 0.40 km
-* Highest Reach: 0.40 km
-* Lowest Reach: 0.40 km
-* 5th-95th percentile: 0.4 - 0.4 km
+── Walkability Reachable Network Length ────────────────────────────────────────
+✔ Isochrone Budget: 10.0 minutes (~750 m at 4.5 km/h)
+✔ Evaluated Nodes: 249
+• Average Reach: 8.75 km
+• Highest Reach: 17.39 km
+• Lowest Reach: 0.75 km
+• 5th-95th percentile: 3.1 - 15.5 km
+```
+
+```r
+# 4. Point-to-point pedestrian routing & circuity
+orig <- st_coordinates(net$nodes[net$nodes$is_giant, ])[1, 1:2]
+dest <- st_coordinates(net$nodes[net$nodes$is_giant, ])[50, 1:2]
+path <- walk_shortest_path(net, from = orig, to = dest)
+path
+
+# 5. Isochrone polygon generation (concave hull)
+iso  <- walk_isochrone(net, origin = orig, time_min = c(5, 10))
+iso
+
+# 6. Urban intersection density & morphology
+dens <- walk_intersection_density(net)
+dens
 ```
 
 ---
 
 ## Key Capabilities
 
+* **Curated Real-World Datasets**: Out-of-the-box model networks for `streets_cusco`, `streets_lima`, and `streets_arequipa`.
 * **Non-destructive Topological Diagnosis**: `walk_diagnose_network()` inspects user street files, flags isolated islands, and locates near-miss *undershoots* without mutating geometries.
 * **Controlled Geometric Repair**: `walk_build_network()` empowers users to choose whether to planarize crossings and snap dangling endpoints at specified tolerances.
 * **Exact Partial-Edge Dijkstra in Rust**: `walk_compute_reach()` computes exact fractional contributions for boundary edges across all CPU cores with zero heap reallocations.
+* **Pedestrian Point-to-Point Routing**: `walk_shortest_path()` extracts the exact shortest path geometry, travel time, and route circuity detour ratio.
+* **Isochrone Polygons & Subgraphs**: `walk_isochrone()` generates exact reachable network corridors and concave hull polygons.
+* **Cumulative POI Accessibility**: `walk_compute_access()` counts reachable amenities (schools, healthcare, transit) within travel time budgets using parallel Rust.
+* **Urban Morphology & Intersection Metrics**: `walk_intersection_density()` classifies cul-de-sacs, 3-way T-junctions, 4-way crossings, and intersection density.
+* **Intervention Scenario Simulation**: `walk_scenario_close()` and `walk_compare_scenarios()` model street cuts, closures, and pedestrianization.
+* **Graph Interoperability**: `as_sfnetwork()` and `as_tidygraph()` enable two-way workflows with `sfnetworks` and `tidygraph`.
 * **Publication-Ready Maps**: `walk_plot_reach()` renders clean `ggplot2` visualizations with 2nd–98th percentile scaling and ascending layer stacking.
-* **Route Directness & Circuity**: `walk_compute_circuity()` evaluates detour ratios between network shortest paths and Euclidean distance.
 
 ---
 

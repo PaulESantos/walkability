@@ -48,4 +48,42 @@ rust_compute_reachable_length <- function(n_nodes, head_num, to, wt, wl, target_
 #' @export
 rust_compute_circuity_sample <- function(n_nodes, head_num, to, wt, wl, coords_x, coords_y, sample_nodes, cutoff) .Call(wrap__rust_compute_circuity_sample, n_nodes, head_num, to, wt, wl, coords_x, coords_y, sample_nodes, cutoff)
 
+#' Compute shortest path between source and target nodes using Dijkstra.
+#'
+#' @param n_nodes Total number of nodes.
+#' @param head_num CSR head array.
+#' @param to CSR destination array.
+#' @param wt CSR travel time array (seconds).
+#' @param wl CSR length array (meters).
+#' @param src_node Origin node (0-indexed).
+#' @param dst_node Destination node (0-indexed).
+#' @export
+rust_shortest_path <- function(n_nodes, head_num, to, wt, wl, src_node, dst_node) .Call(wrap__rust_shortest_path, n_nodes, head_num, to, wt, wl, src_node, dst_node)
+
+#' Extract reachable edges and nodes within cutoff time from an origin node.
+#'
+#' @param n_nodes Total number of nodes.
+#' @param head_num CSR head array.
+#' @param to CSR destination array.
+#' @param wt CSR travel time array (seconds).
+#' @param wl CSR length array (meters).
+#' @param src_node Origin node (0-indexed).
+#' @param cutoff Travel time cutoff in seconds.
+#' @export
+rust_isochrone_subgraph <- function(n_nodes, head_num, to, wt, wl, src_node, cutoff) .Call(wrap__rust_isochrone_subgraph, n_nodes, head_num, to, wt, wl, src_node, cutoff)
+
+#' Compute cumulative POI accessibility for target nodes in parallel.
+#'
+#' @param n_nodes Total number of nodes.
+#' @param head_num CSR head array.
+#' @param to CSR destination array.
+#' @param wt CSR travel time array (seconds).
+#' @param target_nodes Indices of nodes to compute accessibility for (0-indexed).
+#' @param poi_nodes Vector of node indices where POIs are situated.
+#' @param poi_weights Vector of weights/counts for each POI node.
+#' @param cutoff Travel time cutoff in seconds.
+#' @param num_threads Number of worker threads (0 = auto-detect).
+#' @export
+rust_compute_access_multi <- function(n_nodes, head_num, to, wt, target_nodes, poi_nodes, poi_weights, cutoff, num_threads) .Call(wrap__rust_compute_access_multi, n_nodes, head_num, to, wt, target_nodes, poi_nodes, poi_weights, cutoff, num_threads)
+
 # nolint end
