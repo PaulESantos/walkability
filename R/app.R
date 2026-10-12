@@ -212,18 +212,18 @@ walk_app <- function(network = NULL,
           mapgl::maplibreOutput("map_reach", height = "520px")
         ),
         bslib::card(
-          bslib::card_header("\U0001f4d6 Fundamento Teórico y Consideraciones Metodológicas"),
+          bslib::card_header("\U0001f4d6 Fundamento Te\u00f3rico y Consideraciones Metodol\u00f3gicas"),
           shiny::HTML("
-            <h5>Métrica de Red Caminable en $X$ Minutos (10-Minute Walk Reach)</h5>
-            <p>Esta métrica cuantifica la <strong>longitud total de calles físicamente alcanzables</strong> a pie desde cada cruce o esquina de la ciudad dentro de un horizonte temporal determinado (por defecto <strong>10 minutos</strong>, aproximadamente 750 metros a una velocidad de diseño de 4.5 km/h).</p>
-            <h6>¿Por qué es superior al radio euclidiano tradicional?</h6>
-            <p>Los análisis urbanos convencionales suelen trazar círculos de radio fijo (p. ej., «isócronas de área circular de 800 m»). Este enfoque ignora por completo la morfología del tejido urbano, la presencia de barreras físicas (ríos, laderas, avenidas sin cruces) y la estructura de cul-de-sacs. <code>walkability</code> evalúa la conectividad sobre la red real de calles.</p>
-            <h6>Regla de Crédito Parcial de Aristas (Rust Kernel)</h6>
-            <p>A diferencia de librerías como <code>osmnx</code> o <code>igraph</code> que descartan o computan completas las aristas donde se agota el tiempo, <code>walkability</code> calcula algebraicamente la fracción exacta alcanzada:</p>
+            <h5>M\u00e9trica de Red Caminable en $X$ Minutos (10-Minute Walk Reach)</h5>
+            <p>Esta m\u00e9trica cuantifica la <strong>longitud total de calles f\u00edsicamente alcanzables</strong> a pie desde cada cruce o esquina de la ciudad dentro de un horizonte temporal determinado (por defecto <strong>10 minutos</strong>, aproximadamente 750 metros a una velocidad de dise\u00f1o de 4.5 km/h).</p>
+            <h6>\u00bfPor qu\u00e9 es superior al radio euclidiano tradicional?</h6>
+            <p>Los an\u00e1lisis urbanos convencionales suelen trazar c\u00edrculos de radio fijo (p. ej., \u00abis\u00f3cronas de \u00e1rea circular de 800 m\u00bb). Este enfoque ignora por completo la morfolog\u00eda del tejido urbano, la presencia de barreras f\u00edsicas (r\u00edos, laderas, avenidas sin cruces) y la estructura de cul-de-sacs. <code>walkability</code> eval\u00faa la conectividad sobre la red real de calles.</p>
+            <h6>Regla de Cr\u00e9dito Parcial de Aristas (Rust Kernel)</h6>
+            <p>A diferencia de librer\u00edas como <code>osmnx</code> o <code>igraph</code> que descartan o computan completas las aristas donde se agota el tiempo, <code>walkability</code> calcula algebraicamente la fracci\u00f3n exacta alcanzada:</p>
             <div class=\"text-center my-3 p-3 bg-light rounded border fs-5 text-dark\">
               $$\\ell_{\\text{frac}} = L_{(u, v)} \\times \\left(\\frac{B - t(u)}{w_{(u, v)}}\\right)$$
             </div>
-            <p>Donde $B$ es el presupuesto de tiempo, $t(u)$ el tiempo acumulado hasta el nodo $u$, $w_{(u, v)}$ el tiempo de cruce del tramo y $L_{(u, v)}$ su longitud física en metros.</p>
+            <p>Donde $B$ es el presupuesto de tiempo, $t(u)$ el tiempo acumulado hasta el nodo $u$, $w_{(u, v)}$ el tiempo de cruce del tramo y $L_{(u, v)}$ su longitud f\u00edsica en metros.</p>
           ")
         )
       )
@@ -276,18 +276,18 @@ walk_app <- function(network = NULL,
           shiny::tableOutput("table_iso_bands")
         ),
         bslib::card(
-          bslib::card_header("\U0001f4d6 Consideraciones Técnicas: Isócronas Multitemporales No Superpuestas"),
+          bslib::card_header("\U0001f4d6 Consideraciones T\u00e9cnicas: Is\u00f3cronas Multitemporales No Superpuestas"),
           shiny::HTML("
-            <h5>Tratamiento Topológico de Isócronas Concéntricas</h5>
-            <p>Cuando se evalúan horizontes temporales múltiples (por ejemplo, <strong>5, 10 y 15 minutos</strong>), el enfoque convencional genera polígonos acumulativos concéntricos donde el polígono de 15 minutos cubre completamente a los de 10 y 5 minutos. Esto produce oclusión visual y ambigüedad métrica.</p>
+            <h5>Tratamiento Topol\u00f3gico de Is\u00f3cronas Conc\u00e9ntricas</h5>
+            <p>Cuando se eval\u00faan horizontes temporales m\u00faltiples (por ejemplo, <strong>5, 10 y 15 minutos</strong>), el enfoque convencional genera pol\u00edgonos acumulativos conc\u00e9ntricos donde el pol\u00edgono de 15 minutos cubre completamente a los de 10 y 5 minutos. Esto produce oclusi\u00f3n visual y ambig\u00fcedad m\u00e9trica.</p>
             <h6>Estrategia de Anillos Disjuntos (<em>Donut / Concentric Rings</em>):</h6>
-            <p><code>walk_isochrone()</code> implementa una sustracción topológica booleana para garantizar que <strong>los polígonos de cada tiempo no se superpongan</strong>:</p>
+            <p><code>walk_isochrone()</code> implementa una sustracci\u00f3n topol\u00f3gica booleana para garantizar que <strong>los pol\u00edgonos de cada tiempo no se superpongan</strong>:</p>
             <ul>
-              <li><strong>Banda 1 (0 – 5 min):</strong> Corresponde a $P_5$.</li>
-              <li><strong>Banda 2 (5 – 10 min):</strong> Se calcula como $R_{10} = P_{10} \\setminus P_5$ (<code>st_difference</code>).</li>
-              <li><strong>Banda 3 (10 – 15 min):</strong> Se calcula como $R_{15} = P_{15} \\setminus (P_5 \\cup P_{10})$.</li>
+              <li><strong>Banda 1 (0 \u2013 5 min):</strong> Corresponde a $P_5$.</li>
+              <li><strong>Banda 2 (5 \u2013 10 min):</strong> Se calcula como $R_{10} = P_{10} \\setminus P_5$ (<code>st_difference</code>).</li>
+              <li><strong>Banda 3 (10 \u2013 15 min):</strong> Se calcula como $R_{15} = P_{15} \\setminus (P_5 \\cup P_{10})$.</li>
             </ul>
-            <p>Cada anillo representa un intervalo mutuamente excluyente. Esto permite calcular el área neta y los equipamientos alcanzables específicamente en cada salto de 5 minutos, base fundamental para el análisis de la <strong>«Ciudad de los 15 minutos»</strong>.</p>
+            <p>Cada anillo representa un intervalo mutuamente excluyente. Esto permite calcular el \u00e1rea neta y los equipamientos alcanzables espec\u00edficamente en cada salto de 5 minutos, base fundamental para el an\u00e1lisis de la <strong>\u00abCiudad de los 15 minutos\u00bb</strong>.</p>
           ")
         )
       )
@@ -344,20 +344,20 @@ walk_app <- function(network = NULL,
           mapgl::maplibreOutput("map_route", height = "520px")
         ),
         bslib::card(
-          bslib::card_header("\U0001f4d6 Consideraciones Técnicas: Ruteo Dijkstra y Circuidad Urbana"),
+          bslib::card_header("\U0001f4d6 Consideraciones T\u00e9cnicas: Ruteo Dijkstra y Circuidad Urbana"),
           shiny::HTML("
-            <h5>Ruteo Punto a Punto y Métricas de Desvío</h5>
-            <p>La función <code>walk_shortest_path()</code> ejecuta una búsqueda de camino más corto en el motor Rust con parada temprana cuando se extrae el nodo destino del montículo binario (<em>Min-Heap</em>).</p>
-            <h6>Reconstrucción de Trayectorias y Geometría</h6>
-            <p>Durante la búsqueda se mantienen dos arreglos planos <code>prev_node</code> y <code>prev_edge</code>. Una vez alcanzado el destino, el trayecto se reconstruye hacia atrás en tiempo $O(\\text{saltos})$ y se extrae la secuencia de geometrías <code>LINESTRING</code>.</p>
+            <h5>Ruteo Punto a Punto y M\u00e9tricas de Desv\u00edo</h5>
+            <p>La funci\u00f3n <code>walk_shortest_path()</code> ejecuta una b\u00fasqueda de camino m\u00e1s corto en el motor Rust con parada temprana cuando se extrae el nodo destino del mont\u00edculo binario (<em>Min-Heap</em>).</p>
+            <h6>Reconstrucci\u00f3n de Trayectorias y Geometr\u00eda</h6>
+            <p>Durante la b\u00fasqueda se mantienen dos arreglos planos <code>prev_node</code> y <code>prev_edge</code>. Una vez alcanzado el destino, el trayecto se reconstruye hacia atr\u00e1s en tiempo $O(\\text{saltos})$ y se extrae la secuencia de geometr\u00edas <code>LINESTRING</code>.</p>
             <h6>Ratio de Circuidad (<em>Route Directness</em>):</h6>
             <div class=\"text-center my-3 p-3 bg-light rounded border fs-5 text-dark\">
-              $$\\text{Circuity} = \\frac{\\text{Distancia sobre la red vial (m)}}{\\text{Distancia euclidiana en línea recta (m)}}$$
+              $$\\text{Circuity} = \\frac{\\text{Distancia sobre la red vial (m)}}{\\text{Distancia euclidiana en l\u00ednea recta (m)}}$$
             </div>
             <ul>
               <li><strong>1.0 a 1.2:</strong> Trama directa y permeable con alta eficiencia de desplazamiento peatonal.</li>
-              <li><strong>1.2 a 1.4:</strong> Trama moderadamente sinuosa (típica de centros coloniales o cuadrículas con pendientes).</li>
-              <li><strong>&gt; 1.5:</strong> Trama discontinua, presencia de cul-de-sacs o barreras físicas que obligan al peatón a rodeos significativos.</li>
+              <li><strong>1.2 a 1.4:</strong> Trama moderadamente sinuosa (t\u00edpica de centros coloniales o cuadr\u00edculas con pendientes).</li>
+              <li><strong>&gt; 1.5:</strong> Trama discontinua, presencia de cul-de-sacs o barreras f\u00edsicas que obligan al peat\u00f3n a rodeos significativos.</li>
             </ul>
           ")
         )
@@ -407,18 +407,18 @@ walk_app <- function(network = NULL,
           mapgl::maplibreOutput("map_morph", height = "520px")
         ),
         bslib::card(
-          bslib::card_header("\U0001f4d6 Consideraciones Técnicas: Tipología de Cruces y Conectividad"),
+          bslib::card_header("\U0001f4d6 Consideraciones T\u00e9cnicas: Tipolog\u00eda de Cruces y Conectividad"),
           shiny::HTML("
-            <h5>Clasificación de Nodos según Valencia Topológica</h5>
-            <p>La conectividad de un vecindario se define por la cantidad de alternativas de ruta disponibles para el peatón. <code>walk_intersection_density()</code> examina el grado de entrada/salida de cada nodo de la red bidireccional simplificada:</p>
+            <h5>Clasificaci\u00f3n de Nodos seg\u00fan Valencia Topol\u00f3gica</h5>
+            <p>La conectividad de un vecindario se define por la cantidad de alternativas de ruta disponibles para el peat\u00f3n. <code>walk_intersection_density()</code> examina el grado de entrada/salida de cada nodo de la red bidireccional simplificada:</p>
             <ul>
               <li><strong>Grado 1 (Cul-de-sac):</strong> Nodos ciegos que obligan al usuario a retornar por el mismo camino. Un exceso de cul-de-sacs disminuye la transitabilidad activa.</li>
-              <li><strong>Grado 2 (Vértice de paso):</strong> Vértices de curvatura o continuidad que no representan opciones de cruce.</li>
+              <li><strong>Grado 2 (V\u00e9rtice de paso):</strong> V\u00e9rtices de curvatura o continuidad que no representan opciones de cruce.</li>
               <li><strong>Grado 3 (Intersecciones en T):</strong> Bifurcaciones regulares de tres ramales.</li>
-              <li><strong>Grado 4+ (Cruces ortogonales):</strong> Intersecciones en cruz típicas del damero tradicional que maximizan la permeabilidad.</li>
+              <li><strong>Grado 4+ (Cruces ortogonales):</strong> Intersecciones en cruz t\u00edpicas del damero tradicional que maximizan la permeabilidad.</li>
             </ul>
-            <h6>Densidad Métrica sobre la Envolvente Convexa</h6>
-            <p>Para evitar el sesgo de áreas administrativas arbitrarias, la densidad de cruces ($/\\text{km}^2$) se calcula sobre la envolvente convexa (<code>sf::st_convex_hull</code>) de la red analizada.</p>
+            <h6>Densidad M\u00e9trica sobre la Envolvente Convexa</h6>
+            <p>Para evitar el sesgo de \u00e1reas administrativas arbitrarias, la densidad de cruces ($/\\text{km}^2$) se calcula sobre la envolvente convexa (<code>sf::st_convex_hull</code>) de la red analizada.</p>
           ")
         )
       )
@@ -433,7 +433,7 @@ walk_app <- function(network = NULL,
           width = 320,
           shiny::tags$p(
             style = "font-size: 0.85rem; color: #495057; margin-bottom: 8px;",
-            "Haz clic en cualquier tramo del mapa para marcarlo o búscalo por nombre:"
+            "Haz clic en cualquier tramo del mapa para marcarlo o b\u00fascalo por nombre:"
           ),
           shiny::selectizeInput(
             inputId = "scen_edge_select",
@@ -472,13 +472,13 @@ walk_app <- function(network = NULL,
           ),
           shiny::actionButton(
             inputId = "btn_sim_scenario",
-            label = "Simular Intervención",
+            label = "Simular Intervenci\u00f3n",
             class = "btn-warning w-100 fw-bold",
             icon = shiny::icon("traffic-light")
           ),
           shiny::hr(),
           bslib::value_box(
-            title = "Variación de Alcance",
+            title = "Variaci\u00f3n de Alcance",
             value = shiny::textOutput("scen_delta_reach"),
             showcase = shiny::icon("chart-line"),
             theme = "danger"
@@ -492,24 +492,24 @@ walk_app <- function(network = NULL,
         ),
         bslib::card(
           full_screen = TRUE,
-          bslib::card_header("Impacto Espacial de la Intervención (MapLibre GL)"),
+          bslib::card_header("Impacto Espacial de la Intervenci\u00f3n (MapLibre GL)"),
           mapgl::maplibreOutput("map_scenarios", height = "520px")
         ),
         bslib::card(
-          bslib::card_header("Detalle de Tramos Seleccionados para la Intervención"),
+          bslib::card_header("Detalle de Tramos Seleccionados para la Intervenci\u00f3n"),
           shiny::tableOutput("table_closed_edges")
         ),
         bslib::card(
-          bslib::card_header("\U0001f4d6 Consideraciones Técnicas: Modelado de Supermanzanas y Cortes"),
+          bslib::card_header("\U0001f4d6 Consideraciones T\u00e9cnicas: Modelado de Supermanzanas y Cortes"),
           shiny::HTML("
-            <h5>Simulación No Destructiva de Escenarios</h5>
+            <h5>Simulaci\u00f3n No Destructiva de Escenarios</h5>
             <p>Las funciones <code>walk_scenario_close()</code> y <code>walk_compare_scenarios()</code> permiten modelar intervenciones como:</p>
             <ul>
-              <li>Peatonalización de corredores centrales.</li>
+              <li>Peatonalizaci\u00f3n de corredores centrales.</li>
               <li>Clausura temporal de tramos por obras o contingencias.</li>
-              <li>Creación de <strong>supermanzanas</strong> (<em>superblocks</em>).</li>
+              <li>Creaci\u00f3n de <strong>supermanzanas</strong> (<em>superblocks</em>).</li>
             </ul>
-            <p>El grafo resultante se reconstruye de forma instantánea en memoria sin releer archivos vectoriales de disco, permitiendo evaluar la resiliencia de la red y el impacto en la accesibilidad de cada predio.</p>
+            <p>El grafo resultante se reconstruye de forma instant\u00e1nea en memoria sin releer archivos vectoriales de disco, permitiendo evaluar la resiliencia de la red y el impacto en la accesibilidad de cada predio.</p>
           ")
         )
       )
@@ -1022,7 +1022,7 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
     })
 
     # -------------------------------------------------------------
-    # 6. PESTAÑA: ESCENARIOS (SCENARIOS)
+    # 6. PESTA\u00d1A: ESCENARIOS (SCENARIOS)
     # -------------------------------------------------------------
     scen_res <- shiny::reactiveVal(NULL)
 
