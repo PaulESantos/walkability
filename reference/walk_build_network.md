@@ -110,14 +110,14 @@ A `walk_network` S3 object containing:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-# Standard usage with user data:
-net <- walk_build_network(
-  data = mis_calles,
-  crs = 3116,
-  repair = TRUE,
-  snap_tolerance_m = 5.0,
-  keep_components = "largest"
-)
-} # }
+data(streets_cusco)
+net <- walk_build_network(streets_cusco, verbose = FALSE)
+print(net)
+#> 
+#> ── Walkability Network ─────────────────────────────────────────────────────────
+#> ✔ Total nodes: 562 (Giant component: 249)
+#> ✔ Total edges: 288 segments (27.3 km)
+#> ✔ Walking speed: 4.5 km/h (1.25 m/s)
+#> ✔ Connected components: 125
+#> ✔ CRS: EPSG:32719
 ```

@@ -20,12 +20,10 @@ redes viales propias (archivos Shapefile, GeoPackage, GeoJSON u objetos
 `sf`) con total control y transparencia sobre el diagnóstico y la
 reparación topológica.
 
-Para este tutorial utilizaremos la red sintética de ejemplo
-**`datos_viales.gpkg`**, distribuida junto con el paquete en la carpeta
-`inst/extdata`. Contiene una cuadrícula urbana con dos anomalías
-deliberadas para fines didácticos: - Un callejón que termina a 3 metros
-de una avenida (*undershoot*). - Un sendero peatonal en un parque
-aislado no conectado a la red principal (*isla desconectada*).
+Para este tutorial utilizaremos la red vial del **Centro Histórico de
+Cusco** (`streets_cusco`), distribuida como dataset oficial del paquete
+en formato proyectado (UTM 19S, `EPSG:32719`). También se incluyen
+datasets para Lima (`streets_lima`) y Arequipa (`streets_arequipa`).
 
 ### Paso 1: Carga y Diagnóstico No Invasivo de la Red
 
@@ -39,29 +37,22 @@ library(walkability)
 library(sf)
 #> Linking to GEOS 3.12.1, GDAL 3.8.4, PROJ 9.4.0; sf_use_s2() is TRUE
 
-# Cargar la capa sintética de ejemplo incluida en el paquete
-archivo <- system.file("extdata", "datos_viales.gpkg", package = "walkability")
-if (!nzchar(archivo) || !file.exists(archivo)) {
-  archivo <- if (file.exists("inst/extdata/datos_viales.gpkg")) {
-    "inst/extdata/datos_viales.gpkg"
-  } else {
-    "../inst/extdata/datos_viales.gpkg"
-  }
-}
-mis_calles <- st_read(archivo, quiet = TRUE)
+# Cargar la capa real de Cusco incluida en el paquete
+data(streets_cusco)
+mis_calles <- streets_cusco
 
 # Diagnóstico de conectividad y detección de undershoots en un radio de 5 metros
-diag <- walk_diagnose_network(mis_calles, snap_search_radius_m = 5.0, crs = 32719)
+diag <- walk_diagnose_network(mis_calles, snap_search_radius_m = 5.0)
 
 # Imprimir resumen de componentes e islas
 print(diag)
 #> 
 #> ── Walkability Network Health Diagnosis ────────────────────────────────────────
-#> ✔ Total network analyzed: 11 segments (2.7 km)
-#> ✔ Total components detected: 8
-#> • Giant (main) component: 45.0% of network (1.2 km)
-#> ! Detected 7 disconnected components / islands (1.47 km, 55.0% of network).
-#> ℹ Identified 1 potential undershoots (dangling ends located <= 5 m from another street).
+#> ✔ Total network analyzed: 484 segments (40.0 km)
+#> ✔ Total components detected: 125
+#> • Giant (main) component: 68.3% of network (27.3 km)
+#> ! Detected 124 disconnected components / islands (12.69 km, 31.7% of network).
+#> ℹ Identified 81 potential undershoots (dangling ends located <= 5 m from another street).
 #> ! Recommendation: You can fix these by running walk_build_network(..., repair =
 #>   TRUE, snap_tolerance_m =
 #> 5
@@ -103,10 +94,10 @@ red_limpia <- walk_build_network(
 print(red_limpia)
 #> 
 #> ── Walkability Network ─────────────────────────────────────────────────────────
-#> ✔ Total nodes: 22 (Giant component: 20)
-#> ✔ Total edges: 29 segments (2.6 km)
+#> ✔ Total nodes: 822 (Giant component: 807)
+#> ✔ Total edges: 1082 segments (38.2 km)
 #> ✔ Walking speed: 4.5 km/h (1.25 m/s)
-#> ✔ Connected components: 2
+#> ✔ Connected components: 5
 #> ✔ CRS: EPSG:32719
 ```
 
@@ -133,11 +124,11 @@ print(metricas)
 #> 
 #> ── Walkability Reachable Network Length ────────────────────────────────────────
 #> ✔ Isochrone Budget: 10.0 minutes (~750 m at 4.5 km/h)
-#> ✔ Evaluated Nodes: 20
-#> • Average Reach: 2.57 km
-#> • Highest Reach: 2.57 km
-#> • Lowest Reach: 2.57 km
-#> • 5th-95th percentile: 2.6 - 2.6 km
+#> ✔ Evaluated Nodes: 807
+#> • Average Reach: 19.04 km
+#> • Highest Reach: 28.08 km
+#> • Lowest Reach: 0.75 km
+#> • 5th-95th percentile: 7.8 - 27.4 km
 ```
 
 ------------------------------------------------------------------------
@@ -154,7 +145,7 @@ mapa <- walk_plot_reach(
   reach = metricas,
   palette = "viridis",
   title = "Caminabilidad Peatonal en 10 Minutos",
-  subtitle = "Longitud de red accesible a pie desde cada intersección (Red de ejemplo)",
+  subtitle = "Longitud de red accesible a pie desde cada intersección (Centro Histórico de Cusco)",
   dark = TRUE
 )
 
@@ -175,7 +166,7 @@ peatonales frente a distancias euclidianas:
 circuidad <- walk_compute_circuity(red_limpia, sample_size = 50)
 summary(circuidad$mean_circuity)
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#>   1.207   1.238   1.264   1.301   1.278   1.917
+#>   1.190   1.226   1.260   1.285   1.301   1.743
 ```
 
 Valores cercanos a `1.0` reflejan una retícula directa y eficiente;

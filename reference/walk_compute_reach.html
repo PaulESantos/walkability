@@ -28,6 +28,8 @@ crediting crossing frontier edges for only their reachable fraction."><meta prop
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><h6 class="dropdown-header" data-toc-skip>Tutorials &amp; Workflows</h6></li>
     <li><a class="dropdown-item" href="../articles/walkability-guide.html">Guía de Inicio Rápido (Get Started)</a></li>
+    <li><a class="dropdown-item" href="../articles/analisis-avanzado.html">Análisis Avanzado: Ruteo, Isócronas y Accesibilidad</a></li>
+    <li><a class="dropdown-item" href="../articles/visualizacion-avanzada.html">Visualización Avanzada con ggplot2 y patchwork</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Theory &amp; Empirical Results</h6></li>
     <li><a class="dropdown-item" href="../articles/metodologia-y-supuestos.html">Metodología, Motor Rust y Supuestos</a></li>
@@ -126,15 +128,18 @@ only for nodes in the primary connected component, or <code>"all"</code>.</p></d
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="co"># Standard 10-minute walk reach</span></span></span>
-<span class="r-in"><span><span class="va">reach</span> <span class="op">&lt;-</span> <span class="fu">walk_compute_reach</span><span class="op">(</span><span class="va">net</span>, time_min <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Short 5-minute neighborhood reach</span></span></span>
-<span class="r-in"><span><span class="va">reach_5m</span> <span class="op">&lt;-</span> <span class="fu">walk_compute_reach</span><span class="op">(</span><span class="va">net</span>, time_min <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">reach_5m</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">reach_5m</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">streets_cusco</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="walk_build_network.html">walk_build_network</a></span><span class="op">(</span><span class="va">streets_cusco</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">reach</span> <span class="op">&lt;-</span> <span class="fu">walk_compute_reach</span><span class="op">(</span><span class="va">net</span>, time_min <span class="op">=</span> <span class="fl">5</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">reach</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Walkability Reachable Network Length</span> <span style="color: #00BBBB;">────────────────────────────────────────</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Isochrone Budget: <span style="color: #0000BB;">5.0 minutes</span> (~375 m at 4.5 km/h)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Evaluated Nodes: <span style="color: #00BB00;">249</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Average Reach: <span style="color: #BBBB00;">2.29 km</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Highest Reach: <span style="color: #00BB00;">4.91 km</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Lowest Reach: <span style="color: #BB0000;">0.37 km</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> 5th-95th percentile: 0.4 - 4.4 km</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -61,9 +61,20 @@ A `walk_diagnosis` S3 object containing:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-diag <- walk_diagnose_network(mis_calles, snap_search_radius_m = 5)
+data(streets_cusco)
+diag <- walk_diagnose_network(streets_cusco, snap_search_radius_m = 5)
 print(diag)
-plot(diag)
-} # }
+#> 
+#> ── Walkability Network Health Diagnosis ────────────────────────────────────────
+#> ✔ Total network analyzed: 484 segments (40.0 km)
+#> ✔ Total components detected: 125
+#> • Giant (main) component: 68.3% of network (27.3 km)
+#> ! Detected 124 disconnected components / islands (12.69 km, 31.7% of network).
+#> ℹ Identified 81 potential undershoots (dangling ends located <= 5 m from another street).
+#> ! Recommendation: You can fix these by running walk_build_network(..., repair =
+#>   TRUE, snap_tolerance_m =
+#> 5
+#> ).
+#> 
+#> Run `plot(diagnosis)` to inspect isolated segments and undershoots on a map.
 ```

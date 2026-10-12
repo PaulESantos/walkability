@@ -1,5 +1,17 @@
 # Package index
 
+## Sample Street Networks
+
+Real-world OpenStreetMap walkable networks for benchmark cities in Peru.
+
+- [`streets_cusco`](https://paulesantos.github.io/walkability/reference/streets_cusco.md)
+  : Walkable Street Network of Cusco (Historic Center)
+- [`streets_lima`](https://paulesantos.github.io/walkability/reference/streets_lima.md)
+  : Walkable Street Network of Lima (Historic Center / Damero de
+  Pizarro)
+- [`streets_arequipa`](https://paulesantos.github.io/walkability/reference/streets_arequipa.md)
+  : Walkable Street Network of Arequipa (Historic Center / Yanahuara)
+
 ## Topological Diagnostics
 
 Inspect user-supplied street networks for connectivity, dead ends, and
@@ -35,6 +47,87 @@ directness evaluation.
   : Plot Method for Walk Reach Object
 - [`walk_compute_circuity()`](https://paulesantos.github.io/walkability/reference/walk_compute_circuity.md)
   : Compute Network Circuity (Detour Ratio) for Sampled Junctions
+
+## Optimal Pedestrian Routing
+
+Single-pair point-to-point shortest path routing across the street
+network using compiled Rust Dijkstra.
+
+- [`walk_shortest_path()`](https://paulesantos.github.io/walkability/reference/walk_shortest_path.md)
+  : Compute Shortest Pedestrian Path Between Two Locations
+- [`print(`*`<walk_path>`*`)`](https://paulesantos.github.io/walkability/reference/print.walk_path.md)
+  : Print Method for Walk Path
+- [`plot(`*`<walk_path>`*`)`](https://paulesantos.github.io/walkability/reference/plot.walk_path.md)
+  : Plot Method for Walk Path
+
+## Isochrones & Reachable Envelopes
+
+Multi-threshold concave hull polygons and corridor envelopes for
+walkable service areas.
+
+- [`walk_isochrone()`](https://paulesantos.github.io/walkability/reference/walk_isochrone.md)
+  : Compute Pedestrian Isochrone Polygons and Reachable Subgraphs
+- [`print(`*`<walk_isochrone>`*`)`](https://paulesantos.github.io/walkability/reference/print.walk_isochrone.md)
+  : Print Method for Walk Isochrone
+- [`plot(`*`<walk_isochrone>`*`)`](https://paulesantos.github.io/walkability/reference/plot.walk_isochrone.md)
+  : Plot Method for Walk Isochrone
+
+## Network Morphology & Intersection Density
+
+Node valence classification, cul-de-sacs, T-junctions, crossroads, and
+intersection density.
+
+- [`walk_intersection_density()`](https://paulesantos.github.io/walkability/reference/walk_intersection_density.md)
+  : Compute Intersection Density and Street Network Morphology
+- [`print(`*`<walk_morphology>`*`)`](https://paulesantos.github.io/walkability/reference/print.walk_morphology.md)
+  : Print Method for Walk Morphology
+- [`plot(`*`<walk_morphology>`*`)`](https://paulesantos.github.io/walkability/reference/plot.walk_morphology.md)
+  : Plot Method for Walk Morphology
+
+## Facility & POI Accessibility
+
+Multi-threaded cumulative accessibility to urban amenities (schools,
+health, transit) within walking time budgets.
+
+- [`walk_compute_access()`](https://paulesantos.github.io/walkability/reference/walk_compute_access.md)
+  : Compute Cumulative Walkable Accessibility to Points of Interest
+  (POIs)
+- [`print(`*`<walk_access>`*`)`](https://paulesantos.github.io/walkability/reference/print.walk_access.md)
+  : Print Method for Walk Access
+- [`plot(`*`<walk_access>`*`)`](https://paulesantos.github.io/walkability/reference/plot.walk_access.md)
+  : Plot Method for Walk Access
+
+## Intervention Scenarios & Street Closures
+
+Simulate pedestrianization, street cuts, and compare before/after
+walkability metrics.
+
+- [`walk_scenario_close()`](https://paulesantos.github.io/walkability/reference/walk_scenario_close.md)
+  : Simulate Street Closure or Pedestrianization Intervention Scenario
+- [`walk_compare_scenarios()`](https://paulesantos.github.io/walkability/reference/walk_compare_scenarios.md)
+  : Compare Baseline and Intervention Scenarios
+- [`print(`*`<walk_comparison>`*`)`](https://paulesantos.github.io/walkability/reference/print.walk_comparison.md)
+  : Print Method for Walk Comparison
+- [`plot(`*`<walk_comparison>`*`)`](https://paulesantos.github.io/walkability/reference/plot.walk_comparison.md)
+  : Plot Method for Walk Comparison
+
+## Graph Interoperability
+
+Seamless conversion to standard R spatial graph classes (sfnetworks,
+tidygraph).
+
+- [`as_sfnetwork()`](https://paulesantos.github.io/walkability/reference/as_sfnetwork.md)
+  : Convert Walk Network to sfnetworks Graph
+- [`as_tidygraph()`](https://paulesantos.github.io/walkability/reference/as_tidygraph.md)
+  : Convert Walk Network to tidygraph tbl_graph
+
+## Interactive Web Application (mapgl)
+
+GPU-accelerated MapLibre GL interactive dashboard for real-time reach,
+isochrones, routing, and scenario analysis.
+
+- [`walk_app()`](https://paulesantos.github.io/walkability/reference/walk_app.md)
+  : Launch the Interactive Walkability Application
 
 ## Cartographic Visualizations
 
@@ -72,3 +165,11 @@ Dijkstra search.
 - [`rust_compute_circuity_sample()`](https://paulesantos.github.io/walkability/reference/rust_compute_circuity_sample.md)
   : Compute detour ratio (circuity) for sampled origin-destination
   pairs.
+- [`rust_shortest_path()`](https://paulesantos.github.io/walkability/reference/rust_shortest_path.md)
+  : Compute shortest path between source and target nodes using
+  Dijkstra.
+- [`rust_isochrone_subgraph()`](https://paulesantos.github.io/walkability/reference/rust_isochrone_subgraph.md)
+  : Extract reachable edges and nodes within cutoff time from an origin
+  node.
+- [`rust_compute_access_multi()`](https://paulesantos.github.io/walkability/reference/rust_compute_access_multi.md)
+  : Compute cumulative POI accessibility for target nodes in parallel.

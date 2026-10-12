@@ -47,6 +47,8 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><h6 class="dropdown-header" data-toc-skip>Tutorials &amp; Workflows</h6></li>
     <li><a class="dropdown-item" href="articles/walkability-guide.html">Guía de Inicio Rápido (Get Started)</a></li>
+    <li><a class="dropdown-item" href="articles/analisis-avanzado.html">Análisis Avanzado: Ruteo, Isócronas y Accesibilidad</a></li>
+    <li><a class="dropdown-item" href="articles/visualizacion-avanzada.html">Visualización Avanzada con ggplot2 y patchwork</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Theory &amp; Empirical Results</h6></li>
     <li><a class="dropdown-item" href="articles/metodologia-y-supuestos.html">Metodología, Motor Rust y Supuestos</a></li>
@@ -92,35 +94,43 @@
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"PaulESantos/walkability"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="reproducible-minimal-example">Reproducible Minimal Example<a class="anchor" aria-label="anchor" href="#reproducible-minimal-example"></a>
+<h3 id="reproducible-example-with-real-urban-data">Reproducible Example with Real Urban Data<a class="anchor" aria-label="anchor" href="#reproducible-example-with-real-urban-data"></a>
 </h3>
+<p><code>walkability</code> includes real, curated street network datasets from OpenStreetMap for <strong>Cusco</strong>, <strong>Lima</strong>, and <strong>Arequipa</strong>:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://paulesantos.github.io/walkability">walkability</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 1. Create a minimal 2x2 street grid (100 m spacing)</span></span>
-<span><span class="va">lines</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/sfc.html" class="external-link">st_sfc</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st.html" class="external-link">st_linestring</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st.html" class="external-link">st_linestring</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st.html" class="external-link">st_linestring</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">100</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st.html" class="external-link">st_linestring</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">100</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  crs <span class="op">=</span> <span class="fl">32722</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">streets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span>, geometry <span class="op">=</span> <span class="va">lines</span><span class="op">)</span></span>
+<span><span class="co"># 1. Load real street network from Cusco (Historic Center, UTM 19S)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">streets_cusco</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 2. Build graph network &amp; compute pedestrian reach (Rust)</span></span>
-<span><span class="va">net</span>   <span class="op">&lt;-</span> <span class="fu"><a href="reference/walk_build_network.html">walk_build_network</a></span><span class="op">(</span><span class="va">streets</span>, walk_speed_kmh <span class="op">=</span> <span class="fl">4.5</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">net</span>   <span class="op">&lt;-</span> <span class="fu"><a href="reference/walk_build_network.html">walk_build_network</a></span><span class="op">(</span><span class="va">streets_cusco</span>, walk_speed_kmh <span class="op">=</span> <span class="fl">4.5</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">reach</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/walk_compute_reach.html">walk_compute_reach</a></span><span class="op">(</span><span class="va">net</span>, time_min <span class="op">=</span> <span class="fl">10</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 3. View results</span></span>
 <span><span class="va">reach</span></span></code></pre></div>
-<pre class="text"><code>── Walkability Reachable Network Length ─────────────────────────────
-v Isochrone Budget: 10.0 minutes (~750 m at 4.5 km/h)
-v Evaluated Nodes: 4
-* Average Reach: 0.40 km
-* Highest Reach: 0.40 km
-* Lowest Reach: 0.40 km
-* 5th-95th percentile: 0.4 - 0.4 km</code></pre>
+<pre class="text"><code>── Walkability Reachable Network Length ────────────────────────────────────────
+✔ Isochrone Budget: 10.0 minutes (~750 m at 4.5 km/h)
+✔ Evaluated Nodes: 249
+• Average Reach: 8.75 km
+• Highest Reach: 17.39 km
+• Lowest Reach: 0.75 km
+• 5th-95th percentile: 3.1 - 15.5 km</code></pre>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># 4. Point-to-point pedestrian routing &amp; circuity</span></span>
+<span><span class="va">orig</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_coordinates.html" class="external-link">st_coordinates</a></span><span class="op">(</span><span class="va">net</span><span class="op">$</span><span class="va">nodes</span><span class="op">[</span><span class="va">net</span><span class="op">$</span><span class="va">nodes</span><span class="op">$</span><span class="va">is_giant</span>, <span class="op">]</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span></span>
+<span><span class="va">dest</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_coordinates.html" class="external-link">st_coordinates</a></span><span class="op">(</span><span class="va">net</span><span class="op">$</span><span class="va">nodes</span><span class="op">[</span><span class="va">net</span><span class="op">$</span><span class="va">nodes</span><span class="op">$</span><span class="va">is_giant</span>, <span class="op">]</span><span class="op">)</span><span class="op">[</span><span class="fl">50</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span></span>
+<span><span class="va">path</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/walk_shortest_path.html">walk_shortest_path</a></span><span class="op">(</span><span class="va">net</span>, from <span class="op">=</span> <span class="va">orig</span>, to <span class="op">=</span> <span class="va">dest</span><span class="op">)</span></span>
+<span><span class="va">path</span></span>
+<span></span>
+<span><span class="co"># 5. Isochrone polygon generation (concave hull)</span></span>
+<span><span class="va">iso</span>  <span class="op">&lt;-</span> <span class="fu"><a href="reference/walk_isochrone.html">walk_isochrone</a></span><span class="op">(</span><span class="va">net</span>, origin <span class="op">=</span> <span class="va">orig</span>, time_min <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">iso</span></span>
+<span></span>
+<span><span class="co"># 6. Urban intersection density &amp; morphology</span></span>
+<span><span class="va">dens</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/walk_intersection_density.html">walk_intersection_density</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span>
+<span><span class="va">dens</span></span></code></pre></div>
 <hr>
 </div>
 </div>
@@ -129,15 +139,27 @@ v Evaluated Nodes: 4
 </h2>
 <ul>
 <li>
+<strong>Curated Real-World Datasets</strong>: Out-of-the-box model networks for <code>streets_cusco</code>, <code>streets_lima</code>, and <code>streets_arequipa</code>.</li>
+<li>
 <strong>Non-destructive Topological Diagnosis</strong>: <code><a href="reference/walk_diagnose_network.html">walk_diagnose_network()</a></code> inspects user street files, flags isolated islands, and locates near-miss <em>undershoots</em> without mutating geometries.</li>
 <li>
 <strong>Controlled Geometric Repair</strong>: <code><a href="reference/walk_build_network.html">walk_build_network()</a></code> empowers users to choose whether to planarize crossings and snap dangling endpoints at specified tolerances.</li>
 <li>
 <strong>Exact Partial-Edge Dijkstra in Rust</strong>: <code><a href="reference/walk_compute_reach.html">walk_compute_reach()</a></code> computes exact fractional contributions for boundary edges across all CPU cores with zero heap reallocations.</li>
 <li>
-<strong>Publication-Ready Maps</strong>: <code><a href="reference/walk_plot_reach.html">walk_plot_reach()</a></code> renders clean <code>ggplot2</code> visualizations with 2nd–98th percentile scaling and ascending layer stacking.</li>
+<strong>Pedestrian Point-to-Point Routing</strong>: <code><a href="reference/walk_shortest_path.html">walk_shortest_path()</a></code> extracts the exact shortest path geometry, travel time, and route circuity detour ratio.</li>
 <li>
-<strong>Route Directness &amp; Circuity</strong>: <code><a href="reference/walk_compute_circuity.html">walk_compute_circuity()</a></code> evaluates detour ratios between network shortest paths and Euclidean distance.</li>
+<strong>Isochrone Polygons &amp; Subgraphs</strong>: <code><a href="reference/walk_isochrone.html">walk_isochrone()</a></code> generates exact reachable network corridors and concave hull polygons.</li>
+<li>
+<strong>Cumulative POI Accessibility</strong>: <code><a href="reference/walk_compute_access.html">walk_compute_access()</a></code> counts reachable amenities (schools, healthcare, transit) within travel time budgets using parallel Rust.</li>
+<li>
+<strong>Urban Morphology &amp; Intersection Metrics</strong>: <code><a href="reference/walk_intersection_density.html">walk_intersection_density()</a></code> classifies cul-de-sacs, 3-way T-junctions, 4-way crossings, and intersection density.</li>
+<li>
+<strong>Intervention Scenario Simulation</strong>: <code><a href="reference/walk_scenario_close.html">walk_scenario_close()</a></code> and <code><a href="reference/walk_compare_scenarios.html">walk_compare_scenarios()</a></code> model street cuts, closures, and pedestrianization.</li>
+<li>
+<strong>Graph Interoperability</strong>: <code><a href="reference/as_sfnetwork.html">as_sfnetwork()</a></code> and <code><a href="reference/as_tidygraph.html">as_tidygraph()</a></code> enable two-way workflows with <code>sfnetworks</code> and <code>tidygraph</code>.</li>
+<li>
+<strong>Publication-Ready Maps</strong>: <code><a href="reference/walk_plot_reach.html">walk_plot_reach()</a></code> renders clean <code>ggplot2</code> visualizations with 2nd–98th percentile scaling and ascending layer stacking.</li>
 </ul>
 <hr>
 </div>
