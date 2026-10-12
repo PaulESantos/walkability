@@ -13,7 +13,8 @@
 #'   it overrides `time_min`.
 #' @param target Character string. Either `"largest_component"` (default) to compute
 #'   only for nodes in the primary connected component, or `"all"`.
-#' @param n_threads Number of CPU threads to use in parallel (0 = auto-detect all available cores).
+#' @param n_threads Number of CPU threads to use in parallel, from 1 to 2.
+#'   The default is 2, the maximum permitted during CRAN checks.
 #' @param verbose Logical. If `TRUE`, prints summary percentiles and runtime.
 #'
 #' @return A `walk_reach` S3 object containing:
@@ -34,12 +35,15 @@ walk_compute_reach <- function(network,
                                time_min = 10.0,
                                cutoff_s = NULL,
                                target = c("largest_component", "all"),
-                               n_threads = 0,
+                               n_threads = 2L,
                                verbose = TRUE) {
   target <- match.arg(target)
 
   if (!inherits(network, "walk_network")) {
     cli::cli_abort("{.arg network} must be a {.cls walk_network} object.")
+  }
+  if (length(n_threads) != 1L || is.na(n_threads) || n_threads < 1L || n_threads > 2L) {
+    cli::cli_abort("{.arg n_threads} must be a single integer between 1 and 2.")
   }
 
   # Resolve time cutoff in seconds

@@ -15,7 +15,8 @@
 #'   Default is `NULL` (each POI counts as 1.0).
 #' @param target Character string: `"largest_component"` (default) to evaluate nodes
 #'   in the primary connected component, or `"all"`.
-#' @param n_threads Number of CPU threads (0 = auto-detect all available cores).
+#' @param n_threads Number of CPU threads to use in parallel, from 1 to 2.
+#'   The default is 2, the maximum permitted during CRAN checks.
 #' @param verbose Logical. If `TRUE`, prints execution progress and summary.
 #'
 #' @return A `walk_access` S3 object containing:
@@ -38,10 +39,13 @@ walk_compute_access <- function(network,
                                 category_col = NULL,
                                 weight_col = NULL,
                                 target = c("largest_component", "all"),
-                                n_threads = 0,
+                                n_threads = 2L,
                                 verbose = TRUE) {
   if (!inherits(network, "walk_network")) {
     cli::cli_abort("{.arg network} must be a {.cls walk_network} object.")
+  }
+  if (length(n_threads) != 1L || is.na(n_threads) || n_threads < 1L || n_threads > 2L) {
+    cli::cli_abort("{.arg n_threads} must be a single integer between 1 and 2.")
   }
 
   if (!inherits(pois, "sf") && !inherits(pois, "sfc")) {

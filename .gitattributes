@@ -1,0 +1,6 @@
+# Enforce LF line endings for shell scripts and makefiles
+configure text eol=lf
+cleanup text eol=lf
+cleanup.win text eol=lf
+src/Makevars* text eol=lf
+*.sh text eol=lf

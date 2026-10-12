@@ -26,7 +26,8 @@ rust_build_csr <- function(n_nodes, u, v, wt, wl) .Call(wrap__rust_build_csr, n_
 #' @param wl CSR lengths (meters).
 #' @param target_nodes Indices of nodes to compute metric for (0-indexed).
 #' @param cutoff Walk travel-time budget (seconds, default 600.0 = 10 min).
-#' @param num_threads Number of worker threads (0 = auto-detect all CPU cores).
+#' @param num_threads Number of worker threads (1 or 2; values outside this
+#'   range are clamped to the supported range by the native implementation).
 #' @export
 rust_compute_reachable_length <- function(n_nodes, head_num, to, wt, wl, target_nodes, cutoff, num_threads) .Call(wrap__rust_compute_reachable_length, n_nodes, head_num, to, wt, wl, target_nodes, cutoff, num_threads)
 
@@ -82,7 +83,8 @@ rust_isochrone_subgraph <- function(n_nodes, head_num, to, wt, wl, src_node, cut
 #' @param poi_nodes Vector of node indices where POIs are situated.
 #' @param poi_weights Vector of weights/counts for each POI node.
 #' @param cutoff Travel time cutoff in seconds.
-#' @param num_threads Number of worker threads (0 = auto-detect).
+#' @param num_threads Number of worker threads (1 or 2; values outside this
+#'   range are clamped to the supported range by the native implementation).
 #' @export
 rust_compute_access_multi <- function(n_nodes, head_num, to, wt, target_nodes, poi_nodes, poi_weights, cutoff, num_threads) .Call(wrap__rust_compute_access_multi, n_nodes, head_num, to, wt, target_nodes, poi_nodes, poi_weights, cutoff, num_threads)
 

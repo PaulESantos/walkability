@@ -66,7 +66,7 @@ crediting crossing frontier edges for only their reachable fraction.</p>
 <span>  time_min <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  cutoff_s <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  target <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"largest_component"</span>, <span class="st">"all"</span><span class="op">)</span>,</span>
-<span>  n_threads <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  n_threads <span class="op">=</span> <span class="fl">2L</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -96,7 +96,8 @@ only for nodes in the primary connected component, or <code>"all"</code>.</p></d
 
 
 <dt id="arg-n-threads">n_threads<a class="anchor" aria-label="anchor" href="#arg-n-threads"></a></dt>
-<dd><p>Number of CPU threads to use in parallel (0 = auto-detect all available cores).</p></dd>
+<dd><p>Number of CPU threads to use in parallel, from 1 to 2.
+The default is 2, the maximum permitted during CRAN checks.</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>

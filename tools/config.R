@@ -29,7 +29,7 @@ if (!is_not_cran) {
 # the vendored crates are present.
 .cran_flags <- ifelse(
   !is_not_cran && vendor_exists,
-  "-j 2 --offline",
+  "-j 1 --offline",
   ""
 )
 

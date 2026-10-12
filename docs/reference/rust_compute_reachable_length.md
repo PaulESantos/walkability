@@ -50,4 +50,5 @@ rust_compute_reachable_length(
 
 - num_threads:
 
-  Number of worker threads (0 = auto-detect all CPU cores).
+  Number of worker threads (1 or 2; values outside this range are
+  clamped to the supported range by the native implementation).

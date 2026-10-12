@@ -328,7 +328,7 @@ fn rust_build_csr(
 /// @param wl CSR lengths (meters).
 /// @param target_nodes Indices of nodes to compute metric for (0-indexed).
 /// @param cutoff Walk travel-time budget (seconds, default 600.0 = 10 min).
-/// @param num_threads Number of worker threads (0 = auto-detect all CPU cores).
+/// @param num_threads Number of worker threads (limited to 1 or 2).
 /// @export
 #[extendr]
 fn rust_compute_reachable_length(
@@ -365,16 +365,13 @@ fn rust_compute_reachable_length(
             .collect::<Vec<f64>>()
     };
 
-    if num_threads > 0 {
-        let pool = rayon::ThreadPoolBuilder::new()
-            .num_threads(num_threads as usize)
-            .build();
-        match pool {
-            Ok(p) => p.install(compute_fn),
-            Err(_) => compute_fn(),
-        }
-    } else {
-        compute_fn()
+    let thread_count = num_threads.clamp(1, 2) as usize;
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(thread_count)
+        .build();
+    match pool {
+        Ok(p) => p.install(compute_fn),
+        Err(_) => compute_fn(),
     }
 }
 
@@ -865,7 +862,7 @@ fn rust_isochrone_subgraph(
 /// @param poi_nodes Vector of node indices where POIs are situated.
 /// @param poi_weights Vector of weights/counts for each POI node.
 /// @param cutoff Travel time cutoff in seconds.
-/// @param num_threads Number of worker threads (0 = auto-detect).
+/// @param num_threads Number of worker threads (limited to 1 or 2).
 /// @export
 #[extendr]
 fn rust_compute_access_multi(
@@ -955,16 +952,13 @@ fn rust_compute_access_multi(
             .collect::<Vec<(f64, f64)>>()
     };
 
-    let results = if num_threads > 0 {
-        let pool = rayon::ThreadPoolBuilder::new()
-            .num_threads(num_threads as usize)
-            .build();
-        match pool {
-            Ok(p) => p.install(compute_fn),
-            Err(_) => compute_fn(),
-        }
-    } else {
-        compute_fn()
+    let thread_count = num_threads.clamp(1, 2) as usize;
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(thread_count)
+        .build();
+    let results = match pool {
+        Ok(p) => p.install(compute_fn),
+        Err(_) => compute_fn(),
     };
 
     let mut counts = Vec::with_capacity(results.len());

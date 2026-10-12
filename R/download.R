@@ -14,7 +14,15 @@ walk_download_osm <- function(place_name, buffer_m = 2000) {
 
   cli::cli_alert_info("Querying OpenStreetMap for: {place_name}...")
 
-  bb <- osmdata::getbb(place_name, format_out = "matrix")
+  bb <- tryCatch(
+    osmdata::getbb(place_name, format_out = "matrix"),
+    error = function(e) {
+      cli::cli_abort(c(
+        "Could not retrieve a bounding box from OpenStreetMap.",
+        "i" = conditionMessage(e)
+      ))
+    }
+  )
   if (is.null(bb)) {
     cli::cli_abort("Could not resolve bounding box for place: {place_name}")
   }
@@ -30,7 +38,16 @@ walk_download_osm <- function(place_name, buffer_m = 2000) {
     )
   )
 
-  osm_data <- osmdata::osmdata_sf(q)
+  osm_data <- tryCatch(
+    osmdata::osmdata_sf(q),
+    error = function(e) {
+      cli::cli_abort(c(
+        "Could not download street data from the Overpass API.",
+        "i" = "Check the network connection or try again later.",
+        "x" = conditionMessage(e)
+      ))
+    }
+  )
   lines <- osm_data$osm_lines
 
   if (is.null(lines) || nrow(lines) == 0) {
@@ -57,13 +74,39 @@ walk_download_overture_bbox <- function(bbox, output_file = NULL) {
     cli::cli_abort("The {.pkg duckdb} and {.pkg DBI} packages are required. Please install them with {.code install.packages(c('duckdb', 'DBI'))}.")
   }
 
-  con <- DBI::dbConnect(duckdb::duckdb())
+  if (!is.numeric(bbox) || length(bbox) != 4L || any(!is.finite(bbox))) {
+    cli::cli_abort("{.arg bbox} must be four finite WGS84 coordinates: xmin, ymin, xmax, ymax.")
+  }
+  if (bbox[1] >= bbox[3] || bbox[2] >= bbox[4]) {
+    cli::cli_abort("{.arg bbox} must satisfy xmin < xmax and ymin < ymax.")
+  }
+
+  con <- tryCatch(
+    DBI::dbConnect(duckdb::duckdb()),
+    error = function(e) {
+      cli::cli_abort(c(
+        "Could not start a DuckDB connection for the Overture query.",
+        "x" = conditionMessage(e)
+      ))
+    }
+  )
   on.exit(DBI::dbDisconnect(con, shutdown = TRUE))
 
   cli::cli_alert_info("Configuring DuckDB S3 and spatial extensions...")
-  DBI::dbExecute(con, "INSTALL spatial; LOAD spatial;")
-  DBI::dbExecute(con, "INSTALL httpfs; LOAD httpfs;")
-  DBI::dbExecute(con, "SET s3_region='us-west-2';")
+  tryCatch(
+    {
+      DBI::dbExecute(con, "INSTALL spatial; LOAD spatial;")
+      DBI::dbExecute(con, "INSTALL httpfs; LOAD httpfs;")
+      DBI::dbExecute(con, "SET s3_region='us-west-2';")
+    },
+    error = function(e) {
+      cli::cli_abort(c(
+        "Could not configure DuckDB for Overture Maps.",
+        "i" = "Check the network connection and DuckDB extension availability.",
+        "x" = conditionMessage(e)
+      ))
+    }
+  )
 
   xmin <- bbox[1]
   ymin <- bbox[2]
@@ -85,7 +128,16 @@ walk_download_overture_bbox <- function(bbox, output_file = NULL) {
     LIMIT 200000;
   ", xmax, xmin, ymax, ymin)
 
-  df <- DBI::dbGetQuery(con, sql)
+  df <- tryCatch(
+    DBI::dbGetQuery(con, sql),
+    error = function(e) {
+      cli::cli_abort(c(
+        "Could not query Overture Maps.",
+        "i" = "The remote dataset may be unavailable or its release path may have changed.",
+        "x" = conditionMessage(e)
+      ))
+    }
+  )
   
   if (nrow(df) == 0) {
     cli::cli_abort("No Overture segments found in specified bounding box.")
@@ -95,7 +147,15 @@ walk_download_overture_bbox <- function(bbox, output_file = NULL) {
   lines_sf <- sf::st_as_sf(df, wkt = "wkt", crs = 4326)
 
   if (!is.null(output_file)) {
-    sf::st_write(lines_sf, output_file, delete_dsn = TRUE, quiet = TRUE)
+    tryCatch(
+      sf::st_write(lines_sf, output_file, delete_dsn = TRUE, quiet = TRUE),
+      error = function(e) {
+        cli::cli_abort(c(
+          "Could not write the downloaded street data.",
+          "x" = conditionMessage(e)
+        ))
+      }
+    )
   }
 
   lines_sf

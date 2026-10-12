@@ -54,4 +54,5 @@ rust_compute_access_multi(
 
 - num_threads:
 
-  Number of worker threads (0 = auto-detect).
+  Number of worker threads (1 or 2; values outside this range are
+  clamped to the supported range by the native implementation).

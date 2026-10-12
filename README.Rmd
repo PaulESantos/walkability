@@ -45,6 +45,23 @@ Install the development version from GitHub:
 pak::pak("PaulESantos/walkability")
 ```
 
+#### Requirements for source installations
+
+R 4.2 or greater is required for every installation; R 4.5.0 or greater is preferred.
+
+A working Rust toolchain is required when installing `walkability` from source. Install Rust from [rust-lang.org/tools/install](https://rust-lang.org/tools/install/). The additional requirements are:
+
+* Cargo, the Rust package manager.
+* Rustc, the Rust compiler.
+
+On Windows, install the matching version of Rtools first. Then, from a terminal in the package project directory, the most practical Rust target for an R + Rtools source build is:
+
+```sh
+rustup override set stable-x86_64-pc-windows-gnu
+```
+
+CRAN binary installations on Windows and macOS do not normally require a Rust installation; this requirement applies when compiling the package from source.
+
 ### Reproducible Example with Real Urban Data
 
 `walkability` includes real, curated street network datasets from OpenStreetMap for **Cusco**, **Lima**, and **Arequipa**:

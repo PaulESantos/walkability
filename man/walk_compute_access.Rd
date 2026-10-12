@@ -11,7 +11,7 @@ walk_compute_access(
   category_col = NULL,
   weight_col = NULL,
   target = c("largest_component", "all"),
-  n_threads = 0,
+  n_threads = 2L,
   verbose = TRUE
 )
 }
@@ -32,7 +32,8 @@ Default is \code{NULL} (each POI counts as 1.0).}
 \item{target}{Character string: \code{"largest_component"} (default) to evaluate nodes
 in the primary connected component, or \code{"all"}.}
 
-\item{n_threads}{Number of CPU threads (0 = auto-detect all available cores).}
+\item{n_threads}{Number of CPU threads to use in parallel, from 1 to 2.
+The default is 2, the maximum permitted during CRAN checks.}
 
 \item{verbose}{Logical. If \code{TRUE}, prints execution progress and summary.}
 }

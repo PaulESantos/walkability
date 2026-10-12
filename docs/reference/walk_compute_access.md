@@ -16,7 +16,7 @@ walk_compute_access(
   category_col = NULL,
   weight_col = NULL,
   target = c("largest_component", "all"),
-  n_threads = 0,
+  n_threads = 2L,
   verbose = TRUE
 )
 ```
@@ -54,7 +54,8 @@ walk_compute_access(
 
 - n_threads:
 
-  Number of CPU threads (0 = auto-detect all available cores).
+  Number of CPU threads to use in parallel, from 1 to 2. The default is
+  2, the maximum permitted during CRAN checks.
 
 - verbose:
 

@@ -76,6 +76,26 @@ walk_app <- function(network = NULL,
       shiny::tags$span(style = "font-weight: 800; color: #005F73; font-size: 1.25rem;", "walkability"),
       shiny::tags$span(style = "font-size: 0.85rem; color: #0A9396; margin-left: 6px; font-weight: 500;", "| Transitabilidad Urbana & An\u00e1lisis de Grafos")
     ),
+    header = shiny::tagList(
+      shiny::withMathJax(),
+      shiny::tags$head(
+        shiny::tags$script(shiny::HTML("
+          (function() {
+            function typesetWalkabilityMath() {
+              if (window.MathJax && window.MathJax.Hub) {
+                window.MathJax.Hub.Queue([\"Typeset\", window.MathJax.Hub]);
+              } else if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise();
+              }
+            }
+            $(document).on('shiny:connected shown.bs.tab', function() {
+              window.setTimeout(typesetWalkabilityMath, 0);
+            });
+            $(typesetWalkabilityMath);
+          })();
+        "))
+      )
+    ),
     theme = theme,
     fillable = TRUE,
     navbar_options = bslib::navbar_options(collapsible = TRUE),
@@ -171,14 +191,16 @@ walk_app <- function(network = NULL,
           shiny::markdown("
 ### M\u00e9trica de Red Caminable en $X$ Minutos (10-Minute Walk Reach)
 
-Esta m\u00e9trica cuantifica la **longitud total de calles f\u00edsicamente alcanzables** a pie desde cada cruce o esquina de la ciudad dentro de un horizonte temporal determinado (por defecto **10 minutos**, equivalente a ~750 metros a una velocidad de dise\u00f1o de 4.5 km/h).
+Esta m\u00e9trica cuantifica la **longitud total de calles f\u00edsicamente alcanzables** a pie desde cada cruce o esquina de la ciudad dentro de un horizonte temporal determinado (por defecto **10 minutos**, aproximadamente 750 metros a una velocidad de dise\u00f1o de 4.5 km/h).
 
 #### \u00bfPor qu\u00e9 es superior al radio euclidiano tradicional?
 Los an\u00e1lisis urbanos convencionales suelen trazar c\u00edrculos de radio fijo (p. ej., \u00abis\u00f3cronas de \u00e1rea circular de 800 m\u00bb). Este enfoque ignora por completo la morfolog\u00eda del tejido urbano, la presencia de barreras f\u00edsicas (r\u00edos, laderas, avenidas sin cruces) y la estructura de cul-de-sacs. `walkability` eval\u00faa la conectividad sobre la red real de calles.
 
 #### Regla de Cr\u00e9dito Parcial de Aristas (Rust Kernel)
 A diferencia de librer\u00edas como `osmnx` o `igraph` que descartan o computan completas las aristas donde se agota el tiempo, `walkability` calcula algebraicamente la fracci\u00f3n exacta alcanzada:
-$$\\\\ell_{\\\\text{frac}} = L_{(u, v)} \\\\times \\\\left(\\\\frac{B - t(u)}{w_{(u, v)}}\\\\right)$$
+\\[
+\\ell_{\\text{frac}} = L_{(u, v)} \\times \\left(\\frac{B - t(u)}{w_{(u, v)}}\\right)
+\\]
 Donde $B$ es el presupuesto de tiempo, $t(u)$ el tiempo acumulado hasta el nodo $u$, $w_{(u, v)}$ el tiempo de cruce del tramo y $L_{(u, v)}$ su longitud f\u00edsica en metros.
           ")
         )
@@ -241,8 +263,8 @@ Cuando se eval\u00faan horizontes temporales m\u00faltiples (por ejemplo, **5, 1
 #### Estrategia de Anillos Disjuntos (*Donut / Concentric Rings*):
 `walk_isochrone()` implementa una sustracci\u00f3n topol\u00f3gica booleana para garantizar que **los pol\u00edgonos de cada tiempo no se superpongan**:
 * **Banda 1 (0 \u2013 5 min):** Corresponde a $P_5$.
-* **Banda 2 (5 \u2013 10 min):** Se calcula como $R_{10} = P_{10} \\\\setminus P_5$ (`st_difference`).
-* **Banda 3 (10 \u2013 15 min):** Se calcula como $R_{15} = P_{15} \\\\setminus (P_5 \\\\cup P_{10})$.
+* **Banda 2 (5 \u2013 10 min):** Se calcula como $R_{10} = P_{10} \\setminus P_5$ (`st_difference`).
+* **Banda 3 (10 \u2013 15 min):** Se calcula como $R_{15} = P_{15} \\setminus (P_5 \\cup P_{10})$.
 
 Cada anillo representa un intervalo mutuamente excluyente. Esto permite calcular el \u00e1rea neta y los equipamientos alcanzables espec\u00edficamente en cada salto de 5 minutos, base fundamental para el an\u00e1lisis de la **\u00abCiudad de los 15 minutos\u00bb**.
           ")
@@ -308,10 +330,10 @@ Cada anillo representa un intervalo mutuamente excluyente. Esto permite calcular
 La funci\u00f3n `walk_shortest_path()` ejecuta una b\u00fasqueda de camino m\u00e1s corto en el motor Rust con parada temprana cuando se extrae el nodo destino del mont\u00edculo binario (*Min-Heap*).
 
 #### Reconstrucci\u00f3n de Trayectorias y Geometr\u00eda
-Durante la b\u00fasqueda se mantienen dos arreglos planos `prev_node` y `prev_edge`. Una vez alcanzado el destino, el trayecto se reconstruye hacia atr\u00e1s en tiempo $O(\\\\text{saltos})$ y se extrae la secuencia de geometr\u00edas `LINESTRING`.
+Durante la b\u00fasqueda se mantienen dos arreglos planos `prev_node` y `prev_edge`. Una vez alcanzado el destino, el trayecto se reconstruye hacia atr\u00e1s en tiempo $O(\\text{saltos})$ y se extrae la secuencia de geometr\u00edas `LINESTRING`.
 
 #### Ratio de Circuidad (*Route Directness*):
-$$\\\\text{Circuity} = \\\\frac{\\\\text{Distancia sobre la red vial (m)}}{\\\\text{Distancia euclidiana en l\u00ednea recta (m)}}$$
+$$\\text{Circuity} = \\frac{\\text{Distancia sobre la red (m)}}{\\text{Distancia euclidiana (m)}}$$
 * **1.0 a 1.2:** Trama directa y permeable con alta eficiencia de desplazamiento peatonal.
 * **1.2 a 1.4:** Trama moderadamente sinuosa (t\u00edpica de centros coloniales o cuadr\u00edculas con pendientes).
 * **> 1.5:** Trama discontinua, presencia de cul-de-sacs o barreras f\u00edsicas que obligan al peat\u00f3n a rodeos significativos.
@@ -375,7 +397,7 @@ La conectividad de un vecindario se define por la cantidad de alternativas de ru
 * **Grado 4+ (Cruces ortogonales):** Intersecciones en cruz t\u00edpicas del damero tradicional que maximizan la permeabilidad.
 
 #### Densidad M\u00e9trica sobre la Envolvente Convexa
-Para evitar el sesgo de \u00e1reas administrativas arbitrarias, la densidad de cruces ($/\\\\text{km}^2$) se calcula sobre la envolvente convexa (`sf::st_convex_hull`) de la red analizada.
+Para evitar el sesgo de \u00e1reas administrativas arbitrarias, la densidad de cruces ($/\\text{km}^2$) se calcula sobre la envolvente convexa (`sf::st_convex_hull`) de la red analizada.
           ")
         )
       )
@@ -841,8 +863,8 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
       }
 
       r <- route_res()
-      if (!is.null(r)) {
-        path_wgs <- sf::st_transform(r, 4326)
+      if (!is.null(r) && !is.null(r$path_sf)) {
+        path_wgs <- sf::st_transform(r$path_sf, 4326)
         path_wgs$tooltip_text <- sprintf("Ruta: %.1f m | %.1f min | Circuidad: %.2f", r$distance_m, r$time_min, r$circuity)
         m <- m |> mapgl::add_line_layer(
           id = "route_path",
@@ -894,17 +916,26 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
 
       # Filter selected classes
       selected_classes <- as.integer(input$morph_classes)
-      nodes_filtered <- nodes_sf[nodes_sf$degree %in% selected_classes |
-                                 (4 %in% selected_classes & nodes_sf$degree >= 4), ]
+      if (length(selected_classes) == 0) {
+        nodes_filtered <- nodes_sf[0, ]
+      } else {
+        nodes_filtered <- nodes_sf[nodes_sf$degree %in% selected_classes |
+                                   (4 %in% selected_classes & nodes_sf$degree >= 4), ]
+      }
 
       # Color classification
       pal_deg <- function(d) {
         ifelse(d == 1, "#E63946", ifelse(d == 3, "#457B9D", "#2A9D8F"))
       }
-      nodes_filtered$color <- pal_deg(nodes_filtered$degree)
-      nodes_filtered$type_label <- sprintf("Tipo: %s (Grado %s)", nodes_filtered$node_type, nodes_filtered$degree)
+      if (nrow(nodes_filtered) > 0) {
+        nodes_filtered$color <- pal_deg(nodes_filtered$degree)
+        nodes_filtered$type_label <- sprintf("Tipo: %s (Grado %s)", nodes_filtered$junction_type, nodes_filtered$degree)
+      } else {
+        nodes_filtered$color <- character(0)
+        nodes_filtered$type_label <- character(0)
+      }
 
-      mapgl::maplibre(
+      m <- mapgl::maplibre(
         style = mapgl::carto_style("positron"),
         bounds = bb
       ) |>
@@ -916,16 +947,21 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
           line_color = "#B0BEC5",
           line_width = 1.2,
           line_opacity = 0.5
-        ) |>
-        mapgl::add_circle_layer(
-          id = "morph_nodes",
-          source = nodes_filtered,
-          circle_color = mapgl::get_column("color"),
-          circle_radius = 5,
-          circle_stroke_width = 1.5,
-          circle_stroke_color = "#FFFFFF",
-          tooltip = "type_label"
         )
+
+      if (nrow(nodes_filtered) > 0) {
+        m <- m |>
+          mapgl::add_circle_layer(
+            id = "morph_nodes",
+            source = nodes_filtered,
+            circle_color = mapgl::get_column("color"),
+            circle_radius = 5,
+            circle_stroke_width = 1.5,
+            circle_stroke_color = "#FFFFFF",
+            tooltip = "type_label"
+          )
+      }
+      m
     })
 
     # -------------------------------------------------------------
@@ -949,18 +985,20 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
 
     output$scen_delta_reach <- shiny::renderText({
       s <- scen_res()
-      if (is.null(s)) return("--")
-      tab <- s$comp$summary_table
+      if (is.null(s) || is.null(s$comp)) return("--")
+      tab <- s$comp$summary
+      if (!is.data.frame(tab)) return("--")
       delta_row <- tab[tab$Metric == "Mean Reach (km)", ]
-      if (nrow(delta_row) > 0) sprintf("%.3f km", delta_row$Delta) else "--"
+      if (nrow(delta_row) > 0 && !is.na(delta_row$Delta[1])) sprintf("%.3f km", delta_row$Delta[1]) else "--"
     })
 
     output$scen_closed_len <- shiny::renderText({
       s <- scen_res()
-      if (is.null(s)) return("--")
-      tab <- s$comp$summary_table
+      if (is.null(s) || is.null(s$comp)) return("--")
+      tab <- s$comp$summary
+      if (!is.data.frame(tab)) return("--")
       delta_row <- tab[tab$Metric == "Network Length (km)", ]
-      if (nrow(delta_row) > 0) sprintf("%.2f km", abs(delta_row$Delta)) else "--"
+      if (nrow(delta_row) > 0 && !is.na(delta_row$Delta[1])) sprintf("%.2f km", abs(delta_row$Delta[1])) else "--"
     })
 
     output$map_scenarios <- mapgl::renderMaplibre({

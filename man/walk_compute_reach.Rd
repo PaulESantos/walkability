@@ -9,7 +9,7 @@ walk_compute_reach(
   time_min = 10,
   cutoff_s = NULL,
   target = c("largest_component", "all"),
-  n_threads = 0,
+  n_threads = 2L,
   verbose = TRUE
 )
 }
@@ -26,7 +26,8 @@ it overrides \code{time_min}.}
 \item{target}{Character string. Either \code{"largest_component"} (default) to compute
 only for nodes in the primary connected component, or \code{"all"}.}
 
-\item{n_threads}{Number of CPU threads to use in parallel (0 = auto-detect all available cores).}
+\item{n_threads}{Number of CPU threads to use in parallel, from 1 to 2.
+The default is 2, the maximum permitted during CRAN checks.}
 
 \item{verbose}{Logical. If \code{TRUE}, prints summary percentiles and runtime.}
 }
