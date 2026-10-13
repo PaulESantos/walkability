@@ -20,8 +20,8 @@ walk_build_network(
 \arguments{
 \item{data}{An \code{sf} object with \code{LINESTRING} or \code{MULTILINESTRING} geometries.}
 
-\item{crs}{Optional target metric CRS (e.g. \code{EPSG:32722}). If provided and \code{data}
-is in a different CRS, it will be projected.}
+\item{crs}{Optional target metric CRS (e.g. \code{EPSG:32722} or \code{"auto"} to automatically infer
+the appropriate local UTM zone). If provided and \code{data} is in a different CRS, it will be projected.}
 
 \item{walk_speed_kmh}{Walking design speed in km/h (default is 4.5 km/h,
 the international pedestrian planning standard, approx. 1.25 m/s).}

@@ -33,8 +33,10 @@ and calculates the redistribution of shortest-path betweenness centrality
 across the remaining network.
 }
 \examples{
-data(streets_cusco)
-net <- walk_build_network(streets_cusco, verbose = FALSE)
-sim <- walk_scenario_betweenness(net, closed_edges = c(5, 10))
-print(sim)
+if (requireNamespace("igraph", quietly = TRUE)) {
+  data(streets_cusco)
+  net <- walk_build_network(streets_cusco, verbose = FALSE)
+  sim <- walk_scenario_betweenness(net, closed_edges = c(5, 10))
+  print(sim)
+}
 }

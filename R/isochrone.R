@@ -113,7 +113,7 @@ walk_isochrone <- function(network,
     sub_edges$cutoff_min <- t_min
 
     # Create polygon geometry
-    buffered_lines <- sf::st_buffer(sf::st_combine(sub_edges$geometry), dist = buffer_m)
+    buffered_lines <- sf::st_buffer(sf::st_combine(sf::st_geometry(sub_edges)), dist = buffer_m)
 
     poly_geom <- if (method == "concave") {
       # Try concave hull on buffered lines
@@ -166,13 +166,13 @@ walk_isochrone <- function(network,
     ring_rows <- list()
     for (i in seq_len(n_p)) {
       if (i == 1) {
-        r_geom <- all_polys$geometry[1]
+        r_geom <- sf::st_geometry(all_polys)[1]
         interv <- sprintf("0 - %.0f min", all_polys$time_min[1])
         b_min <- 0.0
       } else {
         # Subtract union of smaller isochrones
-        prev_union <- sf::st_union(cumulative_polys$geometry[1:(i - 1)])
-        diff_geom <- sf::st_difference(all_polys$geometry[i], prev_union)
+        prev_union <- sf::st_union(sf::st_geometry(cumulative_polys)[1:(i - 1)])
+        diff_geom <- sf::st_difference(sf::st_geometry(all_polys)[i], prev_union)
         diff_geom <- sf::st_make_valid(diff_geom)
         gtypes <- as.character(sf::st_geometry_type(diff_geom))
         if (any(grepl("GEOMETRYCOLLECTION", gtypes))) {

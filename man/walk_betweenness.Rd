@@ -65,8 +65,10 @@ shortest-path flow, avoiding artificial topological breaks.
 }
 }
 \examples{
-data(streets_cusco)
-net <- walk_build_network(streets_cusco, verbose = FALSE)
-bw <- walk_betweenness(net)
-print(bw)
+if (requireNamespace("igraph", quietly = TRUE)) {
+  data(streets_cusco)
+  net <- walk_build_network(streets_cusco, verbose = FALSE)
+  bw <- walk_betweenness(net)
+  print(bw)
+}
 }

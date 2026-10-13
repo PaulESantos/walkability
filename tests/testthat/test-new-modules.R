@@ -223,4 +223,69 @@ test_that("walk_scenario_betweenness evaluates closures and identifies diverted 
   expect_true("Incremento (Delta)" %in% names(sim$top_diverted))
 })
 
+test_that("walk_build_network with crs = 'auto' automatically projects geographic WGS84 data", {
+  utils::data(streets_cusco)
+  cusco_wgs84 <- sf::st_transform(streets_cusco, 4326)
+  expect_true(sf::st_is_longlat(cusco_wgs84))
+
+  # crs = 'auto' should project to metric UTM without error
+  net_auto <- walk_build_network(cusco_wgs84, crs = "auto", repair = FALSE, verbose = FALSE)
+  expect_s3_class(net_auto, "walk_network")
+  expect_false(sf::st_is_longlat(net_auto$nodes))
+  expect_equal(sf::st_crs(net_auto$nodes)$epsg, 32719)
+})
+
+test_that(".load_spatial_network_from_upload properly parses zipped shapefiles and geopackages", {
+  utils::data(streets_cusco)
+  cusco_wgs84 <- sf::st_transform(streets_cusco, 4326)
+
+  # 1. Test GeoPackage in WGS84
+  tmp_gpkg <- tempfile(fileext = ".gpkg")
+  sf::st_write(cusco_wgs84, tmp_gpkg, quiet = TRUE)
+  df_gpkg <- data.frame(
+    name = basename(tmp_gpkg),
+    size = file.size(tmp_gpkg),
+    type = "application/geopackage+sqlite3",
+    datapath = tmp_gpkg,
+    stringsAsFactors = FALSE
+  )
+  res_gpkg <- walkability:::.load_spatial_network_from_upload(df_gpkg)
+  expect_s3_class(res_gpkg$network, "walk_network")
+  expect_equal(res_gpkg$format, "GeoPackage (.gpkg)")
+  expect_false(sf::st_is_longlat(res_gpkg$network$nodes))
+
+  # 2. Test Zipped Shapefile in WGS84
+  tmp_shp_dir <- tempfile(pattern = "shp_test_")
+  dir.create(tmp_shp_dir)
+  sf::st_write(cusco_wgs84, file.path(tmp_shp_dir, "tramos.shp"), quiet = TRUE)
+  tmp_zip <- tempfile(fileext = ".zip")
+  old_wd <- setwd(tmp_shp_dir)
+  utils::zip(tmp_zip, files = list.files(tmp_shp_dir))
+  setwd(old_wd)
+
+  df_zip <- data.frame(
+    name = "tramos_red.zip",
+    size = file.size(tmp_zip),
+    type = "application/zip",
+    datapath = tmp_zip,
+    stringsAsFactors = FALSE
+  )
+  res_zip <- walkability:::.load_spatial_network_from_upload(df_zip)
+  expect_s3_class(res_zip$network, "walk_network")
+  expect_equal(res_zip$format, "Shapefile (.shp)")
+  expect_false(sf::st_is_longlat(res_zip$network$nodes))
+
+  # 3. Test repair with planarize and snap parameters forwarded
+  res_repaired <- walkability:::.load_spatial_network_from_upload(
+    df_gpkg,
+    repair = TRUE,
+    planarize = TRUE,
+    snap_tolerance_m = 2.0
+  )
+  expect_s3_class(res_repaired$network, "walk_network")
+  expect_true(res_repaired$planarize)
+  expect_equal(res_repaired$snap_tolerance_m, 2.0)
+})
+
+
 

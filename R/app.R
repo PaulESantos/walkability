@@ -52,6 +52,10 @@ walk_app <- function(network = NULL,
   app_ui <- .create_walk_app_ui(has_initial_net = !is.null(network))
   app_server <- .create_walk_app_server(initial_network = network)
 
+  # Support uploading larger spatial files (e.g. up to 250 MB)
+  old_opts <- options(shiny.maxRequestSize = 250 * 1024^2)
+  on.exit(options(old_opts), add = TRUE)
+
   app <- shiny::shinyApp(ui = app_ui, server = app_server)
   shiny::runApp(app, host = host, port = port, launch.browser = launch.browser, ...)
 }
@@ -212,8 +216,19 @@ walk_app <- function(network = NULL,
         condition = "input.city_choice == 'custom'",
         shiny::fileInput(
           inputId = "user_file",
-          label = "Subir archivo espacial (.gpkg, .geojson, .zip):",
-          accept = c(".gpkg", ".geojson", ".json", ".zip")
+          label = "Subir archivo espacial (.gpkg, .zip, .geojson, .shp):",
+          multiple = TRUE,
+          accept = c(".gpkg", ".geojson", ".json", ".zip", ".shp", ".dbf", ".shx", ".prj")
+        ),
+        shiny::textInput(
+          inputId = "custom_crs",
+          label = "Sistema de Coordenadas (CRS):",
+          value = "auto",
+          placeholder = "auto o c\u00f3digo EPSG (ej: 32719, 32618)"
+        ),
+        shiny::tags$small(
+          style = "font-size: 0.76rem; color: #6c757d; display: block; margin-top: -6px; margin-bottom: 8px;",
+          "'auto' proyecta autom\u00e1ticamente a la zona UTM m\u00e9trica adecuada."
         )
       ),
       shiny::hr(),
@@ -227,8 +242,40 @@ walk_app <- function(network = NULL,
       ),
       shiny::checkboxInput(
         inputId = "param_repair",
-        label = "Reparar red (snap & planarize)",
+        label = "Reparar topolog\u00eda de red (GIS)",
         value = TRUE
+      ),
+      shiny::conditionalPanel(
+        condition = "input.param_repair == true",
+        shiny::tags$div(
+          style = "padding: 8px 12px; margin-top: -6px; margin-bottom: 12px; background-color: rgba(0, 95, 115, 0.05); border-left: 3px solid #005F73; border-radius: 4px;",
+          shiny::checkboxInput(
+            inputId = "param_planarize",
+            label = "Planarizar intersecciones (dividir cruces)",
+            value = TRUE
+          ),
+          shiny::numericInput(
+            inputId = "param_snap_tol",
+            label = "Tolerancia de snap (metros):",
+            value = 2.0,
+            min = 0.0,
+            max = 50.0,
+            step = 0.5
+          ),
+          shiny::tags$small(
+            style = "font-size: 0.75rem; color: #555; display: block; margin-top: -4px;",
+            "Corta calles en cruces y une extremos con huecos < tolerancia."
+          )
+        )
+      ),
+      shiny::selectInput(
+        inputId = "param_components",
+        label = "Componentes de red:",
+        choices = c(
+          "Todos los segmentos (conservar red GIS completa)" = "all",
+          "Solo componente continuo principal (islas excluidas)" = "largest"
+        ),
+        selected = "all"
       ),
       shiny::uiOutput("network_status_badge"),
       shiny::downloadButton(
@@ -808,26 +855,242 @@ walk_app <- function(network = NULL,
   )
 }
 
+# Spatial Loader for Custom Uploads (GeoPackage, Zipped Shapefile, GeoJSON, Multi-file Shapefile)
+.load_spatial_network_from_upload <- function(user_file_df, crs_param = "auto", walk_speed_kmh = 4.5, repair = TRUE, planarize = FALSE, snap_tolerance_m = 0.0, keep_components = "all") {
+  if (is.null(user_file_df) || nrow(user_file_df) == 0) return(NULL)
+
+  work_dir <- tempfile(pattern = "walk_spatial_")
+  dir.create(work_dir, recursive = TRUE)
+  on.exit(unlink(work_dir, recursive = TRUE, force = TRUE), add = TRUE)
+
+  # Copy uploaded files preserving original names
+  for (i in seq_len(nrow(user_file_df))) {
+    dest <- file.path(work_dir, user_file_df$name[i])
+    file.copy(user_file_df$datapath[i], dest, overwrite = TRUE)
+  }
+
+  # Unzip any zip archives
+  zip_files <- list.files(work_dir, pattern = "\\.zip$", ignore.case = TRUE, full.names = TRUE)
+  if (length(zip_files) > 0) {
+    for (zf in zip_files) {
+      unzip_dir <- file.path(work_dir, "unzipped")
+      dir.create(unzip_dir, recursive = TRUE, showWarnings = FALSE)
+      utils::unzip(zf, exdir = unzip_dir, unzip = "internal")
+    }
+  }
+
+  all_files <- list.files(work_dir, recursive = TRUE, full.names = TRUE)
+  # Exclude macOS metadata files
+  all_files <- all_files[!grepl("__MACOSX|/\\._|\\\\\\._", all_files)]
+
+  shp_f <- all_files[grepl("\\.shp$", all_files, ignore.case = TRUE)]
+  gpkg_f <- all_files[grepl("\\.gpkg$", all_files, ignore.case = TRUE)]
+  geojson_f <- all_files[grepl("\\.(geojson|json)$", all_files, ignore.case = TRUE)]
+
+  target_file <- NULL
+  file_format <- NULL
+
+  if (length(shp_f) > 0) {
+    target_file <- shp_f[1]
+    file_format <- "Shapefile (.shp)"
+    raw_sf <- sf::st_read(target_file, quiet = TRUE)
+  } else if (length(gpkg_f) > 0) {
+    target_file <- gpkg_f[1]
+    file_format <- "GeoPackage (.gpkg)"
+    layers_info <- sf::st_layers(target_file)
+    chosen_layer <- layers_info$name[1]
+    if (length(layers_info$name) > 1) {
+      line_idx <- which(grepl("line|street|road|edge|tramo|vial|calle|red", layers_info$name, ignore.case = TRUE))
+      if (length(line_idx) > 0) {
+        chosen_layer <- layers_info$name[line_idx[1]]
+      } else {
+        gtype_idx <- which(grepl("line", tolower(as.character(layers_info$geomtype %||% ""))))
+        if (length(gtype_idx) > 0) chosen_layer <- layers_info$name[gtype_idx[1]]
+      }
+    }
+    raw_sf <- sf::st_read(target_file, layer = chosen_layer, quiet = TRUE)
+  } else if (length(geojson_f) > 0) {
+    target_file <- geojson_f[1]
+    file_format <- "GeoJSON (.geojson)"
+    raw_sf <- sf::st_read(target_file, quiet = TRUE)
+  } else {
+    stop("No se detect\u00f3 ning\u00fan archivo espacial compatible (.shp, .gpkg, .geojson, .zip).")
+  }
+
+  # Ensure 2D (drop Z and M coordinates if present)
+  raw_sf <- sf::st_zm(raw_sf, drop = TRUE, what = "ZM")
+
+  # Filter linear geometries (LINESTRING, MULTILINESTRING)
+  gtypes <- as.character(sf::st_geometry_type(raw_sf, by_geometry = TRUE))
+  line_idx <- which(gtypes %in% c("LINESTRING", "MULTILINESTRING"))
+  if (length(line_idx) > 0) {
+    raw_sf <- raw_sf[line_idx, ]
+  } else {
+    raw_sf <- tryCatch(sf::st_collection_extract(raw_sf, "LINESTRING"), error = function(e) raw_sf[0, ])
+  }
+
+  if (nrow(raw_sf) == 0) {
+    stop("El archivo no contiene geometr\u00edas lineales (calles o tramos) utilizables para la red.")
+  }
+
+  # CRS Handling & Metric Projection
+  current_crs <- sf::st_crs(raw_sf)
+  is_missing_crs <- is.na(current_crs) || is.null(current_crs$input)
+  target_crs_code <- NULL
+
+  crs_input_clean <- trimws(tolower(as.character(crs_param %||% "auto")))
+  if (nzchar(crs_input_clean) && crs_input_clean != "auto") {
+    num_code <- as.integer(gsub("[^0-9]", "", crs_input_clean))
+    if (!is.na(num_code) && num_code > 0) {
+      target_crs_code <- num_code
+    }
+  }
+
+  crs_note <- ""
+  if (is_missing_crs) {
+    bb <- sf::st_bbox(raw_sf)
+    if (bb["xmin"] >= -180 && bb["xmax"] <= 180 && bb["ymin"] >= -90 && bb["ymax"] <= 90) {
+      sf::st_crs(raw_sf) <- 4326
+      current_crs <- sf::st_crs(raw_sf)
+      crs_note <- "CRS asumido WGS84"
+    } else {
+      if (is.null(target_crs_code)) target_crs_code <- 3857
+      sf::st_crs(raw_sf) <- target_crs_code
+      current_crs <- sf::st_crs(raw_sf)
+      crs_note <- paste0("CRS asumido EPSG:", target_crs_code)
+    }
+  }
+
+  if (sf::st_is_longlat(raw_sf)) {
+    if (is.null(target_crs_code)) {
+      wgs84_sf <- sf::st_transform(raw_sf, 4326)
+      bb <- sf::st_bbox(wgs84_sf)
+      lon_c <- (bb["xmin"] + bb["xmax"]) / 2
+      lat_c <- (bb["ymin"] + bb["ymax"]) / 2
+      utm_z <- floor((lon_c + 180) / 6) + 1
+      target_crs_code <- if (lat_c >= 0) 32600 + utm_z else 32700 + utm_z
+      crs_note <- sprintf("WGS84 proyectado autom\u00e1ticamente a UTM Zona %d%s (EPSG:%d)",
+                          utm_z, if (lat_c >= 0) "N" else "S", target_crs_code)
+    } else {
+      crs_note <- sprintf("WGS84 proyectado a EPSG:%d", target_crs_code)
+    }
+    raw_sf <- sf::st_transform(raw_sf, as.integer(target_crs_code))
+  } else if (!is.null(target_crs_code)) {
+    raw_sf <- sf::st_transform(raw_sf, as.integer(target_crs_code))
+    crs_note <- sprintf("Proyectado a EPSG:%d", target_crs_code)
+  } else {
+    crs_epsg <- sf::st_crs(raw_sf)$epsg
+    crs_note <- if (!is.null(crs_epsg) && !is.na(crs_epsg)) sprintf("M\u00e9trico nativo (EPSG:%s)", crs_epsg) else "M\u00e9trico nativo"
+  }
+
+  net <- walk_build_network(
+    data = raw_sf,
+    walk_speed_kmh = walk_speed_kmh,
+    repair = repair,
+    planarize = planarize,
+    snap_tolerance_m = snap_tolerance_m,
+    keep_components = keep_components,
+    drop_classes = character(0),
+    verbose = FALSE
+  )
+
+  list(
+    network = net,
+    format = file_format,
+    target_file = basename(target_file),
+    raw_features = nrow(raw_sf),
+    crs_note = crs_note,
+    epsg = sf::st_crs(raw_sf)$epsg,
+    planarize = planarize,
+    snap_tolerance_m = snap_tolerance_m
+  )
+}
+
 # Internal Server Definition
 .create_walk_app_server <- function(initial_network = NULL) {
   function(input, output, session) {
     # 1. Reactive Network Management
     current_net <- shiny::reactiveVal(initial_network)
+    network_meta <- shiny::reactiveVal(if (!is.null(initial_network)) list(
+      format = "Red predefinida",
+      target_file = "initial_network",
+      crs_note = "M\u00e9trico proyectado",
+      epsg = sf::st_crs(initial_network$nodes)$epsg
+    ) else NULL)
+    network_error <- shiny::reactiveVal(NULL)
+
+    # Core reactive state holders across tabs
+    reach_res <- shiny::reactiveVal(NULL)
+    iso_origin_coords <- shiny::reactiveVal(NULL)
+    iso_res <- shiny::reactiveVal(NULL)
+    route_pt_a <- shiny::reactiveVal(NULL)
+    route_pt_b <- shiny::reactiveVal(NULL)
+    route_res <- shiny::reactiveVal(NULL)
+    bw_base_res <- shiny::reactiveVal(NULL)
+    bw_sim_res <- shiny::reactiveVal(NULL)
+    scen_res <- shiny::reactiveVal(NULL)
 
     shiny::observe({
       city <- input$city_choice
       if (city == "custom") {
-        shiny::req(input$user_file)
-        data_path <- input$user_file$datapath
-        custom_sf <- sf::st_read(data_path, quiet = TRUE)
-        net <- walk_build_network(
-          data = custom_sf,
-          walk_speed_kmh = input$param_speed,
-          repair = input$param_repair,
-          verbose = FALSE
-        )
-        current_net(net)
+        if (is.null(input$user_file)) {
+          network_error(NULL)
+          return()
+        }
+
+        shiny::withProgress(message = "Cargando archivo espacial...", value = 0.2, {
+          tryCatch({
+            shiny::incProgress(0.3, detail = "Descomprimiendo y verificando geometr\u00edas...")
+            do_repair <- isTRUE(input$param_repair %||% TRUE)
+            do_planarize <- if (do_repair) isTRUE(input$param_planarize %||% TRUE) else FALSE
+            snap_tol <- if (do_repair) as.numeric(input$param_snap_tol %||% 2.0) else 0.0
+
+            upload_res <- .load_spatial_network_from_upload(
+              user_file_df = input$user_file,
+              crs_param = input$custom_crs %||% "auto",
+              walk_speed_kmh = input$param_speed %||% 4.5,
+              repair = do_repair,
+              planarize = do_planarize,
+              snap_tolerance_m = snap_tol,
+              keep_components = input$param_components %||% "all"
+            )
+            shiny::incProgress(0.4, detail = "Estructurando topolog\u00eda de red en kernel Rust...")
+            net <- upload_res$network
+
+            # Reset spatial states tied to previous coordinates
+            iso_origin_coords(NULL)
+            route_pt_a(NULL)
+            route_pt_b(NULL)
+            route_res(NULL)
+            iso_res(NULL)
+            reach_res(NULL)
+            bw_sim_res(NULL)
+            scen_res(NULL)
+
+            current_net(net)
+            network_meta(upload_res)
+            network_error(NULL)
+
+            repair_note <- if (do_repair && (do_planarize || snap_tol > 0)) {
+              sprintf(" | Reparado (planarize=%s, snap=%.1fm)", if (do_planarize) "s\u00ed" else "no", snap_tol)
+            } else ""
+
+            shiny::showNotification(
+              sprintf("\u00a1Red cargada con \u00e9xito! %d tramos | %s%s", upload_res$raw_features, upload_res$crs_note, repair_note),
+              type = "message",
+              duration = 6
+            )
+          }, error = function(e) {
+            network_error(e$message)
+            shiny::showNotification(
+              paste("Error al cargar la red:", e$message),
+              type = "error",
+              duration = 10
+            )
+          })
+        })
       } else {
+        network_error(NULL)
         if (city == "cusco") {
           utils::data(streets_cusco, package = "walkability", envir = environment())
           net_data <- streets_cusco
@@ -838,24 +1101,91 @@ walk_app <- function(network = NULL,
           utils::data(streets_arequipa, package = "walkability", envir = environment())
           net_data <- streets_arequipa
         }
+
+        # Reset spatial states tied to previous coordinates
+        iso_origin_coords(NULL)
+        route_pt_a(NULL)
+        route_pt_b(NULL)
+        route_res(NULL)
+        iso_res(NULL)
+        reach_res(NULL)
+        bw_sim_res(NULL)
+        scen_res(NULL)
+
+        do_repair <- isTRUE(input$param_repair %||% TRUE)
+        do_planarize <- if (do_repair) isTRUE(input$param_planarize %||% TRUE) else FALSE
+        snap_tol <- if (do_repair) as.numeric(input$param_snap_tol %||% 2.0) else 0.0
+
         net <- walk_build_network(
           data = net_data,
-          walk_speed_kmh = input$param_speed,
-          repair = input$param_repair,
+          walk_speed_kmh = input$param_speed %||% 4.5,
+          repair = do_repair,
+          planarize = do_planarize,
+          snap_tolerance_m = snap_tol,
+          keep_components = input$param_components %||% "all",
           verbose = FALSE
         )
         current_net(net)
+        network_meta(list(
+          format = "Conjunto integrado",
+          target_file = city,
+          crs_note = "M\u00e9trico oficial proyectado (UTM)",
+          epsg = sf::st_crs(net$nodes)$epsg
+        ))
       }
     })
 
     output$network_status_badge <- shiny::renderUI({
+      err <- network_error()
+      if (!is.null(err)) {
+        return(shiny::tags$div(
+          class = "alert alert-danger p-2 mt-2",
+          style = "font-size: 0.85rem;",
+          shiny::tags$strong("Error al cargar red: "), err,
+          shiny::tags$div(
+            style = "font-size: 0.78rem; margin-top: 4px;",
+            "Aseg\u00farate de que el archivo ZIP contenga un .shp (con .dbf y .shx), o sea un GeoPackage (.gpkg) con geometr\u00edas lineales."
+          )
+        ))
+      }
+
+      if (input$city_choice == "custom" && is.null(input$user_file)) {
+        return(shiny::tags$div(
+          class = "alert alert-warning p-2 mt-2",
+          style = "font-size: 0.85rem;",
+          shiny::tags$strong("Esperando archivo: "), "Sube tu GeoPackage (.gpkg), Shapefile (.zip) o GeoJSON en el panel lateral."
+        ))
+      }
+
       net <- current_net()
       if (is.null(net)) return(NULL)
+
+      meta <- network_meta()
+      crs_info <- if (!is.null(meta$crs_note) && nzchar(meta$crs_note)) {
+        paste0(" | ", meta$crs_note)
+      } else {
+        ""
+      }
+
+      raw_n <- meta$raw_features
+      curr_n <- nrow(net$edges)
+      n_omitted <- if (!is.null(raw_n) && raw_n > curr_n) raw_n - curr_n else 0
+
+      comp_txt <- if (!is.null(net$total_components) && net$total_components > 1) {
+        if (n_omitted > 0) {
+          sprintf(" | %d islas/tramos desconectados excluidos", n_omitted)
+        } else {
+          sprintf(" (%d componentes/islas conexas)", net$total_components)
+        }
+      } else {
+        ""
+      }
+
       shiny::tags$div(
         class = "alert alert-success p-2 mt-2",
         style = "font-size: 0.85rem;",
-        shiny::tags$strong("Red cargada: "), sprintf("%s nodos | %s tramos (%.1f km)",
-          nrow(net$nodes), nrow(net$edges), sum(net$edges$length_m) / 1000)
+        shiny::tags$strong("Red cargada: "), sprintf("%s nodos | %s tramos (%.1f km)%s%s",
+          nrow(net$nodes), curr_n, sum(net$edges$length_m) / 1000, comp_txt, crs_info)
       )
     })
 
@@ -887,14 +1217,18 @@ walk_app <- function(network = NULL,
     # -------------------------------------------------------------
     # 2. PESTA\u00d1A: ALCANCE (REACH)
     # -------------------------------------------------------------
-    reach_res <- shiny::reactiveVal(NULL)
-
     shiny::observe({
       net <- current_net()
       shiny::req(net)
-      t_min <- input$reach_time_min
-      r <- walk_compute_reach(net, time_min = t_min, verbose = FALSE)
-      reach_res(r)
+      t_min <- as.numeric(input$reach_time_min %||% 10)
+      if (is.na(t_min) || t_min <= 0) t_min <- 10
+      target_mode <- if (identical(input$param_components, "largest")) "largest_component" else "all"
+      tryCatch({
+        r <- walk_compute_reach(net, time_min = t_min, target = target_mode, verbose = FALSE)
+        reach_res(r)
+      }, error = function(e) {
+        reach_res(NULL)
+      })
     }) |> shiny::bindEvent(input$btn_calc_reach, current_net(), ignoreNULL = FALSE)
 
     # Download handler for Reach sf edges
@@ -930,22 +1264,24 @@ walk_app <- function(network = NULL,
       bb <- sf::st_bbox(edges_wgs)
 
       r <- reach_res()
-      if (!is.null(r)) {
-        # Color edges by reachable length
+      if (!is.null(r) && !is.null(r$edges$reachable_length_km)) {
         lens <- r$edges$reachable_length_km
+        edges_wgs$reachable_length_km <- lens
         min_v <- stats::quantile(lens, 0.05, na.rm = TRUE)
         max_v <- stats::quantile(lens, 0.95, na.rm = TRUE)
-        if (max_v <= min_v) max_v <- min_v + 1
+        if (is.na(min_v) || is.na(max_v) || max_v <= min_v) max_v <- (min_v %||% 0) + 1
         norm_v <- pmin(pmax((lens - min_v) / (max_v - min_v), 0), 1)
+        norm_v[is.na(norm_v)] <- 0
         pal <- scales::col_numeric("viridis", domain = c(0, 1))
         edges_wgs$color <- pal(norm_v)
+        lens_clean <- ifelse(is.na(lens), 0, lens)
+        edges_wgs$tooltip_text <- sprintf("Alcance: %.2f km (Tramo #%d)", lens_clean, seq_len(nrow(edges_wgs)))
       } else {
         edges_wgs$color <- "#0A9396"
+        edges_wgs$tooltip_text <- sprintf("Tramo #%d (%.1f m)", seq_len(nrow(edges_wgs)), edges_wgs$length_m)
       }
 
-      edges_wgs$tooltip_text <- sprintf("Alcance medio: %.2f km", edges_wgs$reachable_length_km %||% 0)
-
-      mapgl::maplibre(
+      m <- mapgl::maplibre(
         style = mapgl::carto_style("positron"),
         bounds = bb
       ) |>
@@ -959,13 +1295,41 @@ walk_app <- function(network = NULL,
           line_opacity = 0.85,
           tooltip = "tooltip_text"
         )
+
+      if (!is.null(r) && !is.null(r$edges$reachable_length_km)) {
+        t_val <- as.numeric(input$reach_time_min %||% 10)
+        min_km <- round(suppressWarnings(min(lens, na.rm = TRUE)), 2)
+        max_km <- round(suppressWarnings(max(lens, na.rm = TRUE)), 2)
+        if (is.infinite(min_km) || is.na(min_km)) min_km <- 0.0
+        if (is.infinite(max_km) || is.na(max_km) || max_km <= min_km) max_km <- min_km + 1.0
+        mid_km <- round((min_km + max_km) / 2, 2)
+
+        m <- m |> mapgl::add_continuous_legend(
+          legend_title = sprintf("Red Accesible (%d min)", as.integer(t_val)),
+          values = c(
+            sprintf("%.1f km", min_km),
+            sprintf("%.1f km", mid_km),
+            sprintf("%.1f km", max_km)
+          ),
+          colors = c("#440154", "#3b528b", "#21908d", "#5dc863", "#fde725"),
+          position = "bottom-right"
+        )
+      } else {
+        m <- m |> mapgl::add_categorical_legend(
+          legend_title = "Alcance Peatonal",
+          values = c("Red Peatonal Base"),
+          colors = c("#0A9396"),
+          patch_shape = "line",
+          position = "bottom-right"
+        )
+      }
+
+      m
     })
 
     # -------------------------------------------------------------
     # 3. PESTA\u00d1A: IS\u00d3CRONAS (ISOCHRONES)
     # -------------------------------------------------------------
-    iso_origin_coords <- shiny::reactiveVal(NULL)
-    iso_res <- shiny::reactiveVal(NULL)
 
     # Detect click on isochrone map
     shiny::observeEvent(input$map_iso_click, {
@@ -1021,6 +1385,8 @@ walk_app <- function(network = NULL,
 
       if (is.null(coords)) {
         giant_nodes <- net$nodes[net$nodes$is_giant, ]
+        if (nrow(giant_nodes) == 0) giant_nodes <- net$nodes
+        if (nrow(giant_nodes) == 0) return()
         pt_origin <- sf::st_coordinates(giant_nodes)[1, 1:2]
       } else {
         pt_wgs <- sf::st_sfc(sf::st_point(coords), crs = 4326)
@@ -1028,14 +1394,21 @@ walk_app <- function(network = NULL,
         pt_origin <- sf::st_coordinates(pt_proj)[1, 1:2]
       }
 
-      iso <- walk_isochrone(
-        network = net,
-        origin = pt_origin,
-        time_min = cutoffs,
-        method = input$iso_method,
-        rings = input$iso_rings
-      )
-      iso_res(iso)
+      meth <- input$iso_method %||% "concave"
+      rngs <- if (is.null(input$iso_rings)) TRUE else isTRUE(input$iso_rings)
+
+      tryCatch({
+        iso <- walk_isochrone(
+          network = net,
+          origin = pt_origin,
+          time_min = cutoffs,
+          method = meth,
+          rings = rngs
+        )
+        iso_res(iso)
+      }, error = function(e) {
+        iso_res(NULL)
+      })
     }) |> shiny::bindEvent(input$btn_calc_iso, current_net(), ignoreNULL = FALSE)
 
     # Download handler for Isochrone sf polygons
@@ -1127,10 +1500,6 @@ walk_app <- function(network = NULL,
     # -------------------------------------------------------------
     # 4. PESTA\u00d1A: RUTEO & CIRCUIDAD (ROUTING)
     # -------------------------------------------------------------
-    route_pt_a <- shiny::reactiveVal(NULL)
-    route_pt_b <- shiny::reactiveVal(NULL)
-    route_res <- shiny::reactiveVal(NULL)
-
     shiny::observeEvent(input$map_route_click, {
       click <- input$map_route_click
       if (!is.null(click$lng) && !is.null(click$lat)) {
@@ -1146,8 +1515,9 @@ walk_app <- function(network = NULL,
       net <- current_net()
       shiny::req(net)
       nodes_proj <- net$nodes[net$nodes$is_giant, ]
+      if (nrow(nodes_proj) < 20) nodes_proj <- net$nodes
       n_cand <- nrow(nodes_proj)
-      if (n_cand >= 20) {
+      if (n_cand >= 2) {
         idx_a <- sample(seq_len(n_cand), 1)
         idx_b <- sample(seq_len(n_cand), 1)
         c_a <- sf::st_coordinates(sf::st_transform(nodes_proj[idx_a, ], 4326))[1, 1:2]
@@ -1229,8 +1599,10 @@ walk_app <- function(network = NULL,
           line_opacity = 0.40
         )
 
-      pa <- route_pt_a()
-      pb <- route_pt_b()
+      # Usar isolate para no re-renderizar el mapa base ni resetear el zoom
+      # al fijar puntos o calcular la ruta
+      pa <- shiny::isolate(route_pt_a())
+      pb <- shiny::isolate(route_pt_b())
 
       if (!is.null(pa)) {
         pt_a_sf <- sf::st_sf(label = "Origen (A)", geometry = sf::st_sfc(sf::st_point(pa), crs = 4326))
@@ -1256,12 +1628,11 @@ walk_app <- function(network = NULL,
         )
       }
 
-      r <- route_res()
+      r <- shiny::isolate(route_res())
       if (!is.null(r) && !is.null(r$path_sf)) {
         path_wgs <- sf::st_transform(r$path_sf, 4326)
         path_wgs$tooltip_text <- sprintf("Ruta: %.1f m | %.1f min | Circuidad: %.2f", r$distance_m, r$time_min, r$circuity)
-        
-        # Halo de contraste detr\u00e1s de la ruta \u00f3ptima
+
         m <- m |>
           mapgl::add_line_layer(
             id = "route_path_casing",
@@ -1270,7 +1641,6 @@ walk_app <- function(network = NULL,
             line_width = 7.5,
             line_opacity = 0.95
           ) |>
-          # Trazado principal de la ruta \u00f3ptima sobre la red
           mapgl::add_line_layer(
             id = "route_path",
             source = path_wgs,
@@ -1289,6 +1659,73 @@ walk_app <- function(network = NULL,
         position = "bottom-right"
       )
     })
+
+    # Actualizaciones reactivas de marcadores y ruta via proxy
+    # Preservan el nivel de zoom y posicion encuadrada por el usuario
+    shiny::observeEvent(route_pt_a(), {
+      proxy <- mapgl::maplibre_proxy("map_route")
+      tryCatch(mapgl::clear_layer(proxy, "marker_a"), error = function(e) NULL)
+      pa <- route_pt_a()
+      if (!is.null(pa)) {
+        pt_a_sf <- sf::st_sf(label = "Origen (A)", geometry = sf::st_sfc(sf::st_point(pa), crs = 4326))
+        proxy |> mapgl::add_circle_layer(
+          id = "marker_a",
+          source = pt_a_sf,
+          circle_color = "#10B981",
+          circle_radius = 9,
+          circle_stroke_width = 2.5,
+          circle_stroke_color = "#FFFFFF"
+        )
+      }
+    }, ignoreNULL = FALSE, ignoreInit = TRUE)
+
+    shiny::observeEvent(route_pt_b(), {
+      proxy <- mapgl::maplibre_proxy("map_route")
+      tryCatch(mapgl::clear_layer(proxy, "marker_b"), error = function(e) NULL)
+      pb <- route_pt_b()
+      if (!is.null(pb)) {
+        pt_b_sf <- sf::st_sf(label = "Destino (B)", geometry = sf::st_sfc(sf::st_point(pb), crs = 4326))
+        proxy |> mapgl::add_circle_layer(
+          id = "marker_b",
+          source = pt_b_sf,
+          circle_color = "#F97316",
+          circle_radius = 9,
+          circle_stroke_width = 2.5,
+          circle_stroke_color = "#FFFFFF"
+        )
+      }
+    }, ignoreNULL = FALSE, ignoreInit = TRUE)
+
+    shiny::observeEvent(route_res(), {
+      proxy <- mapgl::maplibre_proxy("map_route")
+      tryCatch({
+        mapgl::clear_layer(proxy, "route_path_casing")
+        mapgl::clear_layer(proxy, "route_path")
+      }, error = function(e) NULL)
+
+      r <- route_res()
+      if (!is.null(r) && !is.null(r$path_sf)) {
+        path_wgs <- sf::st_transform(r$path_sf, 4326)
+        path_wgs$tooltip_text <- sprintf("Ruta: %.1f m | %.1f min | Circuidad: %.2f", r$distance_m, r$time_min, r$circuity)
+
+        proxy |>
+          mapgl::add_line_layer(
+            id = "route_path_casing",
+            source = path_wgs,
+            line_color = "#FFFFFF",
+            line_width = 7.5,
+            line_opacity = 0.95
+          ) |>
+          mapgl::add_line_layer(
+            id = "route_path",
+            source = path_wgs,
+            line_color = "#E63946",
+            line_width = 5.0,
+            line_opacity = 1.0,
+            tooltip = "tooltip_text"
+          )
+      }
+    }, ignoreNULL = FALSE, ignoreInit = TRUE)
 
     # -------------------------------------------------------------
     # 5. PESTA\u00d1A: MORFOLOG\u00cdA URBANA (MORPHOLOGY)
@@ -1404,7 +1841,7 @@ walk_app <- function(network = NULL,
           "Grado 4+: Ortogonal (Damero)"
         ),
         colors = c("#E63946", "#457B9D", "#2A9D8F"),
-        circular_patches = TRUE,
+        patch_shape = "circle",
         position = "bottom-right"
       )
     })
@@ -1412,34 +1849,48 @@ walk_app <- function(network = NULL,
     # -------------------------------------------------------------
     # 6. PESTA\u00d1A: ESCENARIOS E INTERMEDIACI\u00d3N (SCENARIOS & BETWEENNESS)
     # -------------------------------------------------------------
-    bw_base_res <- shiny::reactiveVal(NULL)
-    bw_sim_res <- shiny::reactiveVal(NULL)
-    scen_res <- shiny::reactiveVal(NULL)
-
     # Function to calculate baseline betweenness
     calc_base_betweenness <- function() {
       net <- current_net()
       shiny::req(net)
+      if (!requireNamespace("igraph", quietly = TRUE)) {
+        shiny::showNotification(
+          "El paquete opcional 'igraph' es necesario para intermediaci\u00f3n. Inst\u00e1lalo con install.packages('igraph').",
+          type = "warning",
+          duration = 5
+        )
+        bw_base_res(NULL)
+        return(NULL)
+      }
       snap_r <- as.numeric(input$scen_snap_radius %||% 0)
       cut_r <- as.numeric(input$scen_analysis_radius %||% 0)
-      shiny::withProgress(message = "Calculando intermediaci\u00f3n de red base...", value = 0.3, {
-        b <- walk_betweenness(
-          network = net,
-          snap_tolerance_m = snap_r,
-          radius_m = if (cut_r > 0) cut_r else NULL
-        )
-        shiny::incProgress(0.7, detail = "Finalizado")
-        bw_base_res(b)
-        bw_sim_res(NULL)
-        scen_res(NULL)
+      tryCatch({
+        shiny::withProgress(message = "Calculando intermediaci\u00f3n de red base...", value = 0.3, {
+          b <- walk_betweenness(
+            network = net,
+            snap_tolerance_m = snap_r,
+            radius_m = if (cut_r > 0) cut_r else NULL
+          )
+          shiny::incProgress(0.7, detail = "Finalizado")
+          bw_base_res(b)
+          bw_sim_res(NULL)
+          scen_res(NULL)
+        })
+      }, error = function(e) {
+        shiny::showNotification(paste("Aviso en intermediaci\u00f3n:", e$message), type = "warning")
+        bw_base_res(NULL)
       })
     }
 
-    # Automatically compute baseline betweenness on network load
+    # Automatically compute baseline betweenness on network load ONLY if igraph is available
     shiny::observe({
       net <- current_net()
       shiny::req(net)
-      calc_base_betweenness()
+      if (requireNamespace("igraph", quietly = TRUE)) {
+        calc_base_betweenness()
+      } else {
+        bw_base_res(NULL)
+      }
     }) |> shiny::bindEvent(current_net(), ignoreInit = FALSE)
 
     # Recalculate baseline when user explicitly requests
@@ -1572,24 +2023,32 @@ walk_app <- function(network = NULL,
         shiny::showNotification("Por favor selecciona o marca al menos un tramo antes de simular.", type = "warning")
         return()
       }
+      if (!requireNamespace("igraph", quietly = TRUE)) {
+        shiny::showNotification("El paquete opcional 'igraph' es necesario para simular escenarios de intermediaci\u00f3n.", type = "warning")
+        return()
+      }
       snap_r <- as.numeric(input$scen_snap_radius %||% 0)
       cut_r <- as.numeric(input$scen_analysis_radius %||% 0)
-      shiny::withProgress(message = "Simulando cierres viales...", value = 0.2, {
-        shiny::incProgress(0.3, detail = "Recalculando rutas y redistribuci\u00f3n de intermediaci\u00f3n...")
-        sim <- walk_scenario_betweenness(
-          network = net,
-          closed_edges = valid_edges,
-          snap_tolerance_m = snap_r,
-          radius_m = if (cut_r > 0) cut_r else NULL,
-          verbose = FALSE
-        )
-        bw_sim_res(sim)
-        shiny::incProgress(0.3, detail = "Evaluando variaci\u00f3n de accesibilidad peatonal...")
-        mod_net <- sim$mod_network
-        comp <- walk_compare_scenarios(base = net, scenario = mod_net, time_min = 5.0, verbose = FALSE)
-        scen_res(list(comp = comp, closed_edges = valid_edges, mod_net = mod_net))
-        shiny::updateRadioButtons(session, "scen_view_mode", selected = "sim_bw")
-        shiny::incProgress(0.2, detail = "Listo")
+      tryCatch({
+        shiny::withProgress(message = "Simulando cierres viales...", value = 0.2, {
+          shiny::incProgress(0.3, detail = "Recalculando rutas y redistribuci\u00f3n de intermediaci\u00f3n...")
+          sim <- walk_scenario_betweenness(
+            network = net,
+            closed_edges = valid_edges,
+            snap_tolerance_m = snap_r,
+            radius_m = if (cut_r > 0) cut_r else NULL,
+            verbose = FALSE
+          )
+          bw_sim_res(sim)
+          shiny::incProgress(0.3, detail = "Evaluando variaci\u00f3n de accesibilidad peatonal...")
+          mod_net <- sim$mod_network
+          comp <- walk_compare_scenarios(base = net, scenario = mod_net, time_min = 5.0, verbose = FALSE)
+          scen_res(list(comp = comp, closed_edges = valid_edges, mod_net = mod_net))
+          shiny::updateRadioButtons(session, "scen_view_mode", selected = "sim_bw")
+          shiny::incProgress(0.2, detail = "Listo")
+        })
+      }, error = function(e) {
+        shiny::showNotification(paste("Error en simulaci\u00f3n:", e$message), type = "error")
       })
     })
 
@@ -1860,7 +2319,7 @@ walk_app <- function(network = NULL,
             "Clausurado / Peatonalizado"
           ),
           colors = c("#D90429", "#F77F00", "#FCBF49", "#457B9D", "#111827"),
-          circular_patches = FALSE,
+          patch_shape = "square",
           position = "bottom-right"
         )
 
@@ -1913,7 +2372,7 @@ walk_app <- function(network = NULL,
             "Clausurado"
           ),
           colors = c("#D90429", "#F77F00", "#94A3B8", "#2A9D8F", "#111827"),
-          circular_patches = FALSE,
+          patch_shape = "square",
           position = "bottom-right"
         )
       }
@@ -1931,7 +2390,10 @@ walk_app <- function(network = NULL,
     generated_code_reactive <- shiny::reactive({
       city <- input$city_choice
       spd <- input$param_speed
-      rep <- if (isTRUE(input$param_repair)) "TRUE" else "FALSE"
+      do_rep <- isTRUE(input$param_repair)
+      rep <- if (do_rep) "TRUE" else "FALSE"
+      plan <- if (do_rep && isTRUE(input$param_planarize %||% TRUE)) "TRUE" else "FALSE"
+      snap_tol <- if (do_rep) as.numeric(input$param_snap_tol %||% 2.0) else 0.0
       filt <- input$code_module_filter
 
       header_txt <- c(
@@ -1951,16 +2413,24 @@ walk_app <- function(network = NULL,
         "# --- 1. Construcci\u00f3n y Reparaci\u00f3n Topol\u00f3gica de la Red Vial ---"
       )
       if (city == "custom") {
+        meta <- network_meta()
+        fname <- if (!is.null(meta$target_file)) meta$target_file else "calles.gpkg"
+        epsg_code <- if (!is.null(meta$epsg)) meta$epsg else 32719
         net_code <- c(net_code,
-          "# Sustituye la ruta por tu archivo espacial (.gpkg, .geojson, etc.):",
-          "datos_calles <- sf::st_read('ruta/a/tu/archivo_calles.gpkg')",
-          sprintf("net <- walk_build_network(datos_calles, walk_speed_kmh = %.1f, repair = %s)", spd, rep)
+          sprintf("# Archivo cargado en sesi\u00f3n: %s (%s)", fname, meta$format %||% "archivo espacial"),
+          sprintf("datos_calles <- sf::st_read('%s')", fname),
+          "# Asegurar geometr\u00eda 2D y proyecci\u00f3n m\u00e9trica (UTM):",
+          "datos_calles <- sf::st_zm(datos_calles, drop = TRUE, what = 'ZM')",
+          "if (sf::st_is_longlat(datos_calles)) {",
+          sprintf("  datos_calles <- sf::st_transform(datos_calles, %d)", epsg_code),
+          "}",
+          sprintf("net <- walk_build_network(datos_calles, walk_speed_kmh = %.1f, repair = %s, planarize = %s, snap_tolerance_m = %.1f)", spd, rep, plan, snap_tol)
         )
       } else {
         ds_name <- paste0("streets_", city)
         net_code <- c(net_code,
           sprintf("utils::data(%s, package = 'walkability')", ds_name),
-          sprintf("net <- walk_build_network(%s, walk_speed_kmh = %.1f, repair = %s)", ds_name, spd, rep)
+          sprintf("net <- walk_build_network(%s, walk_speed_kmh = %.1f, repair = %s, planarize = %s, snap_tolerance_m = %.1f)", ds_name, spd, rep, plan, snap_tol)
         )
       }
       net_code <- c(net_code, "print(net)", "")

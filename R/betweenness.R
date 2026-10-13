@@ -45,10 +45,12 @@
 #' @export
 #'
 #' @examples
-#' data(streets_cusco)
-#' net <- walk_build_network(streets_cusco, verbose = FALSE)
-#' bw <- walk_betweenness(net)
-#' print(bw)
+#' if (requireNamespace("igraph", quietly = TRUE)) {
+#'   data(streets_cusco)
+#'   net <- walk_build_network(streets_cusco, verbose = FALSE)
+#'   bw <- walk_betweenness(net)
+#'   print(bw)
+#' }
 walk_betweenness <- function(network,
                              snap_tolerance_m = 0.0,
                              radius_m = NULL,
@@ -246,10 +248,12 @@ plot.walk_betweenness <- function(x, ...) {
 #' @export
 #'
 #' @examples
-#' data(streets_cusco)
-#' net <- walk_build_network(streets_cusco, verbose = FALSE)
-#' sim <- walk_scenario_betweenness(net, closed_edges = c(5, 10))
-#' print(sim)
+#' if (requireNamespace("igraph", quietly = TRUE)) {
+#'   data(streets_cusco)
+#'   net <- walk_build_network(streets_cusco, verbose = FALSE)
+#'   sim <- walk_scenario_betweenness(net, closed_edges = c(5, 10))
+#'   print(sim)
+#' }
 walk_scenario_betweenness <- function(network,
                                       closed_edges = NULL,
                                       snap_tolerance_m = 0.0,

@@ -7,8 +7,8 @@
 #' topology via compiled Rust.
 #'
 #' @param data An `sf` object with `LINESTRING` or `MULTILINESTRING` geometries.
-#' @param crs Optional target metric CRS (e.g. `EPSG:32722`). If provided and `data`
-#'   is in a different CRS, it will be projected.
+#' @param crs Optional target metric CRS (e.g. `EPSG:32722` or `"auto"` to automatically infer
+#'   the appropriate local UTM zone). If provided and `data` is in a different CRS, it will be projected.
 #' @param walk_speed_kmh Walking design speed in km/h (default is 4.5 km/h,
 #'   the international pedestrian planning standard, approx. 1.25 m/s).
 #' @param repair Logical. If `TRUE`, applies the requested topological cleaning
@@ -61,14 +61,29 @@ walk_build_network <- function(data,
 
   # Reproject to metric CRS if requested
   if (!is.null(crs)) {
-    data <- sf::st_transform(data, crs)
+    if (identical(crs, "auto")) {
+      if (sf::st_is_longlat(data)) {
+        wgs84_sf <- sf::st_transform(data, 4326)
+        bb <- sf::st_bbox(wgs84_sf)
+        lon_c <- (bb["xmin"] + bb["xmax"]) / 2
+        lat_c <- (bb["ymin"] + bb["ymax"]) / 2
+        utm_z <- floor((lon_c + 180) / 6) + 1
+        epsg_utm <- if (lat_c >= 0) 32600 + utm_z else 32700 + utm_z
+        data <- sf::st_transform(data, as.integer(epsg_utm))
+        if (verbose) {
+          cli::cli_alert_info("Automatically projected spatial data from geographic CRS to UTM (EPSG:{epsg_utm}).")
+        }
+      }
+    } else {
+      data <- sf::st_transform(data, crs)
+    }
   }
 
   if (sf::st_is_longlat(data)) {
     cli::cli_abort(c(
       "The spatial data is in geographic coordinates (degrees, EPSG:4326).",
       "x" = "Length and speed calculations require a projected metric CRS (e.g. UTM).",
-      "i" = "Please specify a projected metric CRS via {.arg crs}."
+      "i" = "Please specify a projected metric CRS via {.arg crs} (e.g. {.code crs = 'auto'} or a UTM EPSG code)."
     ))
   }
 
@@ -194,6 +209,9 @@ walk_build_network <- function(data,
   if (keep_components == "largest") {
     lines <- lines[lines$is_giant, ]
   }
+
+  # Standardize active geometry column name to 'geometry'
+  sf::st_geometry(lines) <- "geometry"
 
   res <- structure(
     list(
