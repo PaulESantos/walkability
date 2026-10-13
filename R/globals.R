@@ -1,6 +1,7 @@
 #' Global Variables and Namespace Imports
 #'
 #' @importFrom rlang .data
+#' @importFrom utils head
 #' @keywords internal
 "_PACKAGE"
 

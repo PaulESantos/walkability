@@ -569,36 +569,36 @@ walk_app <- function(network = NULL,
       )
     ),
 
-    # 5. PESTAÑA: SIMULACIÓN DE ESCENARIOS E INTERMEDIACIÓN
+    # 5. PESTA\u00d1A: SIMULACI\u00d3N DE ESCENARIOS E INTERMEDIACI\u00d3N
     bslib::nav_panel(
-      title = "\U0001f6a7 Simulación & Intermediación",
+      title = "\U0001f6a7 Simulaci\u00f3n & Intermediaci\u00f3n",
       bslib::layout_sidebar(
         sidebar = bslib::sidebar(
-          title = "Simulación e Intermediación",
+          title = "Simulaci\u00f3n e Intermediaci\u00f3n",
           width = 330,
           shiny::radioButtons(
             inputId = "scen_view_mode",
             label = "Capa en Visualizador:",
             choices = c(
-              "1. Intermediación Base (Inicial)" = "base_bw",
-              "2. Intermediación Post-Cierre (Simulación)" = "sim_bw",
-              "3. Vías con Mayor Intermediación / Desvíos (\u0394)" = "delta_bw"
+              "1. Intermediaci\u00f3n Base (Inicial)" = "base_bw",
+              "2. Intermediaci\u00f3n Post-Cierre (Simulaci\u00f3n)" = "sim_bw",
+              "3. V\u00edas con Mayor Intermediaci\u00f3n / Desv\u00edos (\u0394)" = "delta_bw"
             ),
             selected = "base_bw"
           ),
           shiny::hr(),
           shiny::sliderInput(
             inputId = "scen_snap_radius",
-            label = "Radio para corrección de red (m):",
+            label = "Radio para correcci\u00f3n de red (m):",
             min = 0,
             max = 25,
             value = 0,
             step = 1
           ),
-          shiny::helpText("Tolerancia para unir discontinuidades y undershoots antes del cálculo."),
+          shiny::helpText("Tolerancia para unir discontinuidades y undershoots antes del c\u00e1lculo."),
           shiny::selectInput(
             inputId = "scen_analysis_radius",
-            label = "Radio métrico de intermediación:",
+            label = "Radio m\u00e9trico de intermediaci\u00f3n:",
             choices = c(
               "Toda la red (Global)" = "0",
               "Radio 400 m (Barrial)" = "400",
@@ -609,7 +609,7 @@ walk_app <- function(network = NULL,
           ),
           shiny::actionButton(
             inputId = "btn_recalc_bw_base",
-            label = "Recalcular Intermediación Base",
+            label = "Recalcular Intermediaci\u00f3n Base",
             class = "btn-sm btn-outline-primary w-100 mb-2",
             icon = shiny::icon("rotate")
           ),
@@ -661,19 +661,19 @@ walk_app <- function(network = NULL,
           ),
           shiny::actionButton(
             inputId = "btn_sim_scenario",
-            label = "Simular Cierre e Intermediación",
+            label = "Simular Cierre e Intermediaci\u00f3n",
             class = "btn-warning w-100 fw-bold",
             icon = shiny::icon("traffic-light")
           ),
           shiny::downloadButton(
             outputId = "dl_betweenness_base_sf",
-            label = "Descargar Intermediación Base (GeoJSON)",
+            label = "Descargar Intermediaci\u00f3n Base (GeoJSON)",
             class = "btn-sm btn-outline-primary w-100 mt-2",
             icon = shiny::icon("download")
           ),
           shiny::downloadButton(
             outputId = "dl_betweenness_sim_sf",
-            label = "Descargar Simulación Cierres (GeoJSON)",
+            label = "Descargar Simulaci\u00f3n Cierres (GeoJSON)",
             class = "btn-sm btn-outline-success w-100 mt-1",
             icon = shiny::icon("download")
           ),
@@ -691,7 +691,7 @@ walk_app <- function(network = NULL,
             theme = "primary"
           ),
           bslib::value_box(
-            title = "Mayor Desvío (Simulación)",
+            title = "Mayor Desv\u00edo (Simulaci\u00f3n)",
             value = shiny::textOutput("scen_top_sim_stat"),
             showcase = shiny::icon("arrows-split-up-and-left"),
             theme = "danger"
@@ -703,7 +703,7 @@ walk_app <- function(network = NULL,
             theme = "secondary"
           ),
           bslib::value_box(
-            title = "Intermediación Media Red",
+            title = "Intermediaci\u00f3n Media Red",
             value = shiny::textOutput("scen_delta_bw_stat"),
             showcase = shiny::icon("chart-line"),
             theme = "warning"
@@ -711,34 +711,34 @@ walk_app <- function(network = NULL,
         ),
         bslib::card(
           full_screen = TRUE,
-          bslib::card_header("Centralidad de Intermediación y Simulación de Desvíos (MapLibre GL)"),
+          bslib::card_header("Centralidad de Intermediaci\u00f3n y Simulaci\u00f3n de Desv\u00edos (MapLibre GL)"),
           mapgl::maplibreOutput("map_scenarios", height = "640px")
         ),
         bslib::accordion(
           open = FALSE,
           bslib::accordion_panel(
-            title = "\U0001f4ca Vías con Mayor Intermediación Producto del Cierre (Desvíos) (Desplegar)",
+            title = "\U0001f4ca V\u00edas con Mayor Intermediaci\u00f3n Producto del Cierre (Desv\u00edos) (Desplegar)",
             icon = shiny::icon("arrow-trend-up"),
             shiny::tableOutput("table_top_diverted")
           ),
           bslib::accordion_panel(
-            title = "\U0001f4cb Detalle de Tramos Seleccionados para la Intervención (Desplegar)",
+            title = "\U0001f4cb Detalle de Tramos Seleccionados para la Intervenci\u00f3n (Desplegar)",
             icon = shiny::icon("table-list"),
             shiny::tableOutput("table_closed_edges")
           ),
           bslib::accordion_panel(
-            title = "\U0001f4d6 Fundamento Teórico: ¿Qué Mide la Intermediación? (Desplegar)",
+            title = "\U0001f4d6 Fundamento Te\u00f3rico: \u00bfQu\u00e9 Mide la Intermediaci\u00f3n? (Desplegar)",
             icon = shiny::icon("circle-info"),
             shiny::HTML("
-              <h5>Intermediación: qué mide</h5>
-              <p>La intermediación mide la proporción de rutas más cortas potenciales que pasan por un tramo. Para cada par de nodos conectados, la herramienta busca la ruta de menor longitud y suma crédito a los tramos que esa ruta utiliza. Un valor alto señala un posible puente, conector o cuello de botella estructural: si se interrumpe, muchas rutas potenciales tendrían que desviarse.</p>
+              <h5>Intermediaci\u00f3n: qu\u00e9 mide</h5>
+              <p>La intermediaci\u00f3n mide la proporci\u00f3n de rutas m\u00e1s cortas potenciales que pasan por un tramo. Para cada par de nodos conectados, la herramienta busca la ruta de menor longitud y suma cr\u00e9dito a los tramos que esa ruta utiliza. Un valor alto se\u00f1ala un posible puente, conector o cuello de botella estructural: si se interrumpe, muchas rutas potenciales tendr\u00edan que desviarse.</p>
               <div class=\"alert alert-warning py-2 px-3 my-2 border-start border-4 border-warning\">
-                <strong>No es un aforo ni una predicción de congestión.</strong> La herramienta no conoce cuántos vehículos viajan, sus orígenes y destinos, horarios, sentidos de circulación ni velocidades reales. Por ello, un tramo rojo merece revisión como prioridad estructural, pero no debe interpretarse como \u201cla vía con más tránsito\u201d.
+                <strong>No es un aforo ni una predicci\u00f3n de congesti\u00f3n.</strong> La herramienta no conoce cu\u00e1ntos veh\u00edculos viajan, sus or\u00edgenes y destinos, horarios, sentidos de circulaci\u00f3n ni velocidades reales. Por ello, un tramo rojo merece revisi\u00f3n como prioridad estructural, pero no debe interpretarse como \u201cla v\u00eda con m\u00e1s tr\u00e1nsito\u201d.
               </div>
-              <h6>¿Por qué establecer radios para la corrección de la red?</h6>
-              <p>Las redes digitalizadas suelen presentar pequeñas discontinuidades o <em>undershoots</em> (brechas milimétricas o métricas entre segmentos adyacentes). El <strong>radio para la corrección de la red</strong> (tolerancia de snapping en metros) une y cicatriza automáticamente estos extremos antes del cálculo de rutas más cortas, asegurando que la intermediación evalúe la permeabilidad real de la trama urbana y no anomalías de digitalización.</p>
-              <h6>Dinámica de Desvíos y Sobrecarga tras el Cierre</h6>
-              <p>Al clausurar o peatonalizar los tramos seleccionados, los itinerarios que antes cruzaban por ellos deben desviarse por vías alternativas. El módulo recalcula la intermediación de toda la red restante e identifica los tramos con mayor incremento ($\\Delta > 0$), los cuales representan los <strong>corredores que absorberán la mayor redistribución de flujo</strong>.</p>
+              <h6>\u00bfPor qu\u00e9 establecer radios para la correcci\u00f3n de la red?</h6>
+              <p>Las redes digitalizadas suelen presentar peque\u00f1as discontinuidades o <em>undershoots</em> (brechas milim\u00e9tricas o m\u00e9tricas entre segmentos adyacentes). El <strong>radio para la correcci\u00f3n de la red</strong> (tolerancia de snapping en metros) une y cicatriza autom\u00e1ticamente estos extremos antes del c\u00e1lculo de rutas m\u00e1s cortas, asegurando que la intermediaci\u00f3n eval\u00fae la permeabilidad real de la trama urbana y no anomal\u00edas de digitalizaci\u00f3n.</p>
+              <h6>Din\u00e1mica de Desv\u00edos y Sobrecarga tras el Cierre</h6>
+              <p>Al clausurar o peatonalizar los tramos seleccionados, los itinerarios que antes cruzaban por ellos deben desviarse por v\u00edas alternativas. El m\u00f3dulo recalcula la intermediaci\u00f3n de toda la red restante e identifica los tramos con mayor incremento ($\\Delta > 0$), los cuales representan los <strong>corredores que absorber\u00e1n la mayor redistribuci\u00f3n de flujo</strong>.</p>
             ")
           )
         )
@@ -1261,7 +1261,7 @@ walk_app <- function(network = NULL,
         path_wgs <- sf::st_transform(r$path_sf, 4326)
         path_wgs$tooltip_text <- sprintf("Ruta: %.1f m | %.1f min | Circuidad: %.2f", r$distance_m, r$time_min, r$circuity)
         
-        # Halo de contraste detrás de la ruta óptima
+        # Halo de contraste detr\u00e1s de la ruta \u00f3ptima
         m <- m |>
           mapgl::add_line_layer(
             id = "route_path_casing",
@@ -1270,7 +1270,7 @@ walk_app <- function(network = NULL,
             line_width = 7.5,
             line_opacity = 0.95
           ) |>
-          # Trazado principal de la ruta óptima sobre la red
+          # Trazado principal de la ruta \u00f3ptima sobre la red
           mapgl::add_line_layer(
             id = "route_path",
             source = path_wgs,
@@ -1281,7 +1281,7 @@ walk_app <- function(network = NULL,
           )
       }
 
-      # Leyenda cartográfica de ruteo
+      # Leyenda cartogr\u00e1fica de ruteo
       m |> mapgl::add_categorical_legend(
         legend_title = "Ruta & Red Vial",
         values = c("Ruta \u00d3ptima", "Red Vial Base (Fondo)"),
@@ -1410,7 +1410,7 @@ walk_app <- function(network = NULL,
     })
 
     # -------------------------------------------------------------
-    # 6. PESTAÑA: ESCENARIOS E INTERMEDIACIÓN (SCENARIOS & BETWEENNESS)
+    # 6. PESTA\u00d1A: ESCENARIOS E INTERMEDIACI\u00d3N (SCENARIOS & BETWEENNESS)
     # -------------------------------------------------------------
     bw_base_res <- shiny::reactiveVal(NULL)
     bw_sim_res <- shiny::reactiveVal(NULL)
@@ -1422,7 +1422,7 @@ walk_app <- function(network = NULL,
       shiny::req(net)
       snap_r <- as.numeric(input$scen_snap_radius %||% 0)
       cut_r <- as.numeric(input$scen_analysis_radius %||% 0)
-      shiny::withProgress(message = "Calculando intermediación de red base...", value = 0.3, {
+      shiny::withProgress(message = "Calculando intermediaci\u00f3n de red base...", value = 0.3, {
         b <- walk_betweenness(
           network = net,
           snap_tolerance_m = snap_r,
@@ -1445,7 +1445,7 @@ walk_app <- function(network = NULL,
     # Recalculate baseline when user explicitly requests
     shiny::observeEvent(input$btn_recalc_bw_base, {
       calc_base_betweenness()
-      shiny::showNotification("Intermediación base recalculada con éxito.", type = "message")
+      shiny::showNotification("Intermediaci\u00f3n base recalculada con \u00e9xito.", type = "message")
     })
 
     # Populate edge choices when network or betweenness updates
@@ -1521,7 +1521,7 @@ walk_app <- function(network = NULL,
         new_sel <- unique(c(curr, top_id))
         shiny::updateSelectizeInput(session, "scen_edge_select", selected = new_sel)
         shiny::showNotification(
-          sprintf("Se seleccionó el cuello de botella crítico #%s (%s)", top_id, b$top_bottlenecks$Nombre[1]),
+          sprintf("Se seleccion\u00f3 el cuello de botella cr\u00edtico #%s (%s)", top_id, b$top_bottlenecks$Nombre[1]),
           type = "message"
         )
       }
@@ -1548,7 +1548,7 @@ walk_app <- function(network = NULL,
       if (length(sel) == 0 || is.null(net)) {
         return(shiny::tags$p(
           style = "font-size: 0.8rem; color: #6c757d; font-style: italic; margin-top: 4px;",
-          "Ningún tramo seleccionado. Haz clic en el mapa o búscalo arriba."
+          "Ning\u00fan tramo seleccionado. Haz clic en el mapa o b\u00fascalo arriba."
         ))
       }
       valid_sel <- sel[sel >= 1 & sel <= nrow(net$edges)]
@@ -1575,7 +1575,7 @@ walk_app <- function(network = NULL,
       snap_r <- as.numeric(input$scen_snap_radius %||% 0)
       cut_r <- as.numeric(input$scen_analysis_radius %||% 0)
       shiny::withProgress(message = "Simulando cierres viales...", value = 0.2, {
-        shiny::incProgress(0.3, detail = "Recalculando rutas y redistribución de intermediación...")
+        shiny::incProgress(0.3, detail = "Recalculando rutas y redistribuci\u00f3n de intermediaci\u00f3n...")
         sim <- walk_scenario_betweenness(
           network = net,
           closed_edges = valid_edges,
@@ -1584,7 +1584,7 @@ walk_app <- function(network = NULL,
           verbose = FALSE
         )
         bw_sim_res(sim)
-        shiny::incProgress(0.3, detail = "Evaluando variación de accesibilidad peatonal...")
+        shiny::incProgress(0.3, detail = "Evaluando variaci\u00f3n de accesibilidad peatonal...")
         mod_net <- sim$mod_network
         comp <- walk_compare_scenarios(base = net, scenario = mod_net, time_min = 5.0, verbose = FALSE)
         scen_res(list(comp = comp, closed_edges = valid_edges, mod_net = mod_net))
@@ -1601,7 +1601,7 @@ walk_app <- function(network = NULL,
       content = function(file) {
         b <- bw_base_res()
         if (is.null(b) || is.null(b$edges)) {
-          shiny::showNotification("No hay análisis de intermediación base disponible.", type = "warning")
+          shiny::showNotification("No hay an\u00e1lisis de intermediaci\u00f3n base disponible.", type = "warning")
           return()
         }
         sf::st_write(sf::st_transform(b$edges, 4326), file, driver = "GeoJSON", delete_dsn = TRUE, quiet = TRUE)
@@ -1616,7 +1616,7 @@ walk_app <- function(network = NULL,
       content = function(file) {
         s <- bw_sim_res()
         if (is.null(s) || is.null(s$edges)) {
-          shiny::showNotification("Simula una intervención antes de descargar los resultados de intermediación.", type = "warning")
+          shiny::showNotification("Simula una intervenci\u00f3n antes de descargar los resultados de intermediaci\u00f3n.", type = "warning")
           return()
         }
         sf::st_write(sf::st_transform(s$edges, 4326), file, driver = "GeoJSON", delete_dsn = TRUE, quiet = TRUE)
@@ -1631,7 +1631,7 @@ walk_app <- function(network = NULL,
       content = function(file) {
         s <- scen_res()
         if (is.null(s) || is.null(s$mod_net)) {
-          shiny::showNotification("Simula una intervención antes de descargar la red resultante.", type = "warning")
+          shiny::showNotification("Simula una intervenci\u00f3n antes de descargar la red resultante.", type = "warning")
           return()
         }
         sf::st_write(sf::st_transform(s$mod_net$edges, 4326), file, driver = "GeoJSON", delete_dsn = TRUE, quiet = TRUE)
@@ -1678,7 +1678,7 @@ walk_app <- function(network = NULL,
     output$table_top_diverted <- shiny::renderTable({
       s <- bw_sim_res()
       if (is.null(s) || nrow(s$top_diverted) == 0) {
-        return(data.frame(Estado = "Ejecuta una simulación para identificar qué vías asumen mayor intermediación producto del cierre."))
+        return(data.frame(Estado = "Ejecuta una simulaci\u00f3n para identificar qu\u00e9 v\u00edas asumen mayor intermediaci\u00f3n producto del cierre."))
       }
       s$top_diverted
     }, striped = TRUE, hover = TRUE, bordered = TRUE)
@@ -1688,11 +1688,11 @@ walk_app <- function(network = NULL,
       sel <- as.integer(input$scen_edge_select)
       sel <- sel[!is.na(sel)]
       if (length(sel) == 0 || is.null(net)) {
-        return(data.frame(Estado = "No hay tramos seleccionados. Haz clic en el mapa o búscalos en el buscador superior."))
+        return(data.frame(Estado = "No hay tramos seleccionados. Haz clic en el mapa o b\u00fascalos en el buscador superior."))
       }
       valid_sel <- sel[sel >= 1 & sel <= nrow(net$edges)]
       if (length(valid_sel) == 0) {
-        return(data.frame(Estado = "Tramos inválidos."))
+        return(data.frame(Estado = "Tramos inv\u00e1lidos."))
       }
       sub_edges <- net$edges[valid_sel, , drop = FALSE]
       b_base <- bw_base_res()
@@ -1704,9 +1704,9 @@ walk_app <- function(network = NULL,
       }
       type_col <- if ("highway" %in% names(sub_edges)) {
         v <- sub_edges$highway
-        ifelse(is.na(v), "vía", v)
+        ifelse(is.na(v), "v\u00eda", v)
       } else {
-        "vía"
+        "v\u00eda"
       }
       bw_col <- if (!is.null(b_base) && !is.null(b_base$edges$betweenness)) {
         round(b_base$edges$betweenness[valid_sel], 1)
@@ -1748,7 +1748,7 @@ walk_app <- function(network = NULL,
         if (!is.null(b_base)) {
           b_edges_wgs <- sf::st_transform(b_base$edges, 4326)
           b_edges_wgs$tooltip_text <- sprintf(
-            "<strong>%s</strong> [#%s]<br>Tipo: %s | Longitud: %.1fm<br>Intermediación: %.0f (Norm: %.1f)<br>Percentil: %.1f%% (%s)<br><em>Haz clic para marcar o desmarcar para cierre</em>",
+            "<strong>%s</strong> [#%s]<br>Tipo: %s | Longitud: %.1fm<br>Intermediaci\u00f3n: %.0f (Norm: %.1f)<br>Percentil: %.1f%% (%s)<br><em>Haz clic para marcar o desmarcar para cierre</em>",
             if ("name" %in% names(b_edges_wgs)) ifelse(is.na(b_edges_wgs$name) | b_edges_wgs$name == "", "(Sin nombre)", b_edges_wgs$name) else paste0("Tramo #", b_edges_wgs$edge_id),
             b_edges_wgs$edge_id,
             if ("highway" %in% names(b_edges_wgs)) ifelse(is.na(b_edges_wgs$highway), "calle", b_edges_wgs$highway) else "calle",
@@ -1795,12 +1795,12 @@ walk_app <- function(network = NULL,
         }
 
         m <- m |> mapgl::add_categorical_legend(
-          legend_title = "Intermediación Base (Cuellos de Botella)",
+          legend_title = "Intermediaci\u00f3n Base (Cuellos de Botella)",
           values = c(
-            "Crítico (Top 10% - Cuello de Botella)",
+            "Cr\u00edtico (Top 10% - Cuello de Botella)",
             "Alto (Top 25% - Conector Principal)",
             "Medio (Conector Secundario)",
-            "Bajo (Tráfico Local / Capilar)",
+            "Bajo (Tr\u00e1fico Local / Capilar)",
             "Marcado para Clausura"
           ),
           colors = c("#D90429", "#F77F00", "#FCBF49", "#457B9D", "#111827"),
@@ -1815,7 +1815,7 @@ walk_app <- function(network = NULL,
         closed_wgs <- sim_edges_wgs[sim_edges_wgs$is_closed, ]
 
         open_wgs$tooltip_text <- sprintf(
-          "<strong>%s</strong> [#%s]<br>Tipo: %s | Longitud: %.1fm<br>Intermediación Post-Cierre: %.0f (Norm: %.1f)<br>Base: %.0f (\u0394: %+.0f)<br>Estado: %s",
+          "<strong>%s</strong> [#%s]<br>Tipo: %s | Longitud: %.1fm<br>Intermediaci\u00f3n Post-Cierre: %.0f (Norm: %.1f)<br>Base: %.0f (\u0394: %+.0f)<br>Estado: %s",
           if ("name" %in% names(open_wgs)) ifelse(is.na(open_wgs$name) | open_wgs$name == "", "(Sin nombre)", open_wgs$name) else paste0("Tramo #", open_wgs$edge_id),
           open_wgs$edge_id,
           if ("highway" %in% names(open_wgs)) ifelse(is.na(open_wgs$highway), "calle", open_wgs$highway) else "calle",
@@ -1851,9 +1851,9 @@ walk_app <- function(network = NULL,
         }
 
         m <- m |> mapgl::add_categorical_legend(
-          legend_title = "Intermediación Post-Cierre",
+          legend_title = "Intermediaci\u00f3n Post-Cierre",
           values = c(
-            "Crítico Post-Cierre (Top 10%)",
+            "Cr\u00edtico Post-Cierre (Top 10%)",
             "Alto Post-Cierre (Top 25%)",
             "Medio Post-Cierre",
             "Bajo Post-Cierre",
@@ -1871,7 +1871,7 @@ walk_app <- function(network = NULL,
         closed_wgs <- sim_edges_wgs[sim_edges_wgs$is_closed, ]
 
         open_wgs$tooltip_text <- sprintf(
-          "<strong>%s</strong> [#%s]<br>Variación de Flujo (\u0394): %+.0f<br>Base: %.0f \u2192 Post-Cierre: %.0f<br>Estado: %s",
+          "<strong>%s</strong> [#%s]<br>Variaci\u00f3n de Flujo (\u0394): %+.0f<br>Base: %.0f \u2192 Post-Cierre: %.0f<br>Estado: %s",
           if ("name" %in% names(open_wgs)) ifelse(is.na(open_wgs$name) | open_wgs$name == "", "(Sin nombre)", open_wgs$name) else paste0("Tramo #", open_wgs$edge_id),
           open_wgs$edge_id,
           open_wgs$delta_betweenness,
@@ -1904,12 +1904,12 @@ walk_app <- function(network = NULL,
         }
 
         m <- m |> mapgl::add_categorical_legend(
-          legend_title = "Variación de Intermediación (\u0394 Desvíos)",
+          legend_title = "Variaci\u00f3n de Intermediaci\u00f3n (\u0394 Desv\u00edos)",
           values = c(
-            "Fuerte Aumento (\u0394 Desvío Crítico)",
+            "Fuerte Aumento (\u0394 Desv\u00edo Cr\u00edtico)",
             "Aumento Moderado",
             "Neutro / Sin Cambio",
-            "Reducción (\u0394 Aliviado)",
+            "Reducci\u00f3n (\u0394 Aliviado)",
             "Clausurado"
           ),
           colors = c("#D90429", "#F77F00", "#94A3B8", "#2A9D8F", "#111827"),
@@ -2066,16 +2066,16 @@ walk_app <- function(network = NULL,
       cut_str <- if (cut_val > 0) paste0(", radius_m = ", cut_val) else ""
 
       scen_code <- c(
-        "# --- 6. Centralidad de Intermediación (Betweenness) y Simulación de Cierres ---",
+        "# --- 6. Centralidad de Intermediaci\u00f3n (Betweenness) y Simulaci\u00f3n de Cierres ---",
         sprintf("intermediacion_base <- walk_betweenness(net, snap_tolerance_m = %s%s)", snap_val, cut_str),
         "print(intermediacion_base)",
         "plot(intermediacion_base)",
         "",
-        "# Simulación de intervención y desvíos resultantes:",
+        "# Simulaci\u00f3n de intervenci\u00f3n y desv\u00edos resultantes:",
         sprintf("tramos_clausura <- %s", sel_edges_str),
         sprintf("simulacion <- walk_scenario_betweenness(net, closed_edges = tramos_clausura, snap_tolerance_m = %s%s)", snap_val, cut_str),
         "print(simulacion)",
-        "# Vías que asumen mayor intermediación producto del cierre:",
+        "# V\u00edas que asumen mayor intermediaci\u00f3n producto del cierre:",
         "head(simulacion$top_diverted, 5)",
         "# sf::st_write(intermediacion_base$edges, 'intermediacion_base.geojson', delete_dsn = TRUE)",
         "# sf::st_write(simulacion$edges, 'simulacion_intermediacion_cierres.geojson', delete_dsn = TRUE)",

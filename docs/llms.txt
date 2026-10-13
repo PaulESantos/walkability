@@ -311,6 +311,22 @@ walkability metrics.
 - [`plot(`*`<walk_comparison>`*`)`](https://paulesantos.github.io/walkability/reference/plot.walk_comparison.md)
   : Plot Method for Walk Comparison
 
+## Centrality & Network Betweenness
+
+Calculate edge betweenness centrality, identify structural bottlenecks,
+and evaluate flow redistribution under street closures.
+
+- [`walk_betweenness()`](https://paulesantos.github.io/walkability/reference/walk_betweenness.md)
+  : Street Network Edge Betweenness Centrality
+- [`print(`*`<walk_betweenness>`*`)`](https://paulesantos.github.io/walkability/reference/print.walk_betweenness.md)
+  : Print Method for Walk Betweenness
+- [`plot(`*`<walk_betweenness>`*`)`](https://paulesantos.github.io/walkability/reference/plot.walk_betweenness.md)
+  : Plot Method for Walk Betweenness
+- [`walk_scenario_betweenness()`](https://paulesantos.github.io/walkability/reference/walk_scenario_betweenness.md)
+  : Simulate Scenario Closures and Evaluate Betweenness Re-routing
+- [`print(`*`<walk_scenario_betweenness>`*`)`](https://paulesantos.github.io/walkability/reference/print.walk_scenario_betweenness.md)
+  : Print Method for Walk Scenario Betweenness
+
 ## Graph Interoperability
 
 Seamless conversion to standard R spatial graph classes (sfnetworks,

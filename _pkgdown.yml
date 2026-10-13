@@ -130,6 +130,15 @@ reference:
       - print.walk_comparison
       - plot.walk_comparison
 
+  - title: "Centrality & Network Betweenness"
+    desc: "Calculate edge betweenness centrality, identify structural bottlenecks, and evaluate flow redistribution under street closures."
+    contents:
+      - walk_betweenness
+      - print.walk_betweenness
+      - plot.walk_betweenness
+      - walk_scenario_betweenness
+      - print.walk_scenario_betweenness
+
   - title: "Graph Interoperability"
     desc: "Seamless conversion to standard R spatial graph classes (sfnetworks, tidygraph)."
     contents:

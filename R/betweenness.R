@@ -194,7 +194,7 @@ print.walk_betweenness <- function(x, ...) {
   cli::cli_alert_info("Tramos evaluados: {x$summary$total_edges} | Radio: {x$summary$radius_m} | Snap: {x$summary$snap_tolerance_m}m")
   cli::cli_alert_info("Intermediaci\u00f3n m\u00e1xima: {round(x$summary$max_betweenness, 1)} | Media: {round(x$summary$mean_betweenness, 1)}")
   cli::cli_h2("Top Cuellos de Botella Estructurales:")
-  print(head(x$top_bottlenecks, 5), row.names = FALSE)
+  print(utils::head(x$top_bottlenecks, 5), row.names = FALSE)
   cli::cli_alert_warning("Nota: Mide centralidad de ruteo potencial en la red. No es aforo ni predicci\u00f3n de congesti\u00f3n.")
   invisible(x)
 }
@@ -445,6 +445,6 @@ print.walk_scenario_betweenness <- function(x, ...) {
   cli::cli_alert_info("Tramos cerrados: {x$summary$n_closed} ({round(x$summary$length_closed_m, 1)} m suprimidos)")
   cli::cli_alert_info("M\u00e1ximo incremento de intermediaci\u00f3n (\u0394): {round(x$summary$max_delta, 1)}")
   cli::cli_h2("V\u00edas con Mayor Intermediaci\u00f3n / Desv\u00edo Producto del Cierre:")
-  print(head(x$top_diverted, 5), row.names = FALSE)
+  print(utils::head(x$top_diverted, 5), row.names = FALSE)
   invisible(x)
 }
