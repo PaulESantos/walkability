@@ -152,30 +152,51 @@ test_that("walk_isochrone creates non-overlapping concentric rings with rings = 
   expect_lt(as.numeric(sf::st_area(inter)), 1e-3)
 })
 
-test_that("walk_app components initialize properly", {
+test_that("walk_app components initialize properly in Spanish and English", {
   skip_if_not_installed("shiny")
   skip_if_not_installed("bslib")
   skip_if_not_installed("mapgl")
 
-  ui <- walkability:::.create_walk_app_ui()
-  expect_s3_class(ui, "shiny.tag.list")
+  # 1. Default Spanish UI
+  ui_es <- walkability:::.create_walk_app_ui(initial_lang = "es")
+  expect_s3_class(ui_es, "shiny.tag.list")
+  ui_es_str <- as.character(ui_es)
 
-  # Verify download buttons and code output are rendered in UI
-  ui_str <- as.character(ui)
-  expect_true(grepl("dl_reach_sf", ui_str))
-  expect_true(grepl("dl_iso_sf", ui_str))
-  expect_true(grepl("dl_route_sf", ui_str))
-  expect_true(grepl("dl_morph_sf", ui_str))
-  expect_true(grepl("dl_scen_sf", ui_str))
-  expect_true(grepl("dl_betweenness_base_sf", ui_str))
-  expect_true(grepl("dl_betweenness_sim_sf", ui_str))
-  expect_true(grepl("scen_view_mode", ui_str))
-  expect_true(grepl("scen_snap_radius", ui_str))
-  expect_true(grepl("Intermediaci.n: qu. mide", ui_str))
-  expect_true(grepl("code_text_display", ui_str))
+  expect_true(grepl("app_lang", ui_es_str))
+  expect_true(grepl("dl_reach_sf", ui_es_str))
+  expect_true(grepl("dl_iso_sf", ui_es_str))
+  expect_true(grepl("dl_route_sf", ui_es_str))
+  expect_true(grepl("dl_morph_sf", ui_es_str))
+  expect_true(grepl("dl_scen_sf", ui_es_str))
+  expect_true(grepl("dl_betweenness_base_sf", ui_es_str))
+  expect_true(grepl("dl_betweenness_sim_sf", ui_es_str))
+  expect_true(grepl("scen_view_mode", ui_es_str))
+  expect_true(grepl("scen_snap_radius", ui_es_str))
+  expect_true(grepl("Intermediaci.n: qu. mide", ui_es_str))
+  expect_true(grepl("Alcance Peatonal", ui_es_str))
+  expect_true(grepl("code_text_display", ui_es_str))
 
-  server <- walkability:::.create_walk_app_server()
-  expect_true(is.function(server))
+  # 2. English UI
+  ui_en <- walkability:::.create_walk_app_ui(initial_lang = "en")
+  expect_s3_class(ui_en, "shiny.tag.list")
+  ui_en_str <- as.character(ui_en)
+
+  expect_true(grepl("app_lang", ui_en_str))
+  expect_true(grepl("Pedestrian Reach", ui_en_str))
+  expect_true(grepl("Select Street Network:", ui_en_str))
+  expect_true(grepl("Betweenness: What it Measures", ui_en_str))
+  expect_true(grepl("Download Active Network", ui_en_str))
+
+  # 3. Server functions
+  server_es <- walkability:::.create_walk_app_server(initial_lang = "es")
+  expect_true(is.function(server_es))
+
+  server_en <- walkability:::.create_walk_app_server(initial_lang = "en")
+  expect_true(is.function(server_en))
+
+  # 4. Helper dictionary
+  expect_equal(walkability:::.app_i18n("tab_reach", "es"), "\U0001f6b6 Alcance Peatonal (Reach)")
+  expect_equal(walkability:::.app_i18n("tab_reach", "en"), "\U0001f6b6 Pedestrian Reach")
 })
 
 test_that("walk_betweenness calculates edge centrality and respects parameters", {

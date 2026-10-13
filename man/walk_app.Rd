@@ -9,6 +9,7 @@ walk_app(
   host = "127.0.0.1",
   port = NULL,
   launch.browser = TRUE,
+  lang = c("es", "en"),
   ...
 )
 }
@@ -22,6 +23,10 @@ or uploading a custom street dataset.}
 \item{port}{Integer. The TCP port that the application should listen on. Default is randomly selected.}
 
 \item{launch.browser}{Logical. Whether to open the application in the system's default browser (default \code{TRUE}).}
+
+\item{lang}{Character string specifying the initial interface language:
+\code{"es"} for Spanish (default) or \code{"en"} for English. The user can also toggle
+the language interactively at runtime via the navbar selector.}
 
 \item{...}{Additional arguments passed to \code{\link[shiny:runApp]{shiny::runApp()}}.}
 }
@@ -46,12 +51,15 @@ The application provides dedicated, fully documented workspaces for:
 }
 \examples{
 \dontrun{
-# Launch with default model datasets:
+# Launch with default language (Spanish):
 walk_app()
+
+# Launch in English:
+walk_app(lang = "en")
 
 # Launch with a pre-built network:
 utils::data(streets_cusco)
 net <- walk_build_network(streets_cusco, verbose = FALSE)
-walk_app(net)
+walk_app(net, lang = "es")
 }
 }
