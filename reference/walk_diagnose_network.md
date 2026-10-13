@@ -36,7 +36,8 @@ A `walk_diagnosis` S3 object containing:
 
 - summary:
 
-  Tibble with diagnostic statistics.
+  Tibble with diagnostic statistics (segments, lengths, components,
+  dangles, undershoots).
 
 - components:
 
@@ -44,7 +45,9 @@ A `walk_diagnosis` S3 object containing:
 
 - undershoots:
 
-  `sf` point collection of suspicious dangling endpoints.
+  `sf` point collection of suspicious dangling endpoints within
+  `snap_search_radius_m` of another street, with column
+  `dist_to_nearest_m`.
 
 - isolated_edges:
 
@@ -57,6 +60,71 @@ A `walk_diagnosis` S3 object containing:
 - search_radius_m:
 
   The search radius parameter used.
+
+## Details
+
+### Concept: Undershoots
+
+An **undershoot** occurs when a digitized street segment terminates just
+short of intersecting or connecting with an adjacent road, leaving a
+small metric gap. While legitimate dead ends (cul-de-sacs) naturally
+exist in pedestrian networks, a dangling endpoint that lies suspiciously
+close (within `snap_search_radius_m`) to another street is typically a
+digitization or vectorization defect.
+
+In `walk_diagnose_network()`, undershoots are identified in two stages:
+
+1.  All dangling endpoints (nodes with topological degree = 1) are
+    isolated across the network.
+
+2.  The minimum Euclidean distance from each dangling endpoint to all
+    other line geometries (excluding the incident segment itself) is
+    computed. If this distance is less than or equal to
+    `snap_search_radius_m`, the endpoint is flagged as a potential
+    undershoot.
+
+In pedestrian routing, even a gap of a few centimeters forms an
+impassable barrier, artificially forcing detours or disconnecting
+origins from destinations. Potential undershoots can be resolved during
+network construction via
+[`walk_build_network(..., repair = TRUE, snap_tolerance_m = ...)`](https://paulesantos.github.io/walkability/reference/walk_build_network.md).
+
+### Concept: Isolated Edges
+
+**Isolated edges** are street segments that belong to disconnected
+components (subgraphs or "islands") outside of the primary **giant
+component** (the largest contiguous connected network).
+
+In `walk_diagnose_network()`, connectivity components are detected using
+a fast disjoint-set (Union-Find) algorithm implemented in Rust:
+
+1.  Endpoints are matched across lines using coordinate coincidence with
+    1 mm precision.
+
+2.  The giant component is determined as the component with the largest
+    total network length.
+
+3.  Any edge where neither endpoint connects to the giant component is
+    labeled as an isolated edge.
+
+Isolated fragments commonly arise from bounding box or polygon clipping
+(cutting streets at administrative borders), gated communities, or
+disjointed municipal data layers. When routing or computing isochrones,
+any origin or destination snapped to an isolated edge will be
+mathematically unreachable from the rest of the city (resulting in
+infinite travel times).
+
+### Visual Inspection
+
+Diagnostic results can be inspected visually using `plot(diagnosis)` or
+[`walk_plot_diagnosis()`](https://paulesantos.github.io/walkability/reference/walk_plot_diagnosis.md),
+which renders the giant component in neutral tones, highlights isolated
+edges in red, and marks potential undershoots with amber points.
+
+## See also
+
+[`walk_plot_diagnosis()`](https://paulesantos.github.io/walkability/reference/walk_plot_diagnosis.md),
+[`walk_build_network()`](https://paulesantos.github.io/walkability/reference/walk_build_network.md)
 
 ## Examples
 
