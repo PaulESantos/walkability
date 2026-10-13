@@ -160,7 +160,67 @@ test_that("walk_app components initialize properly", {
   ui <- walkability:::.create_walk_app_ui()
   expect_s3_class(ui, "shiny.tag.list")
 
+  # Verify download buttons and code output are rendered in UI
+  ui_str <- as.character(ui)
+  expect_true(grepl("dl_reach_sf", ui_str))
+  expect_true(grepl("dl_iso_sf", ui_str))
+  expect_true(grepl("dl_route_sf", ui_str))
+  expect_true(grepl("dl_morph_sf", ui_str))
+  expect_true(grepl("dl_scen_sf", ui_str))
+  expect_true(grepl("dl_betweenness_base_sf", ui_str))
+  expect_true(grepl("dl_betweenness_sim_sf", ui_str))
+  expect_true(grepl("scen_view_mode", ui_str))
+  expect_true(grepl("scen_snap_radius", ui_str))
+  expect_true(grepl("Intermediaci.n: qu. mide", ui_str))
+  expect_true(grepl("code_text_display", ui_str))
+
   server <- walkability:::.create_walk_app_server()
   expect_true(is.function(server))
 })
+
+test_that("walk_betweenness calculates edge centrality and respects parameters", {
+  skip_if_not_installed("igraph")
+  utils::data(streets_cusco)
+  net <- walk_build_network(streets_cusco, verbose = FALSE)
+
+  bw <- walk_betweenness(net)
+  expect_s3_class(bw, "walk_betweenness")
+  expect_true("betweenness" %in% names(bw$edges))
+  expect_true("betweenness_norm" %in% names(bw$edges))
+  expect_true("betweenness_pctl" %in% names(bw$edges))
+  expect_true("bottleneck_class" %in% names(bw$edges))
+  expect_gt(bw$summary$max_betweenness, 0)
+  expect_equal(nrow(bw$edges), nrow(net$edges))
+
+  # Test with search radius cutoff
+  bw_cut <- walk_betweenness(net, radius_m = 500)
+  expect_s3_class(bw_cut, "walk_betweenness")
+  expect_true(bw_cut$summary$radius_m == 500)
+
+  # Test with snap tolerance
+  bw_snap <- walk_betweenness(net, snap_tolerance_m = 5.0)
+  expect_s3_class(bw_snap, "walk_betweenness")
+  expect_equal(bw_snap$summary$snap_tolerance_m, 5.0)
+})
+
+test_that("walk_scenario_betweenness evaluates closures and identifies diverted streets", {
+  skip_if_not_installed("igraph")
+  utils::data(streets_cusco)
+  net <- walk_build_network(streets_cusco, verbose = FALSE)
+
+  sim <- walk_scenario_betweenness(net, closed_edges = c(5, 10), verbose = FALSE)
+  expect_s3_class(sim, "walk_scenario_betweenness")
+  expect_equal(sim$summary$n_closed, 2)
+  expect_true("delta_betweenness" %in% names(sim$edges))
+  expect_true("is_closed" %in% names(sim$edges))
+  expect_true(all(sim$edges$is_closed[c(5, 10)]))
+  expect_equal(sim$edges$betweenness_sim[5], 0)
+  expect_equal(sim$edges$betweenness_sim[10], 0)
+
+  # Top diverted streets table
+  expect_true(is.data.frame(sim$top_diverted))
+  expect_gt(nrow(sim$top_diverted), 0)
+  expect_true("Incremento (Delta)" %in% names(sim$top_diverted))
+})
+
 

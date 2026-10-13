@@ -108,7 +108,10 @@ walk_intersection_density <- function(network, study_area = NULL) {
     list(
       summary = summary_stats,
       nodes = nodes_aug,
-      network = network
+      network = network,
+      intersection_density_km2 = intersection_density_km2,
+      cul_de_sac_ratio_pct = cul_de_sac_ratio * 100,
+      orthogonality_ratio_pct = grid_4way_ratio * 100
     ),
     class = "walk_morphology"
   )

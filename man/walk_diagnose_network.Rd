@@ -17,9 +17,9 @@ undershoots (unconnected ends located near another segment). Default is 10.0 met
 }
 \value{
 A \code{walk_diagnosis} S3 object containing:
-\item{summary}{Tibble with diagnostic statistics.}
+\item{summary}{Tibble with diagnostic statistics (segments, lengths, components, dangles, undershoots).}
 \item{components}{Table of detected connected components and their total lengths.}
-\item{undershoots}{\code{sf} point collection of suspicious dangling endpoints.}
+\item{undershoots}{\code{sf} point collection of suspicious dangling endpoints within \code{snap_search_radius_m} of another street, with column \code{dist_to_nearest_m}.}
 \item{isolated_edges}{\code{sf} line collection of edges not belonging to the giant component.}
 \item{data}{Original spatial line data.}
 \item{search_radius_m}{The search radius parameter used.}
@@ -30,8 +30,59 @@ and component fragmentation of a user-supplied street network before building
 the routing graph. This function does not alter geometries, leaving repair
 decisions to the user.
 }
+\details{
+\subsection{Concept: Undershoots}{
+An \strong{undershoot} occurs when a digitized street segment terminates just short
+of intersecting or connecting with an adjacent road, leaving a small metric gap.
+While legitimate dead ends (cul-de-sacs) naturally exist in pedestrian networks,
+a dangling endpoint that lies suspiciously close (within \code{snap_search_radius_m})
+to another street is typically a digitization or vectorization defect.
+
+In \code{walk_diagnose_network()}, undershoots are identified in two stages:
+\enumerate{
+\item All dangling endpoints (nodes with topological degree = 1) are isolated
+across the network.
+\item The minimum Euclidean distance from each dangling endpoint to all other line
+geometries (excluding the incident segment itself) is computed. If this distance is
+less than or equal to \code{snap_search_radius_m}, the endpoint is flagged as a
+potential undershoot.
+}
+In pedestrian routing, even a gap of a few centimeters forms an impassable barrier,
+artificially forcing detours or disconnecting origins from destinations. Potential
+undershoots can be resolved during network construction via
+\code{\link[=walk_build_network]{walk_build_network(..., repair = TRUE, snap_tolerance_m = ...)}}.
+}
+
+\subsection{Concept: Isolated Edges}{
+\strong{Isolated edges} are street segments that belong to disconnected components
+(subgraphs or "islands") outside of the primary \strong{giant component} (the largest
+contiguous connected network).
+
+In \code{walk_diagnose_network()}, connectivity components are detected using a fast
+disjoint-set (Union-Find) algorithm implemented in Rust:
+\enumerate{
+\item Endpoints are matched across lines using coordinate coincidence with 1 mm precision.
+\item The giant component is determined as the component with the largest total network length.
+\item Any edge where neither endpoint connects to the giant component is labeled as an
+isolated edge.
+}
+Isolated fragments commonly arise from bounding box or polygon clipping (cutting streets
+at administrative borders), gated communities, or disjointed municipal data layers. When
+routing or computing isochrones, any origin or destination snapped to an isolated edge
+will be mathematically unreachable from the rest of the city (resulting in infinite travel times).
+}
+
+\subsection{Visual Inspection}{
+Diagnostic results can be inspected visually using \code{plot(diagnosis)} or
+\code{\link[=walk_plot_diagnosis]{walk_plot_diagnosis()}}, which renders the giant component
+in neutral tones, highlights isolated edges in red, and marks potential undershoots with amber points.
+}
+}
 \examples{
 data(streets_cusco)
 diag <- walk_diagnose_network(streets_cusco, snap_search_radius_m = 5)
 print(diag)
+}
+\seealso{
+\code{\link[=walk_plot_diagnosis]{walk_plot_diagnosis()}}, \code{\link[=walk_build_network]{walk_build_network()}}
 }

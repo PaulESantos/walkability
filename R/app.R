@@ -88,7 +88,9 @@ walk_app <- function(network = NULL,
             tex2jax: {
               inlineMath: [['$','$'], ['\\\\(','\\\\)']],
               displayMath: [['$$','$$'], ['\\\\[','\\\\]']],
-              processEscapes: true
+              processEscapes: true,
+              ignoreClass: 'tex2jax_ignore|no-math',
+              processClass: 'tex2jax_process'
             }
           });
         ")),
@@ -102,6 +104,8 @@ walk_app <- function(network = NULL,
                   {left: '$', right: '$', display: false},
                   {left: '\\\\(', right: '\\\\)', display: false}
                 ],
+                ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+                ignoredClasses: ['tex2jax_ignore', 'no-math', 'shiny-text-output', 'language-r'],
                 throwOnError: false
               });
             }
@@ -117,6 +121,70 @@ walk_app <- function(network = NULL,
           $(document).on('shiny:connected shown.bs.tab shiny:value shiny:idle', function() {
             window.setTimeout(typesetWalkabilityMath, 150);
           });
+
+          function copyCodeToClipboard() {
+            var el = document.getElementById('code_text_display');
+            if (!el) return;
+            var text = el.innerText || el.textContent;
+            if (navigator.clipboard && window.isSecureContext) {
+              navigator.clipboard.writeText(text).then(function() {
+                if (window.Shiny) Shiny.setInputValue('code_copied_trigger', Math.random());
+              });
+            } else {
+              var textArea = document.createElement('textarea');
+              textArea.value = text;
+              textArea.style.position = 'fixed';
+              textArea.style.left = '-999999px';
+              document.body.appendChild(textArea);
+              textArea.focus();
+              textArea.select();
+              try {
+                document.execCommand('copy');
+                if (window.Shiny) Shiny.setInputValue('code_copied_trigger', Math.random());
+              } catch (err) {
+                console.error('Error al copiar c\u00f3digo:', err);
+              }
+              document.body.removeChild(textArea);
+            }
+          }
+        ")),
+        shiny::tags$style(shiny::HTML("
+          pre#code_text_display,
+          #code_text_display {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+            border: 1px solid #334155 !important;
+            border-radius: 8px !important;
+            padding: 18px 20px !important;
+            font-family: 'Fira Code', Consolas, Monaco, monospace !important;
+            font-size: 0.88rem !important;
+            line-height: 1.6 !important;
+            max-height: 580px !important;
+            overflow-x: auto !important;
+            overflow-y: auto !important;
+            white-space: pre !important;
+            word-break: normal !important;
+            word-wrap: normal !important;
+            display: block !important;
+          }
+          pre#code_text_display *,
+          #code_text_display * {
+            color: #f8fafc !important;
+            background-color: transparent !important;
+            font-family: inherit !important;
+          }
+          .accordion-button:not(.collapsed) {
+            background-color: #e0f2fe;
+            color: #0369a1;
+            font-weight: 600;
+          }
+          .morph-legend-box {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 10px 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+          }
         "))
       ),
       shiny::withMathJax()
@@ -163,6 +231,12 @@ walk_app <- function(network = NULL,
         value = TRUE
       ),
       shiny::uiOutput("network_status_badge"),
+      shiny::downloadButton(
+        outputId = "dl_net_edges",
+        label = "Descargar Red Activa (GeoJSON)",
+        class = "btn-sm btn-outline-secondary w-100 mt-2",
+        icon = shiny::icon("download")
+      ),
       shiny::hr(),
       shiny::tags$div(
         style = "font-size: 0.8rem; color: #6c757d;",
@@ -192,6 +266,12 @@ walk_app <- function(network = NULL,
             class = "btn-primary w-100",
             icon = shiny::icon("play")
           ),
+          shiny::downloadButton(
+            outputId = "dl_reach_sf",
+            label = "Descargar Capa Alcance (GeoJSON)",
+            class = "btn-sm btn-outline-primary w-100 mt-2",
+            icon = shiny::icon("download")
+          ),
           shiny::hr(),
           bslib::value_box(
             title = "Alcance Promedio",
@@ -209,22 +289,26 @@ walk_app <- function(network = NULL,
         bslib::card(
           full_screen = TRUE,
           bslib::card_header("Mapa de Longitud de Red Accesible (MapLibre GL)"),
-          mapgl::maplibreOutput("map_reach", height = "520px")
+          mapgl::maplibreOutput("map_reach", height = "640px")
         ),
-        bslib::card(
-          bslib::card_header("\U0001f4d6 Fundamento Te\u00f3rico y Consideraciones Metodol\u00f3gicas"),
-          shiny::HTML("
-            <h5>M\u00e9trica de Red Caminable en $X$ Minutos (10-Minute Walk Reach)</h5>
-            <p>Esta m\u00e9trica cuantifica la <strong>longitud total de calles f\u00edsicamente alcanzables</strong> a pie desde cada cruce o esquina de la ciudad dentro de un horizonte temporal determinado (por defecto <strong>10 minutos</strong>, aproximadamente 750 metros a una velocidad de dise\u00f1o de 4.5 km/h).</p>
-            <h6>\u00bfPor qu\u00e9 es superior al radio euclidiano tradicional?</h6>
-            <p>Los an\u00e1lisis urbanos convencionales suelen trazar c\u00edrculos de radio fijo (p. ej., \u00abis\u00f3cronas de \u00e1rea circular de 800 m\u00bb). Este enfoque ignora por completo la morfolog\u00eda del tejido urbano, la presencia de barreras f\u00edsicas (r\u00edos, laderas, avenidas sin cruces) y la estructura de cul-de-sacs. <code>walkability</code> eval\u00faa la conectividad sobre la red real de calles.</p>
-            <h6>Regla de Cr\u00e9dito Parcial de Aristas (Rust Kernel)</h6>
-            <p>A diferencia de librer\u00edas como <code>osmnx</code> o <code>igraph</code> que descartan o computan completas las aristas donde se agota el tiempo, <code>walkability</code> calcula algebraicamente la fracci\u00f3n exacta alcanzada:</p>
-            <div class=\"text-center my-3 p-3 bg-light rounded border fs-5 text-dark\">
-              $$\\ell_{\\text{frac}} = L_{(u, v)} \\times \\left(\\frac{B - t(u)}{w_{(u, v)}}\\right)$$
-            </div>
-            <p>Donde $B$ es el presupuesto de tiempo, $t(u)$ el tiempo acumulado hasta el nodo $u$, $w_{(u, v)}$ el tiempo de cruce del tramo y $L_{(u, v)}$ su longitud f\u00edsica en metros.</p>
-          ")
+        bslib::accordion(
+          open = FALSE,
+          bslib::accordion_panel(
+            title = "\U0001f4d6 Fundamento Te\u00f3rico y Consideraciones Metodol\u00f3gicas (Desplegar)",
+            icon = shiny::icon("circle-info"),
+            shiny::HTML("
+              <h5>M\u00e9trica de Red Caminable en $X$ Minutos (10-Minute Walk Reach)</h5>
+              <p>Esta m\u00e9trica cuantifica la <strong>longitud total de calles f\u00edsicamente alcanzables</strong> a pie desde cada cruce o esquina de la ciudad dentro de un horizonte temporal determinado (por defecto <strong>10 minutos</strong>, aproximadamente 750 metros a una velocidad de dise\u00f1o de 4.5 km/h).</p>
+              <h6>\u00bfPor qu\u00e9 es superior al radio euclidiano tradicional?</h6>
+              <p>Los an\u00e1lisis urbanos convencionales suelen trazar c\u00edrculos de radio fijo (p. ej., \u00abis\u00f3cronas de \u00e1rea circular de 800 m\u00bb). Este enfoque ignora por completo la morfolog\u00eda del tejido urbano, la presencia de barreras f\u00edsicas (r\u00edos, laderas, avenidas sin cruces) y la estructura de cul-de-sacs. <code>walkability</code> eval\u00faa la conectividad sobre la red real de calles.</p>
+              <h6>Regla de Cr\u00e9dito Parcial de Aristas (Rust Kernel)</h6>
+              <p>A diferencia de librer\u00edas como <code>osmnx</code> o <code>igraph</code> que descartan o computan completas las aristas donde se agota el tiempo, <code>walkability</code> calcula algebraicamente la fracci\u00f3n exacta alcanzada:</p>
+              <div class=\"text-center my-3 p-3 bg-light rounded border fs-5 text-dark\">
+                $$\\ell_{\\text{frac}} = L_{(u, v)} \\times \\left(\\frac{B - t(u)}{w_{(u, v)}}\\right)$$
+              </div>
+              <p>Donde $B$ es el presupuesto de tiempo, $t(u)$ el tiempo acumulado hasta el nodo $u$, $w_{(u, v)}$ el tiempo de cruce del tramo y $L_{(u, v)}$ su longitud f\u00edsica en metros.</p>
+            ")
+          )
         )
       )
     ),
@@ -242,12 +326,25 @@ walk_app <- function(network = NULL,
           ),
           shiny::textOutput("iso_origin_label"),
           shiny::hr(),
-          shiny::checkboxGroupInput(
+          shiny::selectizeInput(
             inputId = "iso_cutoffs",
             label = "Horizontes de tiempo (min):",
-            choices = c("5 min" = 5, "10 min" = 10, "15 min" = 15),
-            selected = c(5, 10, 15)
+            choices = c("3 min" = 3, "5 min" = 5, "10 min" = 10, "15 min" = 15, "20 min" = 20),
+            selected = c(5, 10, 15),
+            multiple = TRUE,
+            options = list(
+              create = TRUE,
+              placeholder = "Elige o escribe minutos...",
+              plugins = list("remove_button")
+            )
           ),
+          shiny::textInput(
+            inputId = "iso_custom_times_text",
+            label = "O escribe tiempos libres (min):",
+            value = "",
+            placeholder = "Ej: 3, 6 o 3, 7, 12 (separados por coma)"
+          ),
+          shiny::uiOutput("iso_times_preview"),
           shiny::checkboxInput(
             inputId = "iso_rings",
             label = "Anillos conc\u00e9ntricos no superpuestos (Disjoint Rings)",
@@ -264,31 +361,42 @@ walk_app <- function(network = NULL,
             label = "Generar Is\u00f3cronas",
             class = "btn-success w-100",
             icon = shiny::icon("bullseye")
+          ),
+          shiny::downloadButton(
+            outputId = "dl_iso_sf",
+            label = "Descargar Is\u00f3cronas (GeoJSON)",
+            class = "btn-sm btn-outline-success w-100 mt-2",
+            icon = shiny::icon("download")
           )
         ),
         bslib::card(
           full_screen = TRUE,
           bslib::card_header("Pol\u00edgonos de Is\u00f3cronas (MapLibre GL)"),
-          mapgl::maplibreOutput("map_iso", height = "520px")
+          mapgl::maplibreOutput("map_iso", height = "640px")
         ),
-        bslib::card(
-          bslib::card_header("Resumen de Cobertura por Banda Temporal"),
-          shiny::tableOutput("table_iso_bands")
-        ),
-        bslib::card(
-          bslib::card_header("\U0001f4d6 Consideraciones T\u00e9cnicas: Is\u00f3cronas Multitemporales No Superpuestas"),
-          shiny::HTML("
-            <h5>Tratamiento Topol\u00f3gico de Is\u00f3cronas Conc\u00e9ntricas</h5>
-            <p>Cuando se eval\u00faan horizontes temporales m\u00faltiples (por ejemplo, <strong>5, 10 y 15 minutos</strong>), el enfoque convencional genera pol\u00edgonos acumulativos conc\u00e9ntricos donde el pol\u00edgono de 15 minutos cubre completamente a los de 10 y 5 minutos. Esto produce oclusi\u00f3n visual y ambig\u00fcedad m\u00e9trica.</p>
-            <h6>Estrategia de Anillos Disjuntos (<em>Donut / Concentric Rings</em>):</h6>
-            <p><code>walk_isochrone()</code> implementa una sustracci\u00f3n topol\u00f3gica booleana para garantizar que <strong>los pol\u00edgonos de cada tiempo no se superpongan</strong>:</p>
-            <ul>
-              <li><strong>Banda 1 (0 \u2013 5 min):</strong> Corresponde a $P_5$.</li>
-              <li><strong>Banda 2 (5 \u2013 10 min):</strong> Se calcula como $R_{10} = P_{10} \\setminus P_5$ (<code>st_difference</code>).</li>
-              <li><strong>Banda 3 (10 \u2013 15 min):</strong> Se calcula como $R_{15} = P_{15} \\setminus (P_5 \\cup P_{10})$.</li>
-            </ul>
-            <p>Cada anillo representa un intervalo mutuamente excluyente. Esto permite calcular el \u00e1rea neta y los equipamientos alcanzables espec\u00edficamente en cada salto de 5 minutos, base fundamental para el an\u00e1lisis de la <strong>\u00abCiudad de los 15 minutos\u00bb</strong>.</p>
-          ")
+        bslib::accordion(
+          open = FALSE,
+          bslib::accordion_panel(
+            title = "\U0001f4ca Resumen de Cobertura por Banda Temporal (Desplegar)",
+            icon = shiny::icon("table"),
+            shiny::tableOutput("table_iso_bands")
+          ),
+          bslib::accordion_panel(
+            title = "\U0001f4d6 Consideraciones T\u00e9cnicas: Is\u00f3cronas Multitemporales No Superpuestas",
+            icon = shiny::icon("circle-info"),
+            shiny::HTML("
+              <h5>Tratamiento Topol\u00f3gico de Is\u00f3cronas Conc\u00e9ntricas</h5>
+              <p>Cuando se eval\u00faan horizontes temporales m\u00faltiples (por ejemplo, <strong>5, 10 y 15 minutos</strong>), el enfoque convencional genera pol\u00edgonos acumulativos conc\u00e9ntricos donde el pol\u00edgono de 15 minutos cubre completamente a los de 10 y 5 minutos. Esto produce oclusi\u00f3n visual y ambig\u00fcedad m\u00e9trica.</p>
+              <h6>Estrategia de Anillos Disjuntos (<em>Donut / Concentric Rings</em>):</h6>
+              <p><code>walk_isochrone()</code> implementa una sustracci\u00f3n topol\u00f3gica booleana para garantizar que <strong>los pol\u00edgonos de cada tiempo no se superpongan</strong>:</p>
+              <ul>
+                <li><strong>Banda 1 (0 \u2013 5 min):</strong> Corresponde a $P_5$.</li>
+                <li><strong>Banda 2 (5 \u2013 10 min):</strong> Se calcula como $R_{10} = P_{10} \\setminus P_5$ (<code>st_difference</code>).</li>
+                <li><strong>Banda 3 (10 \u2013 15 min):</strong> Se calcula como $R_{15} = P_{15} \\setminus (P_5 \\cup P_{10})$.</li>
+              </ul>
+              <p>Cada anillo representa un intervalo mutuamente excluyente. Esto permite calcular el \u00e1rea neta y los equipamientos alcanzables espec\u00edficamente en cada salto de 5 minutos, base fundamental para el an\u00e1lisis de la <strong>\u00abCiudad de los 15 minutos\u00bb</strong>.</p>
+            ")
+          )
         )
       )
     ),
@@ -318,6 +426,12 @@ walk_app <- function(network = NULL,
             class = "btn-primary w-100",
             icon = shiny::icon("route")
           ),
+          shiny::downloadButton(
+            outputId = "dl_route_sf",
+            label = "Descargar Ruta (GeoJSON)",
+            class = "btn-sm btn-outline-primary w-100 mt-2",
+            icon = shiny::icon("download")
+          ),
           shiny::hr(),
           bslib::value_box(
             title = "Distancia en Red",
@@ -341,25 +455,29 @@ walk_app <- function(network = NULL,
         bslib::card(
           full_screen = TRUE,
           bslib::card_header("Trazado de la Ruta \u00d3ptima (MapLibre GL)"),
-          mapgl::maplibreOutput("map_route", height = "520px")
+          mapgl::maplibreOutput("map_route", height = "640px")
         ),
-        bslib::card(
-          bslib::card_header("\U0001f4d6 Consideraciones T\u00e9cnicas: Ruteo Dijkstra y Circuidad Urbana"),
-          shiny::HTML("
-            <h5>Ruteo Punto a Punto y M\u00e9tricas de Desv\u00edo</h5>
-            <p>La funci\u00f3n <code>walk_shortest_path()</code> ejecuta una b\u00fasqueda de camino m\u00e1s corto en el motor Rust con parada temprana cuando se extrae el nodo destino del mont\u00edculo binario (<em>Min-Heap</em>).</p>
-            <h6>Reconstrucci\u00f3n de Trayectorias y Geometr\u00eda</h6>
-            <p>Durante la b\u00fasqueda se mantienen dos arreglos planos <code>prev_node</code> y <code>prev_edge</code>. Una vez alcanzado el destino, el trayecto se reconstruye hacia atr\u00e1s en tiempo $O(\\text{saltos})$ y se extrae la secuencia de geometr\u00edas <code>LINESTRING</code>.</p>
-            <h6>Ratio de Circuidad (<em>Route Directness</em>):</h6>
-            <div class=\"text-center my-3 p-3 bg-light rounded border fs-5 text-dark\">
-              $$\\text{Circuity} = \\frac{\\text{Distancia sobre la red vial (m)}}{\\text{Distancia euclidiana en l\u00ednea recta (m)}}$$
-            </div>
-            <ul>
-              <li><strong>1.0 a 1.2:</strong> Trama directa y permeable con alta eficiencia de desplazamiento peatonal.</li>
-              <li><strong>1.2 a 1.4:</strong> Trama moderadamente sinuosa (t\u00edpica de centros coloniales o cuadr\u00edculas con pendientes).</li>
-              <li><strong>&gt; 1.5:</strong> Trama discontinua, presencia de cul-de-sacs o barreras f\u00edsicas que obligan al peat\u00f3n a rodeos significativos.</li>
-            </ul>
-          ")
+        bslib::accordion(
+          open = FALSE,
+          bslib::accordion_panel(
+            title = "\U0001f4d6 Consideraciones T\u00e9cnicas: Ruteo Dijkstra y Circuidad Urbana (Desplegar)",
+            icon = shiny::icon("circle-info"),
+            shiny::HTML("
+              <h5>Ruteo Punto a Punto y M\u00e9tricas de Desv\u00edo</h5>
+              <p>La funci\u00f3n <code>walk_shortest_path()</code> ejecuta una b\u00fasqueda de camino m\u00e1s corto en el motor Rust con parada temprana cuando se extrae el nodo destino del mont\u00edculo binario (<em>Min-Heap</em>).</p>
+              <h6>Reconstrucci\u00f3n de Trayectorias y Geometr\u00eda</h6>
+              <p>Durante la b\u00fasqueda se mantienen dos arreglos planos <code>prev_node</code> y <code>prev_edge</code>. Una vez alcanzado el destino, el trayecto se reconstruye hacia atr\u00e1s en tiempo $O(\\text{saltos})$ y se extrae la secuencia de geometr\u00edas <code>LINESTRING</code>.</p>
+              <h6>Ratio de Circuidad (<em>Route Directness</em>):</h6>
+              <div class=\"text-center my-3 p-3 bg-light rounded border fs-5 text-dark\">
+                $$\\text{Circuity} = \\frac{\\text{Distancia sobre la red vial (m)}}{\\text{Distancia euclidiana en l\u00ednea recta (m)}}$$
+              </div>
+              <ul>
+                <li><strong>1.0 a 1.2:</strong> Trama directa y permeable con alta eficiencia de desplazamiento peatonal.</li>
+                <li><strong>1.2 a 1.4:</strong> Trama moderadamente sinuosa (t\u00edpica de centros coloniales o cuadr\u00edculas con pendientes).</li>
+                <li><strong>&gt; 1.5:</strong> Trama discontinua, presencia de cul-de-sacs o barreras f\u00edsicas que obligan al peat\u00f3n a rodeos significativos.</li>
+              </ul>
+            ")
+          )
         )
       )
     ),
@@ -370,16 +488,39 @@ walk_app <- function(network = NULL,
       bslib::layout_sidebar(
         sidebar = bslib::sidebar(
           title = "M\u00e9tricas Morfol\u00f3gicas",
-          width = 300,
+          width = 320,
           shiny::checkboxGroupInput(
             inputId = "morph_classes",
-            label = "Mostrar en el mapa:",
+            label = "Filtrar cruces en el mapa:",
             choices = c(
               "Cul-de-sacs (1 v\u00eda, callej\u00f3n ciego)" = 1,
               "Cruces en T (3 v\u00edas)" = 3,
               "Cruces en Cuadr\u00edcula (4+ v\u00edas)" = 4
             ),
             selected = c(1, 3, 4)
+          ),
+          # Leyenda explicativa interactiva
+          shiny::tags$div(
+            class = "morph-legend-box my-2",
+            shiny::tags$h6(style = "font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; color: #005F73;", "Leyenda de Tipolog\u00edas de Cruce:"),
+            shiny::tags$div(style = "display: flex; align-items: center; margin-bottom: 6px; font-size: 0.82rem;",
+              shiny::tags$span(style = "width: 12px; height: 12px; border-radius: 50%; background-color: #E63946; display: inline-block; margin-right: 8px; flex-shrink: 0;"),
+              shiny::tags$span(shiny::tags$strong("Grado 1 (Rojo): "), "Cul-de-sac / Callej\u00f3n ciego")
+            ),
+            shiny::tags$div(style = "display: flex; align-items: center; margin-bottom: 6px; font-size: 0.82rem;",
+              shiny::tags$span(style = "width: 12px; height: 12px; border-radius: 50%; background-color: #457B9D; display: inline-block; margin-right: 8px; flex-shrink: 0;"),
+              shiny::tags$span(shiny::tags$strong("Grado 3 (Azul): "), "Cruce en T (3 ramales)")
+            ),
+            shiny::tags$div(style = "display: flex; align-items: center; font-size: 0.82rem;",
+              shiny::tags$span(style = "width: 12px; height: 12px; border-radius: 50%; background-color: #2A9D8F; display: inline-block; margin-right: 8px; flex-shrink: 0;"),
+              shiny::tags$span(shiny::tags$strong("Grado 4+ (Verde): "), "Ortogonal / Damero en cruz")
+            )
+          ),
+          shiny::downloadButton(
+            outputId = "dl_morph_sf",
+            label = "Descargar Nodos (GeoJSON)",
+            class = "btn-sm btn-outline-primary w-100 mt-2",
+            icon = shiny::icon("download")
           ),
           shiny::hr(),
           bslib::value_box(
@@ -404,40 +545,82 @@ walk_app <- function(network = NULL,
         bslib::card(
           full_screen = TRUE,
           bslib::card_header("Tipolog\u00eda de Cruces y Manzanas (MapLibre GL)"),
-          mapgl::maplibreOutput("map_morph", height = "520px")
+          mapgl::maplibreOutput("map_morph", height = "640px")
         ),
-        bslib::card(
-          bslib::card_header("\U0001f4d6 Consideraciones T\u00e9cnicas: Tipolog\u00eda de Cruces y Conectividad"),
-          shiny::HTML("
-            <h5>Clasificaci\u00f3n de Nodos seg\u00fan Valencia Topol\u00f3gica</h5>
-            <p>La conectividad de un vecindario se define por la cantidad de alternativas de ruta disponibles para el peat\u00f3n. <code>walk_intersection_density()</code> examina el grado de entrada/salida de cada nodo de la red bidireccional simplificada:</p>
-            <ul>
-              <li><strong>Grado 1 (Cul-de-sac):</strong> Nodos ciegos que obligan al usuario a retornar por el mismo camino. Un exceso de cul-de-sacs disminuye la transitabilidad activa.</li>
-              <li><strong>Grado 2 (V\u00e9rtice de paso):</strong> V\u00e9rtices de curvatura o continuidad que no representan opciones de cruce.</li>
-              <li><strong>Grado 3 (Intersecciones en T):</strong> Bifurcaciones regulares de tres ramales.</li>
-              <li><strong>Grado 4+ (Cruces ortogonales):</strong> Intersecciones en cruz t\u00edpicas del damero tradicional que maximizan la permeabilidad.</li>
-            </ul>
-            <h6>Densidad M\u00e9trica sobre la Envolvente Convexa</h6>
-            <p>Para evitar el sesgo de \u00e1reas administrativas arbitrarias, la densidad de cruces ($/\\text{km}^2$) se calcula sobre la envolvente convexa (<code>sf::st_convex_hull</code>) de la red analizada.</p>
-          ")
+        bslib::accordion(
+          open = FALSE,
+          bslib::accordion_panel(
+            title = "\U0001f4d6 Consideraciones T\u00e9cnicas: Tipolog\u00eda de Cruces y Conectividad (Desplegar)",
+            icon = shiny::icon("circle-info"),
+            shiny::HTML("
+              <h5>Clasificaci\u00f3n de Nodos seg\u00fan Valencia Topol\u00f3gica</h5>
+              <p>La conectividad de un vecindario se define por la cantidad de alternativas de ruta disponibles para el peat\u00f3n. <code>walk_intersection_density()</code> examina el grado de entrada/salida de cada nodo de la red bidireccional simplificada:</p>
+              <ul>
+                <li><strong>Grado 1 (Cul-de-sac):</strong> Nodos ciegos que obligan al usuario a retornar por el mismo camino. Un exceso de cul-de-sacs disminuye la transitabilidad activa.</li>
+                <li><strong>Grado 2 (V\u00e9rtice de paso):</strong> V\u00e9rtices de curvatura o continuidad que no representan opciones de cruce.</li>
+                <li><strong>Grado 3 (Intersecciones en T):</strong> Bifurcaciones regulares de tres ramales.</li>
+                <li><strong>Grado 4+ (Cruces ortogonales):</strong> Intersecciones en cruz t\u00edpicas del damero tradicional que maximizan la permeabilidad.</li>
+              </ul>
+              <h6>Densidad M\u00e9trica sobre la Envolvente Convexa</h6>
+              <p>Para evitar el sesgo de \u00e1reas administrativas arbitrarias, la densidad de cruces ($/\\text{km}^2$) se calcula sobre la envolvente convexa (<code>sf::st_convex_hull</code>) de la red analizada.</p>
+            ")
+          )
         )
       )
     ),
 
-    # 5. PESTA\u00d1A: SIMULACI\u00d3N DE ESCENARIOS
+    # 5. PESTAÑA: SIMULACIÓN DE ESCENARIOS E INTERMEDIACIÓN
     bslib::nav_panel(
-      title = "\U0001f6a7 Simulaci\u00f3n de Escenarios",
+      title = "\U0001f6a7 Simulación & Intermediación",
       bslib::layout_sidebar(
         sidebar = bslib::sidebar(
-          title = "Intervenciones Urbanas",
-          width = 320,
+          title = "Simulación e Intermediación",
+          width = 330,
+          shiny::radioButtons(
+            inputId = "scen_view_mode",
+            label = "Capa en Visualizador:",
+            choices = c(
+              "1. Intermediación Base (Inicial)" = "base_bw",
+              "2. Intermediación Post-Cierre (Simulación)" = "sim_bw",
+              "3. Vías con Mayor Intermediación / Desvíos (\u0394)" = "delta_bw"
+            ),
+            selected = "base_bw"
+          ),
+          shiny::hr(),
+          shiny::sliderInput(
+            inputId = "scen_snap_radius",
+            label = "Radio para corrección de red (m):",
+            min = 0,
+            max = 25,
+            value = 0,
+            step = 1
+          ),
+          shiny::helpText("Tolerancia para unir discontinuidades y undershoots antes del cálculo."),
+          shiny::selectInput(
+            inputId = "scen_analysis_radius",
+            label = "Radio métrico de intermediación:",
+            choices = c(
+              "Toda la red (Global)" = "0",
+              "Radio 400 m (Barrial)" = "400",
+              "Radio 800 m (10 min peatonal)" = "800",
+              "Radio 1200 m (Sector urbano)" = "1200"
+            ),
+            selected = "0"
+          ),
+          shiny::actionButton(
+            inputId = "btn_recalc_bw_base",
+            label = "Recalcular Intermediación Base",
+            class = "btn-sm btn-outline-primary w-100 mb-2",
+            icon = shiny::icon("rotate")
+          ),
+          shiny::hr(),
           shiny::tags$p(
-            style = "font-size: 0.85rem; color: #495057; margin-bottom: 8px;",
-            "Haz clic en cualquier tramo del mapa para marcarlo o b\u00fascalo por nombre:"
+            style = "font-size: 0.85rem; color: #495057; margin-bottom: 6px; font-weight: 600;",
+            "Seleccionar tramos a clausurar / peatonalizar:"
           ),
           shiny::selectizeInput(
             inputId = "scen_edge_select",
-            label = "Tramos a clausurar / peatonalizar:",
+            label = NULL,
             choices = NULL,
             multiple = TRUE,
             options = list(
@@ -457,10 +640,16 @@ walk_app <- function(network = NULL,
             ),
             shiny::actionButton(
               inputId = "btn_sample_random",
-              label = "Elegir al azar",
+              label = "Al azar",
               class = "btn-sm btn-outline-secondary w-50",
               icon = shiny::icon("shuffle")
             )
+          ),
+          shiny::actionButton(
+            inputId = "btn_pick_top_bottleneck",
+            label = "Elegir Cuello de Botella Top",
+            class = "btn-sm btn-outline-danger w-100 mb-2",
+            icon = shiny::icon("fire")
           ),
           shiny::sliderInput(
             inputId = "scen_random_n",
@@ -472,15 +661,39 @@ walk_app <- function(network = NULL,
           ),
           shiny::actionButton(
             inputId = "btn_sim_scenario",
-            label = "Simular Intervenci\u00f3n",
+            label = "Simular Cierre e Intermediación",
             class = "btn-warning w-100 fw-bold",
             icon = shiny::icon("traffic-light")
           ),
+          shiny::downloadButton(
+            outputId = "dl_betweenness_base_sf",
+            label = "Descargar Intermediación Base (GeoJSON)",
+            class = "btn-sm btn-outline-primary w-100 mt-2",
+            icon = shiny::icon("download")
+          ),
+          shiny::downloadButton(
+            outputId = "dl_betweenness_sim_sf",
+            label = "Descargar Simulación Cierres (GeoJSON)",
+            class = "btn-sm btn-outline-success w-100 mt-1",
+            icon = shiny::icon("download")
+          ),
+          shiny::downloadButton(
+            outputId = "dl_scen_sf",
+            label = "Descargar Red Modificada (GeoJSON)",
+            class = "btn-sm btn-outline-secondary w-100 mt-1",
+            icon = shiny::icon("download")
+          ),
           shiny::hr(),
           bslib::value_box(
-            title = "Variaci\u00f3n de Alcance",
-            value = shiny::textOutput("scen_delta_reach"),
-            showcase = shiny::icon("chart-line"),
+            title = "Cuello de Botella (Base)",
+            value = shiny::textOutput("scen_top_base_stat"),
+            showcase = shiny::icon("bridge"),
+            theme = "primary"
+          ),
+          bslib::value_box(
+            title = "Mayor Desvío (Simulación)",
+            value = shiny::textOutput("scen_top_sim_stat"),
+            showcase = shiny::icon("arrows-split-up-and-left"),
             theme = "danger"
           ),
           bslib::value_box(
@@ -488,70 +701,108 @@ walk_app <- function(network = NULL,
             value = shiny::textOutput("scen_closed_len"),
             showcase = shiny::icon("scissors"),
             theme = "secondary"
+          ),
+          bslib::value_box(
+            title = "Intermediación Media Red",
+            value = shiny::textOutput("scen_delta_bw_stat"),
+            showcase = shiny::icon("chart-line"),
+            theme = "warning"
           )
         ),
         bslib::card(
           full_screen = TRUE,
-          bslib::card_header("Impacto Espacial de la Intervenci\u00f3n (MapLibre GL)"),
-          mapgl::maplibreOutput("map_scenarios", height = "520px")
+          bslib::card_header("Centralidad de Intermediación y Simulación de Desvíos (MapLibre GL)"),
+          mapgl::maplibreOutput("map_scenarios", height = "640px")
         ),
-        bslib::card(
-          bslib::card_header("Detalle de Tramos Seleccionados para la Intervenci\u00f3n"),
-          shiny::tableOutput("table_closed_edges")
-        ),
-        bslib::card(
-          bslib::card_header("\U0001f4d6 Consideraciones T\u00e9cnicas: Modelado de Supermanzanas y Cortes"),
-          shiny::HTML("
-            <h5>Simulaci\u00f3n No Destructiva de Escenarios</h5>
-            <p>Las funciones <code>walk_scenario_close()</code> y <code>walk_compare_scenarios()</code> permiten modelar intervenciones como:</p>
-            <ul>
-              <li>Peatonalizaci\u00f3n de corredores centrales.</li>
-              <li>Clausura temporal de tramos por obras o contingencias.</li>
-              <li>Creaci\u00f3n de <strong>supermanzanas</strong> (<em>superblocks</em>).</li>
-            </ul>
-            <p>El grafo resultante se reconstruye de forma instant\u00e1nea en memoria sin releer archivos vectoriales de disco, permitiendo evaluar la resiliencia de la red y el impacto en la accesibilidad de cada predio.</p>
-          ")
+        bslib::accordion(
+          open = FALSE,
+          bslib::accordion_panel(
+            title = "\U0001f4ca Vías con Mayor Intermediación Producto del Cierre (Desvíos) (Desplegar)",
+            icon = shiny::icon("arrow-trend-up"),
+            shiny::tableOutput("table_top_diverted")
+          ),
+          bslib::accordion_panel(
+            title = "\U0001f4cb Detalle de Tramos Seleccionados para la Intervención (Desplegar)",
+            icon = shiny::icon("table-list"),
+            shiny::tableOutput("table_closed_edges")
+          ),
+          bslib::accordion_panel(
+            title = "\U0001f4d6 Fundamento Teórico: ¿Qué Mide la Intermediación? (Desplegar)",
+            icon = shiny::icon("circle-info"),
+            shiny::HTML("
+              <h5>Intermediación: qué mide</h5>
+              <p>La intermediación mide la proporción de rutas más cortas potenciales que pasan por un tramo. Para cada par de nodos conectados, la herramienta busca la ruta de menor longitud y suma crédito a los tramos que esa ruta utiliza. Un valor alto señala un posible puente, conector o cuello de botella estructural: si se interrumpe, muchas rutas potenciales tendrían que desviarse.</p>
+              <div class=\"alert alert-warning py-2 px-3 my-2 border-start border-4 border-warning\">
+                <strong>No es un aforo ni una predicción de congestión.</strong> La herramienta no conoce cuántos vehículos viajan, sus orígenes y destinos, horarios, sentidos de circulación ni velocidades reales. Por ello, un tramo rojo merece revisión como prioridad estructural, pero no debe interpretarse como \u201cla vía con más tránsito\u201d.
+              </div>
+              <h6>¿Por qué establecer radios para la corrección de la red?</h6>
+              <p>Las redes digitalizadas suelen presentar pequeñas discontinuidades o <em>undershoots</em> (brechas milimétricas o métricas entre segmentos adyacentes). El <strong>radio para la corrección de la red</strong> (tolerancia de snapping en metros) une y cicatriza automáticamente estos extremos antes del cálculo de rutas más cortas, asegurando que la intermediación evalúe la permeabilidad real de la trama urbana y no anomalías de digitalización.</p>
+              <h6>Dinámica de Desvíos y Sobrecarga tras el Cierre</h6>
+              <p>Al clausurar o peatonalizar los tramos seleccionados, los itinerarios que antes cruzaban por ellos deben desviarse por vías alternativas. El módulo recalcula la intermediación de toda la red restante e identifica los tramos con mayor incremento ($\\Delta > 0$), los cuales representan los <strong>corredores que absorberán la mayor redistribución de flujo</strong>.</p>
+            ")
+          )
         )
       )
     ),
 
-    # 6. PESTA\u00d1A: GU\u00cdA Y REPRODUCIBILIDAD
+    # 6. PESTA\u00d1A: GU\u00cdA Y GENERADOR DE C\u00d3DIGO R (ESTILO ESQUISSE)
     bslib::nav_panel(
-      title = "\U0001f4d6 Gu\u00eda & C\u00f3digo R",
+      title = "\U0001f4bb C\u00f3digo R Generativo",
       bslib::card(
-        bslib::card_header("Reproducibilidad en Scripts de R"),
-        shiny::markdown("
-Puedes replicar cualquiera de los an\u00e1lisis de esta aplicaci\u00f3n de forma program\u00e1tica con el siguiente flujo de c\u00f3digo:
-
-```r
-library(walkability)
-library(sf)
-
-# 1. Cargar red vial real
-utils::data(streets_cusco)
-
-# 2. Construir grafo estructurado
-net <- walk_build_network(streets_cusco, walk_speed_kmh = 4.5, repair = TRUE)
-
-# 3. Alcance a 10 minutos (Rust multi-hilo)
-reach <- walk_compute_reach(net, time_min = 10.0)
-
-# 4. Is\u00f3cronas conc\u00e9ntricas sin superposici\u00f3n (0-5, 5-10, 10-15 min)
-centro <- st_coordinates(net$nodes[net$nodes$is_giant, ])[1, 1:2]
-iso <- walk_isochrone(net, origin = centro, time_min = c(5, 10, 15), rings = TRUE)
-
-# 5. Ruteo punto a punto y circuidad
-destino <- st_coordinates(net$nodes[net$nodes$is_giant, ])[50, 1:2]
-ruta <- walk_shortest_path(net, from = centro, to = destino)
-
-# 6. Morfolog\u00eda y cruces
-morf <- walk_intersection_density(net)
-
-# 7. Simulaci\u00f3n de cierre vial
-cierre <- walk_scenario_close(net, edge_indices = c(5, 12))
-comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
-```
-        ")
+        bslib::card_header(
+          shiny::div(
+            class = "d-flex justify-content-between align-items-center w-100",
+            shiny::tags$span(shiny::tags$strong("Generador de C\u00f3digo R Reproducible"), " (Sincronizado en Tiempo Real)"),
+            shiny::div(
+              class = "d-flex gap-2",
+              shiny::actionButton(
+                inputId = "btn_copy_code",
+                label = "Copiar al Portapapeles",
+                icon = shiny::icon("copy"),
+                class = "btn-sm btn-outline-primary",
+                onclick = "copyCodeToClipboard()"
+              ),
+              shiny::downloadButton(
+                outputId = "dl_code_script",
+                label = "Descargar Script (.R)",
+                class = "btn-sm btn-outline-secondary",
+                icon = shiny::icon("file-arrow-down")
+              )
+            )
+          )
+        ),
+        shiny::div(
+          class = "row mb-3",
+          shiny::div(
+            class = "col-md-5",
+            shiny::selectInput(
+              inputId = "code_module_filter",
+              label = "Filtrar por M\u00f3dulo / An\u00e1lisis:",
+              choices = c(
+                "Script Completo Reproducible (End-to-End)" = "all",
+                "1. Construcci\u00f3n de Red Vial" = "network",
+                "2. Alcance Peatonal (Reach)" = "reach",
+                "3. Is\u00f3cronas Multitemporales" = "iso",
+                "4. Ruteo \u00d3ptimo & Circuidad" = "route",
+                "5. Morfolog\u00eda Urbana & Cruces" = "morph",
+                "6. Simulaci\u00f3n de Escenarios" = "scen"
+              ),
+              selected = "all"
+            )
+          ),
+          shiny::div(
+            class = "col-md-7 d-flex align-items-center",
+            shiny::tags$p(
+              class = "text-muted mb-0",
+              style = "font-size: 0.85rem;",
+              "Este script refleja exactamente la red activa, los puntos fijados en el mapa, coordenadas y par\u00e1metros seleccionados en la sesi\u00f3n."
+            )
+          )
+        ),
+        shiny::div(
+          class = "tex2jax_ignore no-math",
+          shiny::verbatimTextOutput("code_text_display")
+        )
       )
     )
   )
@@ -608,6 +859,18 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
       )
     })
 
+    # Download handler for base network
+    output$dl_net_edges <- shiny::downloadHandler(
+      filename = function() {
+        paste0("walkability_red_vial_", input$city_choice, "_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".geojson")
+      },
+      content = function(file) {
+        net <- current_net()
+        shiny::req(net, net$edges)
+        sf::st_write(sf::st_transform(net$edges, 4326), file, driver = "GeoJSON", delete_dsn = TRUE, quiet = TRUE)
+      }
+    )
+
     # Transform network edges to WGS84 for MapLibre
     net_edges_4326 <- shiny::reactive({
       net <- current_net()
@@ -633,6 +896,21 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
       r <- walk_compute_reach(net, time_min = t_min, verbose = FALSE)
       reach_res(r)
     }) |> shiny::bindEvent(input$btn_calc_reach, current_net(), ignoreNULL = FALSE)
+
+    # Download handler for Reach sf edges
+    output$dl_reach_sf <- shiny::downloadHandler(
+      filename = function() {
+        paste0("walkability_alcance_", input$reach_time_min, "min_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".geojson")
+      },
+      content = function(file) {
+        r <- reach_res()
+        if (is.null(r) || is.null(r$edges)) {
+          shiny::showNotification("Calcula el alcance antes de descargar.", type = "warning")
+          return()
+        }
+        sf::st_write(sf::st_transform(r$edges, 4326), file, driver = "GeoJSON", delete_dsn = TRUE, quiet = TRUE)
+      }
+    )
 
     output$reach_stat_mean <- shiny::renderText({
       r <- reach_res()
@@ -706,12 +984,40 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
       }
     })
 
+    # Reactive helper to resolve active isochrone cutoffs
+    active_iso_cutoffs <- shiny::reactive({
+      custom_txt <- trimws(input$iso_custom_times_text %||% "")
+      if (nzchar(custom_txt)) {
+        # Robust regex extracting all numbers (integers or decimals) even if user writes "3 min, 6 min" or "3min, 6min"
+        matches <- regmatches(custom_txt, gregexpr("[0-9]+(?:\\.[0-9]+)?", custom_txt))[[1]]
+        nums <- as.numeric(matches)
+        cutoffs <- sort(unique(nums[!is.na(nums) & nums > 0]))
+        if (length(cutoffs) > 0) return(cutoffs)
+      }
+      cutoffs <- sort(unique(as.numeric(input$iso_cutoffs)))
+      if (length(cutoffs) == 0) cutoffs <- c(5, 10, 15)
+      cutoffs
+    })
+
+    # Real-time preview badge of the active cutoffs to be computed
+    output$iso_times_preview <- shiny::renderUI({
+      cuts <- active_iso_cutoffs()
+      is_custom <- nzchar(trimws(input$iso_custom_times_text %||% ""))
+      src_label <- if (is_custom) "Tiempos detectados:" else "Tiempos seleccionados:"
+      shiny::tags$div(
+        class = "alert alert-info py-1 px-2 my-2",
+        style = "font-size: 0.8rem;",
+        shiny::tags$strong(src_label), " ",
+        shiny::tags$span(style = "font-weight: 700; color: #005F73;", paste0(cuts, " min", collapse = ", "))
+      )
+    })
+
     shiny::observe({
       net <- current_net()
       shiny::req(net)
       coords <- iso_origin_coords()
-      cutoffs <- as.numeric(input$iso_cutoffs)
-      if (length(cutoffs) == 0) cutoffs <- c(5, 10)
+
+      cutoffs <- active_iso_cutoffs()
 
       if (is.null(coords)) {
         giant_nodes <- net$nodes[net$nodes$is_giant, ]
@@ -731,6 +1037,21 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
       )
       iso_res(iso)
     }) |> shiny::bindEvent(input$btn_calc_iso, current_net(), ignoreNULL = FALSE)
+
+    # Download handler for Isochrone sf polygons
+    output$dl_iso_sf <- shiny::downloadHandler(
+      filename = function() {
+        paste0("walkability_isocronas_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".geojson")
+      },
+      content = function(file) {
+        iso <- iso_res()
+        if (is.null(iso) || is.null(iso$polygons)) {
+          shiny::showNotification("Genera las is\u00f3cronas antes de descargar.", type = "warning")
+          return()
+        }
+        sf::st_write(sf::st_transform(iso$polygons, 4326), file, driver = "GeoJSON", delete_dsn = TRUE, quiet = TRUE)
+      }
+    )
 
     output$table_iso_bands <- shiny::renderTable({
       iso <- iso_res()
@@ -855,6 +1176,21 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
       })
     }) |> shiny::bindEvent(input$btn_calc_route, input$btn_random_route)
 
+    # Download handler for Route sf path
+    output$dl_route_sf <- shiny::downloadHandler(
+      filename = function() {
+        paste0("walkability_ruta_optima_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".geojson")
+      },
+      content = function(file) {
+        r <- route_res()
+        if (is.null(r) || is.null(r$path_sf)) {
+          shiny::showNotification("Calcula una ruta entre dos puntos antes de descargar.", type = "warning")
+          return()
+        }
+        sf::st_write(sf::st_transform(r$path_sf, 4326), file, driver = "GeoJSON", delete_dsn = TRUE, quiet = TRUE)
+      }
+    )
+
     output$route_dist <- shiny::renderText({
       r <- route_res()
       if (is.null(r)) return("--")
@@ -884,12 +1220,13 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
       ) |>
         mapgl::add_navigation_control() |>
         mapgl::add_scale_control() |>
+        # Red vial original en el fondo con transparencia
         mapgl::add_line_layer(
           id = "route_bg_streets",
           source = edges_wgs,
-          line_color = "#CFD8DC",
-          line_width = 1.2,
-          line_opacity = 0.5
+          line_color = "#475569",
+          line_width = 1.8,
+          line_opacity = 0.40
         )
 
       pa <- route_pt_a()
@@ -900,9 +1237,9 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
         m <- m |> mapgl::add_circle_layer(
           id = "marker_a",
           source = pt_a_sf,
-          circle_color = "#2A9D8F",
-          circle_radius = 8,
-          circle_stroke_width = 2,
+          circle_color = "#10B981",
+          circle_radius = 9,
+          circle_stroke_width = 2.5,
           circle_stroke_color = "#FFFFFF"
         )
       }
@@ -912,9 +1249,9 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
         m <- m |> mapgl::add_circle_layer(
           id = "marker_b",
           source = pt_b_sf,
-          circle_color = "#E76F51",
-          circle_radius = 8,
-          circle_stroke_width = 2,
+          circle_color = "#F97316",
+          circle_radius = 9,
+          circle_stroke_width = 2.5,
           circle_stroke_color = "#FFFFFF"
         )
       }
@@ -923,16 +1260,34 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
       if (!is.null(r) && !is.null(r$path_sf)) {
         path_wgs <- sf::st_transform(r$path_sf, 4326)
         path_wgs$tooltip_text <- sprintf("Ruta: %.1f m | %.1f min | Circuidad: %.2f", r$distance_m, r$time_min, r$circuity)
-        m <- m |> mapgl::add_line_layer(
-          id = "route_path",
-          source = path_wgs,
-          line_color = "#005F73",
-          line_width = 5,
-          line_opacity = 0.95,
-          tooltip = "tooltip_text"
-        )
+        
+        # Halo de contraste detrás de la ruta óptima
+        m <- m |>
+          mapgl::add_line_layer(
+            id = "route_path_casing",
+            source = path_wgs,
+            line_color = "#FFFFFF",
+            line_width = 7.5,
+            line_opacity = 0.95
+          ) |>
+          # Trazado principal de la ruta óptima sobre la red
+          mapgl::add_line_layer(
+            id = "route_path",
+            source = path_wgs,
+            line_color = "#E63946",
+            line_width = 5.0,
+            line_opacity = 1.0,
+            tooltip = "tooltip_text"
+          )
       }
-      m
+
+      # Leyenda cartográfica de ruteo
+      m |> mapgl::add_categorical_legend(
+        legend_title = "Ruta & Red Vial",
+        values = c("Ruta \u00d3ptima", "Red Vial Base (Fondo)"),
+        colors = c("#E63946", "#475569"),
+        position = "bottom-right"
+      )
     })
 
     # -------------------------------------------------------------
@@ -947,20 +1302,41 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
     output$morph_density <- shiny::renderText({
       m <- morph_res()
       if (is.null(m)) return("--")
-      sprintf("%.1f / km\u00b2", m$intersection_density_km2)
+      val <- if (!is.null(m$summary$intersection_density_km2)) m$summary$intersection_density_km2 else m$intersection_density_km2
+      if (is.null(val) || is.na(val)) return("--")
+      sprintf("%.1f / km\u00b2", val)
     })
 
     output$morph_culdesac <- shiny::renderText({
       m <- morph_res()
       if (is.null(m)) return("--")
-      sprintf("%.1f %%", m$cul_de_sac_ratio_pct)
+      val <- if (!is.null(m$summary$cul_de_sac_ratio)) m$summary$cul_de_sac_ratio * 100 else m$cul_de_sac_ratio_pct
+      if (is.null(val) || is.na(val)) return("--")
+      sprintf("%.1f %%", val)
     })
 
     output$morph_ortho <- shiny::renderText({
       m <- morph_res()
       if (is.null(m)) return("--")
-      sprintf("%.1f %%", m$orthogonality_ratio_pct)
+      val <- if (!is.null(m$summary$grid_4way_ratio)) m$summary$grid_4way_ratio * 100 else m$orthogonality_ratio_pct
+      if (is.null(val) || is.na(val)) return("--")
+      sprintf("%.1f %%", val)
     })
+
+    # Download handler for Morphology nodes sf
+    output$dl_morph_sf <- shiny::downloadHandler(
+      filename = function() {
+        paste0("walkability_morfologia_nodos_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".geojson")
+      },
+      content = function(file) {
+        m_calc <- morph_res()
+        if (is.null(m_calc) || is.null(m_calc$nodes)) {
+          shiny::showNotification("No hay nodos de morfolog\u00eda calculados.", type = "warning")
+          return()
+        }
+        sf::st_write(sf::st_transform(m_calc$nodes, 4326), file, driver = "GeoJSON", delete_dsn = TRUE, quiet = TRUE)
+      }
+    )
 
     output$map_morph <- mapgl::renderMaplibre({
       edges_wgs <- net_edges_4326()
@@ -1018,21 +1394,68 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
             tooltip = "type_label"
           )
       }
-      m
+
+      # Interactive Categorical Legend for morphology classes
+      m |> mapgl::add_categorical_legend(
+        legend_title = "Tipolog\u00eda de Cruce",
+        values = c(
+          "Grado 1: Cul-de-sac (Ciego)",
+          "Grado 3: Cruce en T (3 v\u00edas)",
+          "Grado 4+: Ortogonal (Damero)"
+        ),
+        colors = c("#E63946", "#457B9D", "#2A9D8F"),
+        circular_patches = TRUE,
+        position = "bottom-right"
+      )
     })
 
     # -------------------------------------------------------------
-    # 6. PESTA\u00d1A: ESCENARIOS (SCENARIOS)
+    # 6. PESTAÑA: ESCENARIOS E INTERMEDIACIÓN (SCENARIOS & BETWEENNESS)
     # -------------------------------------------------------------
+    bw_base_res <- shiny::reactiveVal(NULL)
+    bw_sim_res <- shiny::reactiveVal(NULL)
     scen_res <- shiny::reactiveVal(NULL)
 
-    # Populate edge choices when network loads or changes
+    # Function to calculate baseline betweenness
+    calc_base_betweenness <- function() {
+      net <- current_net()
+      shiny::req(net)
+      snap_r <- as.numeric(input$scen_snap_radius %||% 0)
+      cut_r <- as.numeric(input$scen_analysis_radius %||% 0)
+      shiny::withProgress(message = "Calculando intermediación de red base...", value = 0.3, {
+        b <- walk_betweenness(
+          network = net,
+          snap_tolerance_m = snap_r,
+          radius_m = if (cut_r > 0) cut_r else NULL
+        )
+        shiny::incProgress(0.7, detail = "Finalizado")
+        bw_base_res(b)
+        bw_sim_res(NULL)
+        scen_res(NULL)
+      })
+    }
+
+    # Automatically compute baseline betweenness on network load
+    shiny::observe({
+      net <- current_net()
+      shiny::req(net)
+      calc_base_betweenness()
+    }) |> shiny::bindEvent(current_net(), ignoreInit = FALSE)
+
+    # Recalculate baseline when user explicitly requests
+    shiny::observeEvent(input$btn_recalc_bw_base, {
+      calc_base_betweenness()
+      shiny::showNotification("Intermediación base recalculada con éxito.", type = "message")
+    })
+
+    # Populate edge choices when network or betweenness updates
     shiny::observe({
       net <- current_net()
       shiny::req(net)
       edges <- net$edges
       n_edges <- nrow(edges)
       if (n_edges > 0) {
+        b_base <- bw_base_res()
         choices_vec <- as.character(seq_len(n_edges))
         names(choices_vec) <- vapply(seq_len(n_edges), function(i) {
           nm <- if ("name" %in% names(edges) && !is.na(edges$name[i]) && nzchar(trimws(edges$name[i]))) {
@@ -1041,20 +1464,25 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
             paste0("Tramo #", i)
           }
           hw <- if ("highway" %in% names(edges) && !is.na(edges$highway[i])) edges$highway[i] else "calle"
-          sprintf("%s [#%d | %.0fm | %s]", nm, i, edges$length_m[i], hw)
+          bw_str <- if (!is.null(b_base) && !is.null(b_base$edges$betweenness[i])) {
+            sprintf(" | Intermed: %.0f", b_base$edges$betweenness[i])
+          } else {
+            ""
+          }
+          sprintf("%s [#%d | %.0fm | %s%s]", nm, i, edges$length_m[i], hw, bw_str)
         }, character(1))
+        curr_selected <- shiny::isolate(input$scen_edge_select)
         shiny::updateSelectizeInput(
           session,
           "scen_edge_select",
           choices = choices_vec,
-          selected = character(0),
+          selected = curr_selected,
           server = TRUE
         )
       }
-      scen_res(NULL)
     })
 
-    # Interactive map click to toggle street segment selection
+    # Map click: toggle street selection
     shiny::observeEvent(input$map_scenarios_click, {
       clk <- input$map_scenarios_click
       shiny::req(clk, clk$lng, clk$lat)
@@ -1064,7 +1492,7 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
       pt <- sf::st_sfc(sf::st_point(c(clk$lng, clk$lat)), crs = 4326)
       near_idx <- sf::st_nearest_feature(pt, edges_wgs)
       if (length(near_idx) == 1 && !is.na(near_idx)) {
-        curr <- as.character(input$scen_edge_select)
+        curr <- as.character(input$scen_edge_select %||% character(0))
         target_str <- as.character(near_idx)
         if (target_str %in% curr) {
           new_sel <- setdiff(curr, target_str)
@@ -1078,7 +1506,25 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
     # Clear selection button
     shiny::observeEvent(input$btn_clear_scen, {
       shiny::updateSelectizeInput(session, "scen_edge_select", selected = character(0))
+      bw_sim_res(NULL)
       scen_res(NULL)
+      shiny::updateRadioButtons(session, "scen_view_mode", selected = "base_bw")
+    })
+
+    # Pick top bottleneck button
+    shiny::observeEvent(input$btn_pick_top_bottleneck, {
+      b <- bw_base_res()
+      shiny::req(b)
+      if (nrow(b$top_bottlenecks) > 0) {
+        top_id <- as.character(b$top_bottlenecks$`# ID`[1])
+        curr <- as.character(input$scen_edge_select %||% character(0))
+        new_sel <- unique(c(curr, top_id))
+        shiny::updateSelectizeInput(session, "scen_edge_select", selected = new_sel)
+        shiny::showNotification(
+          sprintf("Se seleccionó el cuello de botella crítico #%s (%s)", top_id, b$top_bottlenecks$Nombre[1]),
+          type = "message"
+        )
+      }
     })
 
     # Random sample selection button
@@ -1102,7 +1548,7 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
       if (length(sel) == 0 || is.null(net)) {
         return(shiny::tags$p(
           style = "font-size: 0.8rem; color: #6c757d; font-style: italic; margin-top: 4px;",
-          "Ning\u00fan tramo seleccionado. Haz clic en el mapa o b\u00fascalos arriba."
+          "Ningún tramo seleccionado. Haz clic en el mapa o búscalo arriba."
         ))
       }
       valid_sel <- sel[sel >= 1 & sel <= nrow(net$edges)]
@@ -1126,45 +1572,130 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
         shiny::showNotification("Por favor selecciona o marca al menos un tramo antes de simular.", type = "warning")
         return()
       }
-      shiny::withProgress(message = "Simulando intervenci\u00f3n urbana...", value = 0.3, {
-        mod_net <- walk_scenario_close(net, edge_indices = valid_edges, name = "Intervenci\u00f3n Peatonal")
-        shiny::incProgress(0.4, detail = "Calculando variaci\u00f3n de accesibilidad...")
+      snap_r <- as.numeric(input$scen_snap_radius %||% 0)
+      cut_r <- as.numeric(input$scen_analysis_radius %||% 0)
+      shiny::withProgress(message = "Simulando cierres viales...", value = 0.2, {
+        shiny::incProgress(0.3, detail = "Recalculando rutas y redistribución de intermediación...")
+        sim <- walk_scenario_betweenness(
+          network = net,
+          closed_edges = valid_edges,
+          snap_tolerance_m = snap_r,
+          radius_m = if (cut_r > 0) cut_r else NULL,
+          verbose = FALSE
+        )
+        bw_sim_res(sim)
+        shiny::incProgress(0.3, detail = "Evaluando variación de accesibilidad peatonal...")
+        mod_net <- sim$mod_network
         comp <- walk_compare_scenarios(base = net, scenario = mod_net, time_min = 5.0, verbose = FALSE)
-        shiny::incProgress(0.3, detail = "Listo")
         scen_res(list(comp = comp, closed_edges = valid_edges, mod_net = mod_net))
+        shiny::updateRadioButtons(session, "scen_view_mode", selected = "sim_bw")
+        shiny::incProgress(0.2, detail = "Listo")
       })
     })
 
-    output$scen_delta_reach <- shiny::renderText({
-      s <- scen_res()
-      if (is.null(s) || is.null(s$comp)) return("--")
-      tab <- s$comp$summary
-      if (!is.data.frame(tab)) return("--")
-      delta_row <- tab[tab$Metric == "Mean Reach (km)", ]
-      if (nrow(delta_row) > 0 && !is.na(delta_row$Delta[1])) sprintf("%.3f km", delta_row$Delta[1]) else "--"
+    # Download handler for Baseline Betweenness GeoJSON
+    output$dl_betweenness_base_sf <- shiny::downloadHandler(
+      filename = function() {
+        paste0("walkability_intermediacion_base_", input$city_choice, "_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".geojson")
+      },
+      content = function(file) {
+        b <- bw_base_res()
+        if (is.null(b) || is.null(b$edges)) {
+          shiny::showNotification("No hay análisis de intermediación base disponible.", type = "warning")
+          return()
+        }
+        sf::st_write(sf::st_transform(b$edges, 4326), file, driver = "GeoJSON", delete_dsn = TRUE, quiet = TRUE)
+      }
+    )
+
+    # Download handler for Simulation Betweenness GeoJSON
+    output$dl_betweenness_sim_sf <- shiny::downloadHandler(
+      filename = function() {
+        paste0("walkability_simulacion_intermediacion_cierres_", input$city_choice, "_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".geojson")
+      },
+      content = function(file) {
+        s <- bw_sim_res()
+        if (is.null(s) || is.null(s$edges)) {
+          shiny::showNotification("Simula una intervención antes de descargar los resultados de intermediación.", type = "warning")
+          return()
+        }
+        sf::st_write(sf::st_transform(s$edges, 4326), file, driver = "GeoJSON", delete_dsn = TRUE, quiet = TRUE)
+      }
+    )
+
+    # Download handler for Scenarios modified network sf
+    output$dl_scen_sf <- shiny::downloadHandler(
+      filename = function() {
+        paste0("walkability_escenario_red_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".geojson")
+      },
+      content = function(file) {
+        s <- scen_res()
+        if (is.null(s) || is.null(s$mod_net)) {
+          shiny::showNotification("Simula una intervención antes de descargar la red resultante.", type = "warning")
+          return()
+        }
+        sf::st_write(sf::st_transform(s$mod_net$edges, 4326), file, driver = "GeoJSON", delete_dsn = TRUE, quiet = TRUE)
+      }
+    )
+
+    # Value boxes
+    output$scen_top_base_stat <- shiny::renderText({
+      b <- bw_base_res()
+      if (is.null(b) || nrow(b$top_bottlenecks) == 0) return("--")
+      top_row <- b$top_bottlenecks[1, ]
+      sprintf("%s [#%s | %.0f]", top_row$Nombre, top_row$`# ID`, top_row$Intermediacion)
+    })
+
+    output$scen_top_sim_stat <- shiny::renderText({
+      s <- bw_sim_res()
+      if (is.null(s) || nrow(s$top_diverted) == 0) return("--")
+      top_row <- s$top_diverted[1, ]
+      sprintf("%s [#%s | \u0394 %+.0f]", top_row$Nombre, top_row$`# ID`, top_row$`Incremento (Delta)`)
     })
 
     output$scen_closed_len <- shiny::renderText({
-      s <- scen_res()
-      if (is.null(s) || is.null(s$comp)) return("--")
-      tab <- s$comp$summary
-      if (!is.data.frame(tab)) return("--")
-      delta_row <- tab[tab$Metric == "Network Length (km)", ]
-      if (nrow(delta_row) > 0 && !is.na(delta_row$Delta[1])) sprintf("%.2f km", abs(delta_row$Delta[1])) else "--"
+      sel <- as.integer(input$scen_edge_select)
+      sel <- sel[!is.na(sel)]
+      net <- current_net()
+      if (length(sel) == 0 || is.null(net)) return("0.0 m")
+      valid_sel <- sel[sel >= 1 & sel <= nrow(net$edges)]
+      tot_m <- sum(net$edges$length_m[valid_sel], na.rm = TRUE)
+      if (tot_m >= 1000) sprintf("%.2f km", tot_m / 1000) else sprintf("%.1f m", tot_m)
     })
+
+    output$scen_delta_bw_stat <- shiny::renderText({
+      s <- bw_sim_res()
+      if (is.null(s)) {
+        b <- bw_base_res()
+        if (is.null(b)) return("--")
+        sprintf("%.0f (media base)", b$summary$mean_betweenness)
+      } else {
+        sprintf("%.0f \u2192 %.0f", s$summary$base_mean, s$summary$sim_mean)
+      }
+    })
+
+    # Tables
+    output$table_top_diverted <- shiny::renderTable({
+      s <- bw_sim_res()
+      if (is.null(s) || nrow(s$top_diverted) == 0) {
+        return(data.frame(Estado = "Ejecuta una simulación para identificar qué vías asumen mayor intermediación producto del cierre."))
+      }
+      s$top_diverted
+    }, striped = TRUE, hover = TRUE, bordered = TRUE)
 
     output$table_closed_edges <- shiny::renderTable({
       net <- current_net()
       sel <- as.integer(input$scen_edge_select)
       sel <- sel[!is.na(sel)]
       if (length(sel) == 0 || is.null(net)) {
-        return(data.frame(Estado = "No hay tramos seleccionados. Haz clic en el mapa o b\u00fascalos en el buscador superior."))
+        return(data.frame(Estado = "No hay tramos seleccionados. Haz clic en el mapa o búscalos en el buscador superior."))
       }
       valid_sel <- sel[sel >= 1 & sel <= nrow(net$edges)]
       if (length(valid_sel) == 0) {
-        return(data.frame(Estado = "Tramos inv\u00e1lidos."))
+        return(data.frame(Estado = "Tramos inválidos."))
       }
       sub_edges <- net$edges[valid_sel, , drop = FALSE]
+      b_base <- bw_base_res()
       names_col <- if ("name" %in% names(sub_edges)) {
         v <- sub_edges$name
         ifelse(is.na(v) | v == "", "(Sin nombre)", v)
@@ -1173,70 +1704,412 @@ comp <- walk_compare_scenarios(base = net, scenario = cierre, time_min = 5.0)
       }
       type_col <- if ("highway" %in% names(sub_edges)) {
         v <- sub_edges$highway
-        ifelse(is.na(v), "v\u00eda", v)
+        ifelse(is.na(v), "vía", v)
       } else {
-        "v\u00eda"
+        "vía"
+      }
+      bw_col <- if (!is.null(b_base) && !is.null(b_base$edges$betweenness)) {
+        round(b_base$edges$betweenness[valid_sel], 1)
+      } else {
+        rep(NA_real_, length(valid_sel))
       }
       data.frame(
         `# ID` = valid_sel,
         Nombre = names_col,
         Tipo = type_col,
         `Longitud (m)` = round(sub_edges$length_m, 1),
+        `Intermed. Base` = bw_col,
         check.names = FALSE
       )
     }, striped = TRUE, hover = TRUE, bordered = TRUE)
 
+    # Render MapLibre map for Scenarios
     output$map_scenarios <- mapgl::renderMaplibre({
       edges_wgs <- net_edges_4326()
       shiny::req(edges_wgs)
       bb <- sf::st_bbox(edges_wgs)
+
+      mode <- input$scen_view_mode %||% "base_bw"
+      b_base <- bw_base_res()
+      b_sim <- bw_sim_res()
 
       m <- mapgl::maplibre(
         style = mapgl::carto_style("positron"),
         bounds = bb
       ) |>
         mapgl::add_navigation_control() |>
-        mapgl::add_scale_control() |>
-        mapgl::add_line_layer(
-          id = "scen_base_streets",
-          source = edges_wgs,
-          line_color = "#005F73",
-          line_width = 1.8,
-          line_opacity = 0.65
-        )
+        mapgl::add_scale_control()
 
       sel <- as.integer(input$scen_edge_select)
       sel <- sel[!is.na(sel) & sel >= 1 & sel <= nrow(edges_wgs)]
-      s <- scen_res()
 
-      if (!is.null(s) && length(s$closed_edges) > 0) {
-        closed_wgs <- edges_wgs[s$closed_edges, ]
-        closed_wgs$tooltip_text <- paste0("Tramo #", s$closed_edges, " [Clausurado]")
+      if (mode == "base_bw" || is.null(b_sim)) {
+        # Visualizing baseline betweenness
+        if (!is.null(b_base)) {
+          b_edges_wgs <- sf::st_transform(b_base$edges, 4326)
+          b_edges_wgs$tooltip_text <- sprintf(
+            "<strong>%s</strong> [#%s]<br>Tipo: %s | Longitud: %.1fm<br>Intermediación: %.0f (Norm: %.1f)<br>Percentil: %.1f%% (%s)<br><em>Haz clic para marcar o desmarcar para cierre</em>",
+            if ("name" %in% names(b_edges_wgs)) ifelse(is.na(b_edges_wgs$name) | b_edges_wgs$name == "", "(Sin nombre)", b_edges_wgs$name) else paste0("Tramo #", b_edges_wgs$edge_id),
+            b_edges_wgs$edge_id,
+            if ("highway" %in% names(b_edges_wgs)) ifelse(is.na(b_edges_wgs$highway), "calle", b_edges_wgs$highway) else "calle",
+            b_edges_wgs$length_m,
+            b_edges_wgs$betweenness,
+            b_edges_wgs$betweenness_norm,
+            b_edges_wgs$betweenness_pctl,
+            b_edges_wgs$bottleneck_class
+          )
+
+          m <- m |>
+            mapgl::add_line_layer(
+              id = "scen_base_bw_streets",
+              source = b_edges_wgs,
+              line_color = mapgl::get_column("color"),
+              line_width = 3.0,
+              line_opacity = 0.85,
+              tooltip = "tooltip_text"
+            )
+        } else {
+          m <- m |>
+            mapgl::add_line_layer(
+              id = "scen_default_streets",
+              source = edges_wgs,
+              line_color = "#005F73",
+              line_width = 2.0,
+              line_opacity = 0.7
+            )
+        }
+
+        # Highlight marked edges for closure
+        if (length(sel) > 0) {
+          marked_wgs <- edges_wgs[sel, ]
+          marked_wgs$tooltip_text <- paste0("Tramo #", sel, " [Marcado para clausura]")
+          m <- m |>
+            mapgl::add_line_layer(
+              id = "scen_marked_streets",
+              source = marked_wgs,
+              line_color = "#111827",
+              line_width = 5.0,
+              line_dasharray = c(2, 2),
+              tooltip = "tooltip_text"
+            )
+        }
+
+        m <- m |> mapgl::add_categorical_legend(
+          legend_title = "Intermediación Base (Cuellos de Botella)",
+          values = c(
+            "Crítico (Top 10% - Cuello de Botella)",
+            "Alto (Top 25% - Conector Principal)",
+            "Medio (Conector Secundario)",
+            "Bajo (Tráfico Local / Capilar)",
+            "Marcado para Clausura"
+          ),
+          colors = c("#D90429", "#F77F00", "#FCBF49", "#457B9D", "#111827"),
+          circular_patches = FALSE,
+          position = "bottom-right"
+        )
+
+      } else if (mode == "sim_bw") {
+        # Visualizing simulation post-closure betweenness
+        sim_edges_wgs <- sf::st_transform(b_sim$edges, 4326)
+        open_wgs <- sim_edges_wgs[!sim_edges_wgs$is_closed, ]
+        closed_wgs <- sim_edges_wgs[sim_edges_wgs$is_closed, ]
+
+        open_wgs$tooltip_text <- sprintf(
+          "<strong>%s</strong> [#%s]<br>Tipo: %s | Longitud: %.1fm<br>Intermediación Post-Cierre: %.0f (Norm: %.1f)<br>Base: %.0f (\u0394: %+.0f)<br>Estado: %s",
+          if ("name" %in% names(open_wgs)) ifelse(is.na(open_wgs$name) | open_wgs$name == "", "(Sin nombre)", open_wgs$name) else paste0("Tramo #", open_wgs$edge_id),
+          open_wgs$edge_id,
+          if ("highway" %in% names(open_wgs)) ifelse(is.na(open_wgs$highway), "calle", open_wgs$highway) else "calle",
+          open_wgs$length_m,
+          open_wgs$betweenness_sim,
+          open_wgs$betweenness_sim_norm,
+          open_wgs$betweenness_base,
+          open_wgs$delta_betweenness,
+          open_wgs$status
+        )
 
         m <- m |>
           mapgl::add_line_layer(
-            id = "scen_closed_streets",
-            source = closed_wgs,
-            line_color = "#AE2012",
-            line_width = 4.5,
-            line_dasharray = c(2, 2),
+            id = "scen_sim_open_streets",
+            source = open_wgs,
+            line_color = mapgl::get_column("color_sim"),
+            line_width = 3.2,
+            line_opacity = 0.9,
             tooltip = "tooltip_text"
           )
-      } else if (length(sel) > 0) {
-        marked_wgs <- edges_wgs[sel, ]
-        marked_wgs$tooltip_text <- paste0("Tramo #", sel, " [Marcado para clausura]")
+
+        if (nrow(closed_wgs) > 0) {
+          closed_wgs$tooltip_text <- paste0("Tramo #", closed_wgs$edge_id, " [Clausurado / Peatonalizado]")
+          m <- m |>
+            mapgl::add_line_layer(
+              id = "scen_sim_closed_streets",
+              source = closed_wgs,
+              line_color = "#111827",
+              line_width = 4.5,
+              line_dasharray = c(2, 2),
+              tooltip = "tooltip_text"
+            )
+        }
+
+        m <- m |> mapgl::add_categorical_legend(
+          legend_title = "Intermediación Post-Cierre",
+          values = c(
+            "Crítico Post-Cierre (Top 10%)",
+            "Alto Post-Cierre (Top 25%)",
+            "Medio Post-Cierre",
+            "Bajo Post-Cierre",
+            "Clausurado / Peatonalizado"
+          ),
+          colors = c("#D90429", "#F77F00", "#FCBF49", "#457B9D", "#111827"),
+          circular_patches = FALSE,
+          position = "bottom-right"
+        )
+
+      } else {
+        # Visualizing delta betweenness (diversions and stress shifts)
+        sim_edges_wgs <- sf::st_transform(b_sim$edges, 4326)
+        open_wgs <- sim_edges_wgs[!sim_edges_wgs$is_closed, ]
+        closed_wgs <- sim_edges_wgs[sim_edges_wgs$is_closed, ]
+
+        open_wgs$tooltip_text <- sprintf(
+          "<strong>%s</strong> [#%s]<br>Variación de Flujo (\u0394): %+.0f<br>Base: %.0f \u2192 Post-Cierre: %.0f<br>Estado: %s",
+          if ("name" %in% names(open_wgs)) ifelse(is.na(open_wgs$name) | open_wgs$name == "", "(Sin nombre)", open_wgs$name) else paste0("Tramo #", open_wgs$edge_id),
+          open_wgs$edge_id,
+          open_wgs$delta_betweenness,
+          open_wgs$betweenness_base,
+          open_wgs$delta_betweenness + open_wgs$betweenness_base,
+          open_wgs$status
+        )
 
         m <- m |>
           mapgl::add_line_layer(
-            id = "scen_marked_streets",
-            source = marked_wgs,
-            line_color = "#E76F51",
-            line_width = 4,
+            id = "scen_delta_open_streets",
+            source = open_wgs,
+            line_color = mapgl::get_column("color_delta"),
+            line_width = 3.5,
+            line_opacity = 0.9,
             tooltip = "tooltip_text"
           )
+
+        if (nrow(closed_wgs) > 0) {
+          closed_wgs$tooltip_text <- paste0("Tramo #", closed_wgs$edge_id, " [Clausurado / Peatonalizado]")
+          m <- m |>
+            mapgl::add_line_layer(
+              id = "scen_delta_closed_streets",
+              source = closed_wgs,
+              line_color = "#111827",
+              line_width = 4.5,
+              line_dasharray = c(2, 2),
+              tooltip = "tooltip_text"
+            )
+        }
+
+        m <- m |> mapgl::add_categorical_legend(
+          legend_title = "Variación de Intermediación (\u0394 Desvíos)",
+          values = c(
+            "Fuerte Aumento (\u0394 Desvío Crítico)",
+            "Aumento Moderado",
+            "Neutro / Sin Cambio",
+            "Reducción (\u0394 Aliviado)",
+            "Clausurado"
+          ),
+          colors = c("#D90429", "#F77F00", "#94A3B8", "#2A9D8F", "#111827"),
+          circular_patches = FALSE,
+          position = "bottom-right"
+        )
       }
+
       m
     })
+
+    # -------------------------------------------------------------
+    # 7. GENERADOR DE C\u00d3DIGO R REPRODUCIBLE (ESTILO ESQUISSE)
+    # -------------------------------------------------------------
+    shiny::observeEvent(input$code_copied_trigger, {
+      shiny::showNotification("\u00a1C\u00f3digo R copiado al portapapeles con \u00e9xito!", type = "message", duration = 3)
+    })
+
+    generated_code_reactive <- shiny::reactive({
+      city <- input$city_choice
+      spd <- input$param_speed
+      rep <- if (isTRUE(input$param_repair)) "TRUE" else "FALSE"
+      filt <- input$code_module_filter
+
+      header_txt <- c(
+        "# ====================================================================",
+        "# An\u00e1lisis de Transitabilidad Peatonal con el Paquete {walkability}",
+        "# Script reproducible generado autom\u00e1ticamente por la aplicaci\u00f3n",
+        paste0("# Fecha de generaci\u00f3n: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S")),
+        "# ====================================================================",
+        "",
+        "library(walkability)",
+        "library(sf)",
+        ""
+      )
+
+      # 1. Red
+      net_code <- c(
+        "# --- 1. Construcci\u00f3n y Reparaci\u00f3n Topol\u00f3gica de la Red Vial ---"
+      )
+      if (city == "custom") {
+        net_code <- c(net_code,
+          "# Sustituye la ruta por tu archivo espacial (.gpkg, .geojson, etc.):",
+          "datos_calles <- sf::st_read('ruta/a/tu/archivo_calles.gpkg')",
+          sprintf("net <- walk_build_network(datos_calles, walk_speed_kmh = %.1f, repair = %s)", spd, rep)
+        )
+      } else {
+        ds_name <- paste0("streets_", city)
+        net_code <- c(net_code,
+          sprintf("utils::data(%s, package = 'walkability')", ds_name),
+          sprintf("net <- walk_build_network(%s, walk_speed_kmh = %.1f, repair = %s)", ds_name, spd, rep)
+        )
+      }
+      net_code <- c(net_code, "print(net)", "")
+
+      # 2. Reach
+      t_reach <- input$reach_time_min
+      if (is.null(t_reach)) t_reach <- 10
+      reach_code <- c(
+        "# --- 2. Alcance Peatonal (10-min Reach / Rust Multi-hilo) ---",
+        sprintf("reach <- walk_compute_reach(net, time_min = %.1f)", t_reach),
+        "print(reach)",
+        "plot(reach)",
+        "# sf::st_write(reach$edges, 'red_alcance_peatonal.geojson', delete_dsn = TRUE)",
+        ""
+      )
+
+      # 3. Isochrones
+      iso_orig <- iso_origin_coords()
+      custom_txt <- trimws(input$iso_custom_times_text %||% "")
+      if (nzchar(custom_txt)) {
+        matches <- regmatches(custom_txt, gregexpr("[0-9]+(?:\\.[0-9]+)?", custom_txt))[[1]]
+        nums <- as.numeric(matches)
+        cutoffs_vec <- sort(unique(nums[!is.na(nums) & nums > 0]))
+        if (length(cutoffs_vec) == 0) cutoffs_vec <- sort(unique(as.numeric(input$iso_cutoffs)))
+      } else {
+        cutoffs_vec <- sort(unique(as.numeric(input$iso_cutoffs)))
+      }
+      if (length(cutoffs_vec) == 0) cutoffs_vec <- c(5, 10, 15)
+      cutoffs_str <- paste(cutoffs_vec, collapse = ", ")
+      method_str <- if (!is.null(input$iso_method)) input$iso_method else "concave"
+      rings_str <- if (isTRUE(input$iso_rings)) "TRUE" else "FALSE"
+
+      if (is.null(iso_orig)) {
+        iso_orig_line <- "origen_coord <- sf::st_coordinates(net$nodes[net$nodes$is_giant, ])[1, 1:2]"
+      } else {
+        iso_orig_line <- sprintf("origen_coord <- c(%.6f, %.6f)  # Coordenada fijada en mapa", iso_orig[1], iso_orig[2])
+      }
+
+      iso_code <- c(
+        "# --- 3. Is\u00f3cronas Multitemporales (Anillos No Superpuestos) ---",
+        iso_orig_line,
+        "origen_sf <- sf::st_sfc(sf::st_point(origen_coord), crs = 4326)",
+        "origen_proj <- sf::st_transform(origen_sf, sf::st_crs(net$nodes))",
+        sprintf("iso <- walk_isochrone(net, origin = sf::st_coordinates(origen_proj)[1, 1:2], time_min = c(%s), method = '%s', rings = %s)",
+                cutoffs_str, method_str, rings_str),
+        "print(iso)",
+        "plot(iso)",
+        "# sf::st_write(iso$polygons, 'isocronas_multitemporales.geojson', delete_dsn = TRUE)",
+        ""
+      )
+
+      # 4. Route
+      pa <- route_pt_a()
+      pb <- route_pt_b()
+      if (is.null(pa) || is.null(pb)) {
+        route_setup <- c(
+          "coords_giant <- sf::st_coordinates(sf::st_transform(net$nodes[net$nodes$is_giant, ], 4326))",
+          "punto_a <- coords_giant[1, 1:2]",
+          "punto_b <- coords_giant[min(50, nrow(coords_giant)), 1:2]"
+        )
+      } else {
+        route_setup <- c(
+          sprintf("punto_a <- c(%.6f, %.6f)  # Origen", pa[1], pa[2]),
+          sprintf("punto_b <- c(%.6f, %.6f)  # Destino", pb[1], pb[2])
+        )
+      }
+      route_code <- c(
+        "# --- 4. Ruteo Punto a Punto y Ratio de Circuidad (Dijkstra Min-Heap) ---",
+        route_setup,
+        "pt_a_proj <- sf::st_transform(sf::st_sfc(sf::st_point(punto_a), crs = 4326), sf::st_crs(net$nodes))",
+        "pt_b_proj <- sf::st_transform(sf::st_sfc(sf::st_point(punto_b), crs = 4326), sf::st_crs(net$nodes))",
+        "ruta <- walk_shortest_path(net, from = sf::st_coordinates(pt_a_proj)[1, 1:2], to = sf::st_coordinates(pt_b_proj)[1, 1:2])",
+        "print(ruta)",
+        "plot(ruta, network = net)",
+        "# sf::st_write(ruta$path_sf, 'ruta_optima_caminata.geojson', delete_dsn = TRUE)",
+        ""
+      )
+
+      # 5. Morphology
+      classes_vec <- paste(input$morph_classes, collapse = ", ")
+      if (!nzchar(classes_vec)) classes_vec <- "1, 3, 4"
+      morph_code <- c(
+        "# --- 5. Morfolog\u00eda Urbana y Densidad de Cruces (Topolog\u00eda de Nodos) ---",
+        "morfologia <- walk_intersection_density(net)",
+        "print(morfologia)",
+        "plot(morfologia)",
+        sprintf("# Filtrar por clases seleccionadas (grados %s):", classes_vec),
+        sprintf("nodos_sel <- morfologia$nodes[morfologia$nodes$degree %%in%% c(%s), ]", classes_vec),
+        "# sf::st_write(nodos_sel, 'nodos_morfologia_urbana.geojson', delete_dsn = TRUE)",
+        ""
+      )
+
+      # 6. Scenarios and Betweenness Centrality
+      sel_edges <- as.integer(input$scen_edge_select)
+      sel_edges <- sel_edges[!is.na(sel_edges)]
+      if (length(sel_edges) == 0) {
+        sel_edges_str <- "c(5, 10)"
+      } else {
+        sel_edges_str <- paste0("c(", paste(sel_edges, collapse = ", "), ")")
+      }
+      snap_val <- as.numeric(input$scen_snap_radius %||% 0)
+      cut_val <- as.numeric(input$scen_analysis_radius %||% 0)
+      cut_str <- if (cut_val > 0) paste0(", radius_m = ", cut_val) else ""
+
+      scen_code <- c(
+        "# --- 6. Centralidad de Intermediación (Betweenness) y Simulación de Cierres ---",
+        sprintf("intermediacion_base <- walk_betweenness(net, snap_tolerance_m = %s%s)", snap_val, cut_str),
+        "print(intermediacion_base)",
+        "plot(intermediacion_base)",
+        "",
+        "# Simulación de intervención y desvíos resultantes:",
+        sprintf("tramos_clausura <- %s", sel_edges_str),
+        sprintf("simulacion <- walk_scenario_betweenness(net, closed_edges = tramos_clausura, snap_tolerance_m = %s%s)", snap_val, cut_str),
+        "print(simulacion)",
+        "# Vías que asumen mayor intermediación producto del cierre:",
+        "head(simulacion$top_diverted, 5)",
+        "# sf::st_write(intermediacion_base$edges, 'intermediacion_base.geojson', delete_dsn = TRUE)",
+        "# sf::st_write(simulacion$edges, 'simulacion_intermediacion_cierres.geojson', delete_dsn = TRUE)",
+        ""
+      )
+
+      content_map <- list(
+        all = c(header_txt, net_code, reach_code, iso_code, route_code, morph_code, scen_code),
+        network = c(header_txt, net_code),
+        reach = c(header_txt, net_code, reach_code),
+        iso = c(header_txt, net_code, iso_code),
+        route = c(header_txt, net_code, route_code),
+        morph = c(header_txt, net_code, morph_code),
+        scen = c(header_txt, net_code, scen_code)
+      )
+
+      chosen_filter <- if (!is.null(filt)) filt else "all"
+      res_lines <- content_map[[chosen_filter]]
+      if (is.null(res_lines)) res_lines <- content_map$all
+      paste(res_lines, collapse = "\n")
+    })
+
+    output$code_text_display <- shiny::renderText({
+      generated_code_reactive()
+    })
+
+    output$dl_code_script <- shiny::downloadHandler(
+      filename = function() {
+        paste0("analisis_walkability_", input$city_choice, "_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".R")
+      },
+      content = function(file) {
+        cat(generated_code_reactive(), file = file)
+      }
+    )
   }
 }
 
