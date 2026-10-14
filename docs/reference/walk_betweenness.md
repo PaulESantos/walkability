@@ -110,10 +110,12 @@ breaks.
 ## Examples
 
 ``` r
-data(streets_cusco)
-net <- walk_build_network(streets_cusco, verbose = FALSE)
-bw <- walk_betweenness(net)
-print(bw)
+if (requireNamespace("igraph", quietly = TRUE)) {
+  data(streets_cusco)
+  net <- walk_build_network(streets_cusco, verbose = FALSE)
+  bw <- walk_betweenness(net)
+  print(bw)
+}
 #> 
 #> ── Walkability: Centralidad de Intermediación (Edge Betweenness) ───────────────
 #> ℹ Tramos evaluados: 288 | Radio: Global | Snap: 0m

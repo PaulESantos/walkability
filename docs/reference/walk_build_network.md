@@ -31,8 +31,9 @@ walk_build_network(
 
 - crs:
 
-  Optional target metric CRS (e.g. `EPSG:32722`). If provided and `data`
-  is in a different CRS, it will be projected.
+  Optional target metric CRS (e.g. `EPSG:32722` or `"auto"` to
+  automatically infer the appropriate local UTM zone). If provided and
+  `data` is in a different CRS, it will be projected.
 
 - walk_speed_kmh:
 
