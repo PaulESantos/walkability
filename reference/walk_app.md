@@ -12,6 +12,7 @@ walk_app(
   host = "127.0.0.1",
   port = NULL,
   launch.browser = TRUE,
+  lang = c("es", "en"),
   ...
 )
 ```
@@ -38,6 +39,12 @@ walk_app(
 
   Logical. Whether to open the application in the system's default
   browser (default `TRUE`).
+
+- lang:
+
+  Character string specifying the initial interface language: `"es"` for
+  Spanish (default) or `"en"` for English. The user can also toggle the
+  language interactively at runtime via the navbar selector.
 
 - ...:
 
@@ -74,12 +81,15 @@ The application provides dedicated, fully documented workspaces for:
 
 ``` r
 if (FALSE) { # \dontrun{
-# Launch with default model datasets:
+# Launch with default language (Spanish):
 walk_app()
+
+# Launch in English:
+walk_app(lang = "en")
 
 # Launch with a pre-built network:
 utils::data(streets_cusco)
 net <- walk_build_network(streets_cusco, verbose = FALSE)
-walk_app(net)
+walk_app(net, lang = "es")
 } # }
 ```

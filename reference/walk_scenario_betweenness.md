@@ -46,13 +46,15 @@ augmented edges with delta betweenness, and top diverted streets.
 ## Examples
 
 ``` r
-data(streets_cusco)
-net <- walk_build_network(streets_cusco, verbose = FALSE)
-sim <- walk_scenario_betweenness(net, closed_edges = c(5, 10))
+if (requireNamespace("igraph", quietly = TRUE)) {
+  data(streets_cusco)
+  net <- walk_build_network(streets_cusco, verbose = FALSE)
+  sim <- walk_scenario_betweenness(net, closed_edges = c(5, 10))
+  print(sim)
+}
 #> ℹ Calculando intermediación de red base...
 #> ℹ Simulando cierre de 2 tramos y reconstruyendo topología...
 #> ℹ Recalculando intermediación post-cierre...
-print(sim)
 #> 
 #> ── Walkability: Simulación de Cierres e Intermediación ─────────────────────────
 #> ℹ Tramos cerrados: 2 (220.2 m suprimidos)
