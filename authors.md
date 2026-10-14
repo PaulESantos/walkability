@@ -9,16 +9,16 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/PaulESantos/walkability/blob/main/DESCRIPTION)
+[`inst/CITATION`](https://github.com/PaulESantos/walkability/blob/main/inst/CITATION)
 
 Santos Andrade P (2026). *walkability: Urban Walkability and Active
 Transit Network Analysis*. R package version 0.1.0,
-<https://paulesantos.github.io/walkability>.
+<https://github.com/PaulESantos/walkability>.
 
     @Manual{,
       title = {walkability: Urban Walkability and Active Transit Network Analysis},
       author = {Paul E. {Santos Andrade}},
       year = {2026},
       note = {R package version 0.1.0},
-      url = {https://paulesantos.github.io/walkability},
+      url = {https://github.com/PaulESantos/walkability},
     }

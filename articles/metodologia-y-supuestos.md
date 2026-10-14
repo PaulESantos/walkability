@@ -90,12 +90,12 @@ Al interpretar los resultados cartográficos y estadísticos de
 caminabilidad, deben considerarse los siguientes supuestos
 metodológicos:
 
-1.  **Acera transitable por defecto en vías urbanas:** Los datos
-    abiertos (Overture / OSM) no siempre registran con precisión si una
-    calle cuenta con acera peatonal continua. El modelo asume
-    transitabilidad peatonal en todas las clases secundarias y
-    residenciales, excluyendo autopistas (`motorway`) y vías rápidas de
-    acceso controlado (`trunk`).
+1.  **Acera transitable por defecto en vías urbanas:** Los datos de
+    OpenStreetMap y las redes viales personalizadas no siempre registran
+    con precisión si una calle cuenta con acera peatonal continua. El
+    modelo asume transitabilidad peatonal en todas las clases
+    secundarias y residenciales, excluyendo autopistas (`motorway`) y
+    vías rápidas de acceso controlado (`trunk`).
 2.  **Exclusión de vías rápidas:** Las autopistas y vías troncales se
     eliminan para evitar que las líneas centrales de carreteras actúen
     como atajos artificiales para peatones.

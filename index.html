@@ -77,7 +77,7 @@
 <blockquote>
 <p><strong>Quantify, diagnose, and map 10-minute pedestrian reach across urban street networks at native CPU speed.</strong></p>
 </blockquote>
-<p><code>walkability</code> computes the <strong>reachable walkable network length within a 10-minute walk</strong> (~750 m at 4.5 km/h) for every junction in a city. Designed for urban planners and researchers, it solves two major bottlenecks in pedestrian analytics: slow routing over massive street graphs and geometric digitization biases, using a multi-threaded <strong>Rust</strong> kernel with exact partial-edge credits.</p>
+<p><code>walkability</code> computes the <strong>reachable walkable network length within a 10-minute walk</strong> (~750 m at 4.5 km/h) for every junction in a city. Designed for urban planners and researchers, it analyzes OpenStreetMap street data or user-provided road networks with a multi-threaded <strong>Rust</strong> kernel and exact partial-edge credits.</p>
 <p align="center">
 <img src="reference/figures/cusco_reach.png" width="600" alt="Reachable walkable network length in Cusco rendered with viridis colormap"><br><em>Reachable network length in Cusco. Yellow highlights dense, highly permeable pedestrian districts (Historic Center); dark purple marks fragmented outskirts and steep hillsides.</em>
 </p>
@@ -95,11 +95,11 @@
 <div class="section level4">
 <h4 id="requirements-for-source-installations">Requirements for source installations<a class="anchor" aria-label="anchor" href="#requirements-for-source-installations"></a>
 </h4>
-<p>R 4.2 or greater is required for every installation; R 4.5.0 or greater is preferred.</p>
+<p>R 4.2 or greater is required.</p>
 <p>A working Rust toolchain is required when installing <code>walkability</code> from source. Install Rust from <a href="https://rust-lang.org/tools/install/" class="external-link">rust-lang.org/tools/install</a>. The additional requirements are:</p>
 <ul>
-<li>Cargo, the Rust package manager.</li>
-<li>Rustc, the Rust compiler.</li>
+<li>Cargo 1.80 or greater, the Rust package manager.</li>
+<li>Rustc 1.80 or greater, the Rust compiler.</li>
 </ul>
 <p>On Windows, install the matching version of Rtools first. Then, from a terminal in the package project directory, the most practical Rust target for an R + Rtools source build is:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="ex">rustup</span> override set stable-x86_64-pc-windows-gnu</span></code></pre></div>
@@ -177,6 +177,13 @@
 <hr>
 </div>
 <div class="section level2">
+<h2 id="data-sources-and-attribution">Data Sources and Attribution<a class="anchor" aria-label="anchor" href="#data-sources-and-attribution"></a>
+</h2>
+<p>The bundled Cusco, Lima, and Arequipa street networks are derived from <a href="https://www.openstreetmap.org/copyright" class="external-link">OpenStreetMap</a> data and are available under the <a href="https://opendatacommons.org/licenses/odbl/" class="external-link">Open Database License (ODbL)</a>. When using, redistributing, or adapting these datasets, retain the attribution <strong>© OpenStreetMap contributors</strong> and comply with the ODbL.</p>
+<p>You may also analyze a custom street network supplied as an <code>sf</code> object or uploaded through the application. You are responsible for confirming that you have the right to use and redistribute any user-provided data.</p>
+<hr>
+</div>
+<div class="section level2">
 <h2 id="scope--limitations">Scope &amp; Limitations<a class="anchor" aria-label="anchor" href="#scope--limitations"></a>
 </h2>
 <ul>
@@ -206,9 +213,10 @@
 <div class="section level2">
 <h2 id="citation--license">Citation &amp; License<a class="anchor" aria-label="anchor" href="#citation--license"></a>
 </h2>
-<p>To cite <code>walkability</code> in publications:</p>
-<pre class="text"><code>Santos Andrade, P. E. (2026). walkability: Urban Walkability and Active Transit Network Analysis.
-R package version 0.1.0. https://github.com/PaulESantos/walkability</code></pre>
+<p>To cite <code>walkability</code> in publications, run <code>citation("walkability")</code>. The current software citation is:</p>
+<pre class="text"><code>Santos Andrade, P. E. (2026). walkability: Urban Walkability and Active Transit
+Network Analysis. R package version 0.1.0.
+https://github.com/PaulESantos/walkability</code></pre>
 <p>Distributed under the <a href="LICENSE">MIT License</a>.</p>
 </div>
 </div>
