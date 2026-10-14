@@ -7,16 +7,18 @@ Authors@R:
                  comment = c(ORCID = "0000-0002-6635-0375"))  
 Description: High-performance geospatial graph analysis for urban street networks,
     walkability, and active transitability. Features topological diagnostics and
-    repair for user-provided networks, automated data acquisition from Overture Maps
-    and OpenStreetMap, multi-threaded Rust kernels for isochrone-based reachable network
-    length metrics with partial-edge credits, and publication-ready ggplot2 visualizations.
+    controlled repair for user-provided networks, street-network acquisition from
+    OpenStreetMap, multi-threaded Rust kernels for isochrone-based reachable-network
+    length metrics with partial-edge credits, and publication-ready 'ggplot2'
+    visualizations.
 License: MIT + file LICENSE
+Copyright: See inst/COPYRIGHTS for copyright and license notices for vendored Rust code.
 URL: https://paulesantos.github.io/walkability, https://github.com/PaulESantos/walkability
 BugReports: https://github.com/PaulESantos/walkability/issues
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-SystemRequirements: Cargo (Rust's package manager), rustc
+SystemRequirements: Cargo (Rust's package manager) (>= 1.80), rustc (>= 1.80)
 Depends:
     R (>= 4.2.0)
 Imports:
@@ -28,9 +30,7 @@ Imports:
 Suggests:
     arrow,
     bslib,
-    DBI,
     dplyr,
-    duckdb,
     igraph,
     knitr,
     mapgl,

@@ -1,0 +1,10 @@
+citHeader("To cite walkability in publications use:")
+
+citEntry(
+  entry = "Manual",
+  title = "walkability: Urban Walkability and Active Transit Network Analysis",
+  author = person("Paul E.", "Santos Andrade", email = "paulefrens@gmail.com"),
+  year = "2026",
+  note = "R package version 0.1.0",
+  url = "https://github.com/PaulESantos/walkability"
+)

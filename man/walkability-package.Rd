@@ -6,7 +6,7 @@
 \alias{walkability-package}
 \title{Global Variables and Namespace Imports}
 \description{
-High-performance geospatial graph analysis for urban street networks, walkability, and active transitability. Features topological diagnostics and repair for user-provided networks, automated data acquisition from Overture Maps and OpenStreetMap, multi-threaded Rust kernels for isochrone-based reachable network length metrics with partial-edge credits, and publication-ready ggplot2 visualizations.
+High-performance geospatial graph analysis for urban street networks, walkability, and active transitability. Features topological diagnostics and controlled repair for user-provided networks, street-network acquisition from OpenStreetMap, multi-threaded Rust kernels for isochrone-based reachable-network length metrics with partial-edge credits, and publication-ready 'ggplot2' visualizations.
 }
 \seealso{
 Useful links:

@@ -158,10 +158,9 @@ reference:
       - theme_walkability
 
   - title: "Data Ingestion"
-    desc: "Automated street network acquisition from OpenStreetMap and Overture Maps."
+    desc: "Automated street network acquisition from OpenStreetMap."
     contents:
       - walk_download_osm
-      - walk_download_overture_bbox
 
   - title: "Rust Acceleration Kernels"
     desc: "Low-level compiled Rust routines for CSR conversion and parallel Dijkstra search."

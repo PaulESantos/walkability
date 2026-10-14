@@ -5,10 +5,9 @@
 
 `walkability` computes the **reachable walkable network length within a
 10-minute walk** (~750 m at 4.5 km/h) for every junction in a city.
-Designed for urban planners and researchers, it solves two major
-bottlenecks in pedestrian analytics: slow routing over massive street
-graphs and geometric digitization biases, using a multi-threaded
-**Rust** kernel with exact partial-edge credits.
+Designed for urban planners and researchers, it analyzes OpenStreetMap
+street data or user-provided road networks with a multi-threaded
+**Rust** kernel and exact partial-edge credits.
 
 ![Reachable walkable network length in Cusco rendered with viridis
 colormap](reference/figures/cusco_reach.png)\
@@ -32,16 +31,15 @@ pak::pak("PaulESantos/walkability")
 
 #### Requirements for source installations
 
-R 4.2 or greater is required for every installation; R 4.5.0 or greater
-is preferred.
+R 4.2 or greater is required.
 
 A working Rust toolchain is required when installing `walkability` from
 source. Install Rust from
 [rust-lang.org/tools/install](https://rust-lang.org/tools/install/). The
 additional requirements are:
 
-- Cargo, the Rust package manager.
-- Rustc, the Rust compiler.
+- Cargo 1.80 or greater, the Rust package manager.
+- Rustc 1.80 or greater, the Rust compiler.
 
 On Windows, install the matching version of Rtools first. Then, from a
 terminal in the package project directory, the most practical Rust
@@ -153,6 +151,21 @@ dens
 
 ------------------------------------------------------------------------
 
+## Data Sources and Attribution
+
+The bundled Cusco, Lima, and Arequipa street networks are derived from
+[OpenStreetMap](https://www.openstreetmap.org/copyright) data and are
+available under the [Open Database License
+(ODbL)](https://opendatacommons.org/licenses/odbl/). When using,
+redistributing, or adapting these datasets, retain the attribution **©
+OpenStreetMap contributors** and comply with the ODbL.
+
+You may also analyze a custom street network supplied as an `sf` object
+or uploaded through the application. You are responsible for confirming
+that you have the right to use and redistribute any user-provided data.
+
+------------------------------------------------------------------------
+
 ## Scope & Limitations
 
 - **Modeled speed**: Assumes a design walking speed of 4.5 km/h (1.25
@@ -188,11 +201,13 @@ guide for details.*
 
 ## Citation & License
 
-To cite `walkability` in publications:
+To cite `walkability` in publications, run `citation("walkability")`.
+The current software citation is:
 
 ``` text
-Santos Andrade, P. E. (2026). walkability: Urban Walkability and Active Transit Network Analysis.
-R package version 0.1.0. https://github.com/PaulESantos/walkability
+Santos Andrade, P. E. (2026). walkability: Urban Walkability and Active Transit
+Network Analysis. R package version 0.1.0.
+https://github.com/PaulESantos/walkability
 ```
 
 Distributed under the [MIT

@@ -69,7 +69,7 @@ El algoritmo de Dijkstra se ejecuta en paralelo en **Rust** (usando `rayon` y la
 
 Al interpretar los resultados cartográficos y estadísticos de caminabilidad, deben considerarse los siguientes supuestos metodológicos:
 
-1. **Acera transitable por defecto en vías urbanas:** Los datos abiertos (Overture / OSM) no siempre registran con precisión si una calle cuenta con acera peatonal continua. El modelo asume transitabilidad peatonal en todas las clases secundarias y residenciales, excluyendo autopistas (`motorway`) y vías rápidas de acceso controlado (`trunk`).
+1. **Acera transitable por defecto en vías urbanas:** Los datos de OpenStreetMap y las redes viales personalizadas no siempre registran con precisión si una calle cuenta con acera peatonal continua. El modelo asume transitabilidad peatonal en todas las clases secundarias y residenciales, excluyendo autopistas (`motorway`) y vías rápidas de acceso controlado (`trunk`).
 2. **Exclusión de vías rápidas:** Las autopistas y vías troncales se eliminan para evitar que las líneas centrales de carreteras actúen como atajos artificiales para peatones.
 3. **Entradas privadas y parqueaderos descartados:** Los accesos de servicio vehicular privado (`driveway`, `parking_aisle`) son filtrados para no sobrestimar la permeabilidad peatonal.
 4. **Dependencia de cruces digitalizados:** Si dos vías peatonales en lados opuestos de una avenida no comparten un punto de conexión o paso de cebra digitalizado, la red se modela como fragmentada.

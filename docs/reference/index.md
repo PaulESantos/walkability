@@ -158,13 +158,10 @@ Publication-grade ggplot2 maps and minimalist cartographic themes.
 
 ## Data Ingestion
 
-Automated street network acquisition from OpenStreetMap and Overture
-Maps.
+Automated street network acquisition from OpenStreetMap.
 
 - [`walk_download_osm()`](https://paulesantos.github.io/walkability/reference/walk_download_osm.md)
   : Download OpenStreetMap Street Network Data
-- [`walk_download_overture_bbox()`](https://paulesantos.github.io/walkability/reference/walk_download_overture_bbox.md)
-  : Query Overture Maps Data via DuckDB
 
 ## Rust Acceleration Kernels
 

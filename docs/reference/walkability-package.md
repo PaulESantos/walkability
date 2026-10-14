@@ -2,10 +2,10 @@
 
 High-performance geospatial graph analysis for urban street networks,
 walkability, and active transitability. Features topological diagnostics
-and repair for user-provided networks, automated data acquisition from
-Overture Maps and OpenStreetMap, multi-threaded Rust kernels for
-isochrone-based reachable network length metrics with partial-edge
-credits, and publication-ready ggplot2 visualizations.
+and controlled repair for user-provided networks, street-network
+acquisition from OpenStreetMap, multi-threaded Rust kernels for
+isochrone-based reachable-network length metrics with partial-edge
+credits, and publication-ready 'ggplot2' visualizations.
 
 ## See also
 
