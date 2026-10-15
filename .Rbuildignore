@@ -20,3 +20,4 @@
 ^docs$
 ^CONSIDERACIONES_TECNICAS\.md$
 ^docs/CONSIDERACIONES_TECNICAS\.html$
+^cran-comments\.md$

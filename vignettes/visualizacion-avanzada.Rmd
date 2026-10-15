@@ -71,7 +71,7 @@ iso <- walk_isochrone(net, origin = orig_node, time_min = c(5, 10, 15), rings = 
 p_iso <- plot(iso)
 ```
 
-El gráfico base utiliza [`theme_walkability()`](file:///d:/walkability/R/plot.R). Si deseamos adaptar el diseño a un estilo formal para un artículo científico o reporte institucional, podemos sobrescribir el tema con `theme_bw()` o `theme_minimal()` y ajustar la tipografía y leyendas:
+El gráfico base utiliza `theme_walkability()`. Si deseamos adaptar el diseño a un estilo formal para un artículo científico o reporte institucional, podemos sobrescribir el tema con `theme_bw()` o `theme_minimal()` y ajustar la tipografía y leyendas:
 
 ```{r isochrone-custom}
 p_iso_custom <- p_iso +
@@ -96,7 +96,7 @@ p_iso_custom
 
 ### 2.2. Tema Integrado con Soporte de Modo Oscuro (`dark = TRUE`)
 
-[`theme_walkability()`](file:///d:/walkability/R/plot.R) permite generar de forma nativa mapas en modo oscuro de alto impacto visual, ideal para presentaciones interactivas o interfaces web:
+`theme_walkability()` permite generar de forma nativa mapas en modo oscuro de alto impacto visual, ideal para presentaciones interactivas o interfaces web:
 
 ```{r dark-theme}
 # Aplicar tema oscuro personalizado con alta legibilidad

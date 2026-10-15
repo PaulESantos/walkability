@@ -9,7 +9,7 @@
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust
-Engine](https://img.shields.io/badge/Rust-Rayon%20Multi--threaded-orange.svg)](https://www.rust-lang.org/)
+Engine](https://img.shields.io/badge/Rust-Rayon%20Multi--threaded-orange.svg)](https://rust-lang.org/)
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html)
 <!-- badges: end -->

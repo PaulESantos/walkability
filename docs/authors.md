@@ -13,12 +13,12 @@ Source:
 
 Santos Andrade P (2026). *walkability: Urban Walkability and Active
 Transit Network Analysis*. R package version 0.1.0,
-<https://github.com/PaulESantos/walkability>.
+<https://paulesantos.github.io/walkability/>.
 
     @Manual{,
       title = {walkability: Urban Walkability and Active Transit Network Analysis},
       author = {Paul E. {Santos Andrade}},
       year = {2026},
       note = {R package version 0.1.0},
-      url = {https://github.com/PaulESantos/walkability},
+      url = {https://paulesantos.github.io/walkability/},
     }

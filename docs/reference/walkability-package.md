@@ -1,17 +1,17 @@
 # Global Variables and Namespace Imports
 
 High-performance geospatial graph analysis for urban street networks,
-walkability, and active transitability. Features topological diagnostics
-and controlled repair for user-provided networks, street-network
-acquisition from OpenStreetMap, multi-threaded Rust kernels for
-isochrone-based reachable-network length metrics with partial-edge
-credits, and publication-ready 'ggplot2' visualizations.
+walkability, and active mobility. Features topological diagnostics and
+controlled repair for user-provided networks, street-network acquisition
+from 'OpenStreetMap', multi-threaded Rust kernels for isochrone-based
+reachable-network length metrics with partial-edge credits, and
+publication-ready 'ggplot2' visualizations.
 
 ## See also
 
 Useful links:
 
-- <https://paulesantos.github.io/walkability>
+- <https://paulesantos.github.io/walkability/>
 
 - <https://github.com/PaulESantos/walkability>
 

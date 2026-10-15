@@ -1,8 +1,8 @@
-url: https://paulesantos.github.io/walkability
+url: https://paulesantos.github.io/walkability/
 
 home:
   title: walkability R package
-  description: High-performance geospatial graph analysis for urban street networks, walkability, and active transitability. Powered by multi-threaded Rust kernels with exact partial-edge credits and publication-ready ggplot2 visualizations.
+  description: High-performance geospatial graph analysis for urban street networks, walkability, and active mobility. Powered by multi-threaded Rust kernels with exact partial-edge credits and publication-ready ggplot2 visualizations.
 
 authors:
   Paul E. Santos Andrade:
