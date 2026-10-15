@@ -78,9 +78,9 @@ p_iso <- plot(iso)
 ```
 
 El gráfico base utiliza
-[`theme_walkability()`](file:///d:/walkability/R/plot.R). Si deseamos
-adaptar el diseño a un estilo formal para un artículo científico o
-reporte institucional, podemos sobrescribir el tema con
+[`theme_walkability()`](https://paulesantos.github.io/walkability/reference/theme_walkability.md).
+Si deseamos adaptar el diseño a un estilo formal para un artículo
+científico o reporte institucional, podemos sobrescribir el tema con
 [`theme_bw()`](https://ggplot2.tidyverse.org/reference/ggtheme.html) o
 [`theme_minimal()`](https://ggplot2.tidyverse.org/reference/ggtheme.html)
 y ajustar la tipografía y leyendas:
@@ -111,9 +111,9 @@ p_iso_custom
 
 ### 2.2. Tema Integrado con Soporte de Modo Oscuro (`dark = TRUE`)
 
-[`theme_walkability()`](file:///d:/walkability/R/plot.R) permite generar
-de forma nativa mapas en modo oscuro de alto impacto visual, ideal para
-presentaciones interactivas o interfaces web:
+[`theme_walkability()`](https://paulesantos.github.io/walkability/reference/theme_walkability.md)
+permite generar de forma nativa mapas en modo oscuro de alto impacto
+visual, ideal para presentaciones interactivas o interfaces web:
 
 ``` r
 
