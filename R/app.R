@@ -175,7 +175,7 @@ walk_app <- function(network = NULL,
     morph_class_1 = "Cul-de-sacs (1 v\u00eda, callej\u00f3n ciego)",
     morph_class_3 = "Cruces en T (3 v\u00edas)",
     morph_class_4 = "Cruces en Cuadr\u00edcula (4+ v\u00edas)",
-    morph_legend_html = "<h6 style=\"font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; color: #005F73;\">Leyenda de Tipolog\u00edas de Cruce:</h6><div style=\"display: flex; align-items: center; margin-bottom: 6px; font-size: 0.82rem;\"><span style=\"width: 12px; height: 12px; border-radius: 50%; background-color: #E63946; display: inline-block; margin-right: 8px; flex-shrink: 0;\"></span><span><strong>Grado 1 (Rojo): </strong>Cul-de-sac / Callej\u00f3n ciego</span></div><div style=\"display: flex; align-items: center; margin-bottom: 6px; font-size: 0.82rem;\"><span style=\"width: 12px; height: 12px; border-radius: 50%; background-color: #457B9D; display: inline-block; margin-right: 8px; flex-shrink: 0;\"></span><span><strong>Grado 3 (Azul): </strong>Cruce en T (3 ramales)</span></div><div style=\"display: flex; align-items: center; font-size: 0.82rem;\"><span style=\"width: 12px; height: 12px; border-radius: 50%; background-color: #2A9D8F; display: inline-block; margin-right: 8px; flex-shrink: 0;\"></span><span><strong>Grado 4+ (Verde): </strong>Ortogonal / Damero en cruz</span></div>",
+    morph_legend_html = "<h6 style=\"font-size: 0.82rem; font-weight: 700; margin-bottom: 8px; color: #161C22; letter-spacing: -0.01em;\">Tipolog\u00edas de Cruce:</h6><div style=\"display: flex; align-items: center; margin-bottom: 6px; font-size: 0.8rem;\"><span style=\"width: 10px; height: 10px; border-radius: 50%; background-color: #C93B2B; display: inline-block; margin-right: 8px; flex-shrink: 0;\"></span><span><strong>Grado 1: </strong>Cul-de-sac / Callej\u00f3n ciego</span></div><div style=\"display: flex; align-items: center; margin-bottom: 6px; font-size: 0.8rem;\"><span style=\"width: 10px; height: 10px; border-radius: 50%; background-color: #546270; display: inline-block; margin-right: 8px; flex-shrink: 0;\"></span><span><strong>Grado 3: </strong>Cruce en T (3 ramales)</span></div><div style=\"display: flex; align-items: center; font-size: 0.8rem;\"><span style=\"width: 10px; height: 10px; border-radius: 50%; background-color: #1E6B52; display: inline-block; margin-right: 8px; flex-shrink: 0;\"></span><span><strong>Grado 4+: </strong>Ortogonal / Damero en cruz</span></div>",
     dl_morph_sf = "Descargar Nodos (GeoJSON)",
     box_morph_density = "Densidad de Intersecciones",
     box_morph_culdesac = "Proporci\u00f3n de Cul-de-sacs",
@@ -356,7 +356,7 @@ walk_app <- function(network = NULL,
     morph_class_1 = "Cul-de-sacs (1-way, dead-ends)",
     morph_class_3 = "T-Junctions (3-way branches)",
     morph_class_4 = "Grid Intersections (4+ ways)",
-    morph_legend_html = "<h6 style=\"font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; color: #005F73;\">Intersection Typologies Legend:</h6><div style=\"display: flex; align-items: center; margin-bottom: 6px; font-size: 0.82rem;\"><span style=\"width: 12px; height: 12px; border-radius: 50%; background-color: #E63946; display: inline-block; margin-right: 8px; flex-shrink: 0;\"></span><span><strong>Degree 1 (Red): </strong>Cul-de-sac / Dead-end</span></div><div style=\"display: flex; align-items: center; margin-bottom: 6px; font-size: 0.82rem;\"><span style=\"width: 12px; height: 12px; border-radius: 50%; background-color: #457B9D; display: inline-block; margin-right: 8px; flex-shrink: 0;\"></span><span><strong>Degree 3 (Blue): </strong>T-Junction (3 branches)</span></div><div style=\"display: flex; align-items: center; font-size: 0.82rem;\"><span style=\"width: 12px; height: 12px; border-radius: 50%; background-color: #2A9D8F; display: inline-block; margin-right: 8px; flex-shrink: 0;\"></span><span><strong>Degree 4+ (Green): </strong>Orthogonal / 4-way grid</span></div>",
+    morph_legend_html = "<h6 style=\"font-size: 0.82rem; font-weight: 700; margin-bottom: 8px; color: #161C22; letter-spacing: -0.01em;\">Intersection Typologies:</h6><div style=\"display: flex; align-items: center; margin-bottom: 6px; font-size: 0.8rem;\"><span style=\"width: 10px; height: 10px; border-radius: 50%; background-color: #C93B2B; display: inline-block; margin-right: 8px; flex-shrink: 0;\"></span><span><strong>Degree 1: </strong>Cul-de-sac / Dead-end</span></div><div style=\"display: flex; align-items: center; margin-bottom: 6px; font-size: 0.8rem;\"><span style=\"width: 10px; height: 10px; border-radius: 50%; background-color: #546270; display: inline-block; margin-right: 8px; flex-shrink: 0;\"></span><span><strong>Degree 3: </strong>T-Junction (3 branches)</span></div><div style=\"display: flex; align-items: center; font-size: 0.8rem;\"><span style=\"width: 10px; height: 10px; border-radius: 50%; background-color: #1E6B52; display: inline-block; margin-right: 8px; flex-shrink: 0;\"></span><span><strong>Degree 4+: </strong>Orthogonal (4-way grid)</span></div>",
     dl_morph_sf = "Download Nodes (GeoJSON)",
     box_morph_density = "Intersection Density",
     box_morph_culdesac = "Cul-de-sac Proportion",
@@ -452,24 +452,32 @@ walk_app <- function(network = NULL,
 
   theme <- bslib::bs_theme(
     version = 5,
-    bootswatch = "cosmo",
-    primary = "#005F73",
-    secondary = "#0A9396",
-    success = "#2A9D8F",
-    info = "#94D2BD",
-    warning = "#E9D8A6",
-    danger = "#AE2012",
-    base_font = bslib::font_google("Inter"),
-    code_font = bslib::font_google("Fira Code")
+    bg = "#F8F7F4",
+    fg = "#161C22",
+    primary = "#161C22",
+    secondary = "#546270",
+    success = "#1E6B52",
+    info = "#2C5282",
+    warning = "#E27D18",
+    danger = "#C93B2B",
+    base_font = bslib::font_google("Plus Jakarta Sans"),
+    heading_font = bslib::font_google("Plus Jakarta Sans"),
+    code_font = bslib::font_google("JetBrains Mono")
   )
 
   bslib::page_navbar(
     title = shiny::div(
-      shiny::tags$span(style = "font-weight: 800; color: #005F73; font-size: 1.25rem;", "walkability"),
-      shiny::tags$span(id = "i18n_nav_subtitle", style = "font-size: 0.85rem; color: #0A9396; margin-left: 6px; font-weight: 500;", .app_i18n("nav_subtitle", initial_lang))
+      class = "walk-brand-container",
+      shiny::tags$span(class = "walk-brand-mark"),
+      shiny::tags$span(class = "walk-brand-title", "walkability"),
+      shiny::tags$span(id = "i18n_nav_subtitle", class = "walk-brand-subtitle", .app_i18n("nav_subtitle", initial_lang))
     ),
     header = shiny::tagList(
       shiny::tags$head(
+        # Preconnect and load distinct typographic pairing: Plus Jakarta Sans & JetBrains Mono
+        shiny::tags$link(rel = "preconnect", href = "https://fonts.googleapis.com"),
+        shiny::tags$link(rel = "preconnect", href = "https://fonts.gstatic.com", crossorigin = NA),
+        shiny::tags$link(rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"),
         # KaTeX for instant, reliable LaTeX math rendering
         shiny::tags$link(rel = "stylesheet", href = "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"),
         shiny::tags$script(defer = NA, src = "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"),
@@ -557,53 +565,505 @@ walk_app <- function(network = NULL,
           }
         ")),
         shiny::tags$style(shiny::HTML("
+          /* ==========================================================================
+             WALKABILITY ARCHITECTURAL & CARTOGRAPHIC DESIGN SYSTEM
+             ========================================================================== */
+          :root {
+            --geo-ink: #161C22;
+            --geo-ink-light: #2A333C;
+            --geo-stone: #F5F3EF;
+            --geo-stone-card: #FFFFFF;
+            --geo-stone-muted: #EAE6DF;
+            --geo-border: #E2DFD7;
+            --geo-border-strong: #CCD2D8;
+            --geo-slate: #546270;
+            --geo-slate-light: #73808D;
+            --geo-amber: #E27D18;
+            --geo-amber-hover: #C96C10;
+            --geo-amber-active: #B05B0A;
+            --geo-amber-tint: rgba(226, 125, 24, 0.08);
+            --geo-spruce: #1E6B52;
+            --geo-spruce-tint: rgba(30, 107, 82, 0.08);
+            --geo-vermilion: #C93B2B;
+            --geo-vermilion-tint: rgba(201, 59, 43, 0.08);
+            --geo-radius: 4px;
+          }
+
+          body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            color: var(--geo-ink) !important;
+            background-color: var(--geo-stone) !important;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+          }
+
+          /* --- Brand & Navbar --- */
+          .navbar {
+            background-color: #FFFFFF !important;
+            border-bottom: 1px solid var(--geo-border) !important;
+            padding: 0.55rem 1.25rem !important;
+            box-shadow: none !important;
+          }
+
+          .walk-brand-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+          }
+
+          .walk-brand-mark {
+            width: 10px;
+            height: 10px;
+            background-color: var(--geo-amber);
+            border-radius: 2px;
+            display: inline-block;
+            box-shadow: 0 0 0 2px rgba(226, 125, 24, 0.2);
+          }
+
+          .walk-brand-title {
+            font-size: 1.15rem !important;
+            font-weight: 750 !important;
+            color: var(--geo-ink) !important;
+            letter-spacing: -0.03em !important;
+            text-transform: lowercase;
+          }
+
+          .walk-brand-subtitle {
+            font-size: 0.8rem !important;
+            font-weight: 500 !important;
+            color: var(--geo-slate) !important;
+            border-left: 1px solid var(--geo-border);
+            padding-left: 10px;
+            letter-spacing: -0.01em;
+          }
+
+          .navbar-nav .nav-link {
+            font-size: 0.85rem !important;
+            font-weight: 550 !important;
+            color: var(--geo-slate) !important;
+            padding: 0.45rem 0.8rem !important;
+            border-radius: var(--geo-radius) !important;
+            transition: all 0.15s ease-in-out !important;
+            margin-right: 3px;
+          }
+
+          .navbar-nav .nav-link:hover {
+            color: var(--geo-ink) !important;
+            background-color: var(--geo-stone) !important;
+          }
+
+          .navbar-nav .nav-link.active {
+            color: var(--geo-ink) !important;
+            background-color: var(--geo-stone) !important;
+            font-weight: 650 !important;
+            box-shadow: inset 0 -2px 0 var(--geo-amber) !important;
+          }
+
+          .navbar .shiny-input-container,
+          .navbar .selectize-control {
+            margin-bottom: 0 !important;
+          }
+
+          .navbar .selectize-input {
+            background: #FFFFFF !important;
+            border: 1px solid var(--geo-border) !important;
+            border-radius: var(--geo-radius) !important;
+            padding: 4px 10px !important;
+            font-size: 0.82rem !important;
+            min-height: 28px !important;
+            line-height: 1.3 !important;
+            box-shadow: none !important;
+          }
+
+          /* --- Sidebar Styling --- */
+          .bslib-sidebar-layout > .sidebar,
+          .sidebar {
+            background-color: #FAFAF8 !important;
+            border-right: 1px solid var(--geo-border) !important;
+            padding: 1.25rem 1rem !important;
+          }
+
+          .sidebar-title {
+            font-size: 0.85rem !important;
+            font-weight: 700 !important;
+            color: var(--geo-ink) !important;
+            letter-spacing: -0.01em !important;
+            border-bottom: 1px solid var(--geo-border) !important;
+            padding-bottom: 8px !important;
+            margin-bottom: 12px !important;
+          }
+
+          .walk-subpanel {
+            padding: 10px 12px;
+            margin-top: -6px;
+            margin-bottom: 12px;
+            background-color: var(--geo-amber-tint);
+            border-left: 3px solid var(--geo-amber);
+            border-radius: var(--geo-radius);
+          }
+
+          .walk-sidebar-footer {
+            font-size: 0.72rem;
+            color: var(--geo-slate-light);
+            border-top: 1px solid var(--geo-border);
+            padding-top: 10px;
+            margin-top: 14px;
+            line-height: 1.45;
+          }
+
+          /* --- Form Controls & Inputs --- */
+          .form-label,
+          .control-label {
+            font-size: 0.8rem !important;
+            font-weight: 600 !important;
+            color: var(--geo-ink-light) !important;
+            margin-bottom: 4px !important;
+          }
+
+          .form-control,
+          .form-select,
+          .selectize-input {
+            border: 1px solid var(--geo-border-strong) !important;
+            border-radius: var(--geo-radius) !important;
+            font-size: 0.84rem !important;
+            background-color: #FFFFFF !important;
+            color: var(--geo-ink) !important;
+            box-shadow: none !important;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+          }
+
+          .form-control:focus,
+          .form-select:focus,
+          .selectize-input.focus {
+            border-color: var(--geo-amber) !important;
+            box-shadow: 0 0 0 2px var(--geo-amber-tint) !important;
+          }
+
+          /* --- Ion Slider --- */
+          .irs--shiny .irs-bar {
+            background: var(--geo-amber) !important;
+            border-top: 1px solid var(--geo-amber) !important;
+            border-bottom: 1px solid var(--geo-amber) !important;
+          }
+
+          .irs--shiny .irs-single,
+          .irs--shiny .irs-from,
+          .irs--shiny .irs-to {
+            background: var(--geo-ink) !important;
+            font-family: 'JetBrains Mono', monospace !important;
+            font-size: 0.75rem !important;
+            border-radius: 2px !important;
+          }
+
+          .irs--shiny .irs-handle {
+            border: 2px solid var(--geo-amber) !important;
+            background-color: #FFFFFF !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
+          }
+
+          /* --- Buttons --- */
+          .btn {
+            border-radius: var(--geo-radius) !important;
+            font-size: 0.82rem !important;
+            font-weight: 600 !important;
+            letter-spacing: -0.01em !important;
+            transition: all 0.15s ease !important;
+          }
+
+          .btn-primary {
+            background-color: var(--geo-amber) !important;
+            border-color: var(--geo-amber) !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 1px 2px rgba(226, 125, 24, 0.2) !important;
+          }
+
+          .btn-primary:hover,
+          .btn-primary:focus {
+            background-color: var(--geo-amber-hover) !important;
+            border-color: var(--geo-amber-hover) !important;
+            color: #FFFFFF !important;
+          }
+
+          .btn-primary:active {
+            background-color: var(--geo-amber-active) !important;
+            border-color: var(--geo-amber-active) !important;
+          }
+
+          .btn-secondary {
+            background-color: var(--geo-slate) !important;
+            border-color: var(--geo-slate) !important;
+            color: #FFFFFF !important;
+          }
+
+          .btn-secondary:hover {
+            background-color: var(--geo-ink-light) !important;
+            border-color: var(--geo-ink-light) !important;
+          }
+
+          .btn-success {
+            background-color: var(--geo-spruce) !important;
+            border-color: var(--geo-spruce) !important;
+            color: #FFFFFF !important;
+          }
+
+          .btn-success:hover {
+            background-color: #175440 !important;
+            border-color: #175440 !important;
+          }
+
+          .btn-danger {
+            background-color: var(--geo-vermilion) !important;
+            border-color: var(--geo-vermilion) !important;
+            color: #FFFFFF !important;
+          }
+
+          .btn-danger:hover {
+            background-color: #A82E20 !important;
+            border-color: #A82E20 !important;
+          }
+
+          .btn-warning {
+            background-color: var(--geo-amber) !important;
+            border-color: var(--geo-amber) !important;
+            color: #FFFFFF !important;
+          }
+
+          .btn-warning:hover {
+            background-color: var(--geo-amber-hover) !important;
+            border-color: var(--geo-amber-hover) !important;
+            color: #FFFFFF !important;
+          }
+
+          .btn-outline-primary {
+            border-color: var(--geo-ink) !important;
+            color: var(--geo-ink) !important;
+            background: transparent !important;
+          }
+
+          .btn-outline-primary:hover {
+            background-color: var(--geo-ink) !important;
+            color: #FFFFFF !important;
+          }
+
+          .btn-outline-secondary {
+            border-color: var(--geo-border-strong) !important;
+            color: var(--geo-slate) !important;
+            background: transparent !important;
+          }
+
+          .btn-outline-secondary:hover {
+            background-color: var(--geo-stone-muted) !important;
+            color: var(--geo-ink) !important;
+          }
+
+          .btn-outline-danger {
+            border-color: var(--geo-vermilion) !important;
+            color: var(--geo-vermilion) !important;
+            background: transparent !important;
+          }
+
+          .btn-outline-danger:hover {
+            background-color: var(--geo-vermilion) !important;
+            color: #FFFFFF !important;
+          }
+
+          /* --- Architectural Telemetry Cards (Value Boxes) --- */
+          .bslib-value-box,
+          .value-box {
+            background-color: #FFFFFF !important;
+            border: 1px solid var(--geo-border) !important;
+            border-radius: var(--geo-radius) !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
+            padding: 0.75rem 1rem !important;
+            margin-bottom: 0.65rem !important;
+            position: relative !important;
+            overflow: hidden !important;
+          }
+
+          .bslib-value-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 3px;
+            background-color: var(--geo-slate);
+          }
+
+          .bslib-value-box.bg-primary::before,
+          .bslib-value-box[class*=\"primary\"]::before {
+            background-color: var(--geo-amber) !important;
+          }
+
+          .bslib-value-box.bg-secondary::before,
+          .bslib-value-box[class*=\"secondary\"]::before {
+            background-color: var(--geo-slate) !important;
+          }
+
+          .bslib-value-box.bg-success::before,
+          .bslib-value-box[class*=\"success\"]::before {
+            background-color: var(--geo-spruce) !important;
+          }
+
+          .bslib-value-box.bg-warning::before,
+          .bslib-value-box[class*=\"warning\"]::before {
+            background-color: var(--geo-amber) !important;
+          }
+
+          .bslib-value-box.bg-danger::before,
+          .bslib-value-box[class*=\"danger\"]::before {
+            background-color: var(--geo-vermilion) !important;
+          }
+
+          .bslib-value-box .value-box-title,
+          .bslib-value-box .value-box-area span[id^=\"i18n_box\"] {
+            font-size: 0.72rem !important;
+            font-weight: 600 !important;
+            color: var(--geo-slate) !important;
+            text-transform: none !important;
+            letter-spacing: 0.01em !important;
+            margin-bottom: 2px !important;
+          }
+
+          .bslib-value-box .value-box-value,
+          .bslib-value-box .shiny-text-output {
+            font-family: 'JetBrains Mono', Consolas, monospace !important;
+            font-size: 1.45rem !important;
+            font-weight: 700 !important;
+            color: var(--geo-ink) !important;
+            letter-spacing: -0.03em !important;
+            line-height: 1.2 !important;
+          }
+
+          .bslib-value-box .value-box-showcase,
+          .bslib-value-box .showcase {
+            color: var(--geo-slate-light) !important;
+            opacity: 0.45 !important;
+          }
+
+          /* --- Map Container & Cards --- */
+          .card {
+            border: 1px solid var(--geo-border) !important;
+            border-radius: var(--geo-radius) !important;
+            background-color: #FFFFFF !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
+          }
+
+          .card-header {
+            background-color: #FAFAF8 !important;
+            border-bottom: 1px solid var(--geo-border) !important;
+            padding: 0.65rem 1rem !important;
+            font-size: 0.85rem !important;
+            font-weight: 650 !important;
+            color: var(--geo-ink) !important;
+          }
+
+          /* --- Accordions (Methodology & Documentation) --- */
+          .accordion-item {
+            border: 1px solid var(--geo-border) !important;
+            border-radius: var(--geo-radius) !important;
+            margin-top: 10px !important;
+            overflow: hidden !important;
+          }
+
+          .accordion-button {
+            background-color: #FAFAF8 !important;
+            color: var(--geo-ink) !important;
+            font-size: 0.84rem !important;
+            font-weight: 600 !important;
+            padding: 0.75rem 1rem !important;
+            box-shadow: none !important;
+          }
+
+          .accordion-button:not(.collapsed) {
+            background-color: var(--geo-stone-muted) !important;
+            color: var(--geo-ink) !important;
+            font-weight: 650 !important;
+            border-left: 3px solid var(--geo-amber) !important;
+          }
+
+          .accordion-body {
+            background-color: #FFFFFF !important;
+            padding: 1.25rem 1.5rem !important;
+            font-size: 0.88rem !important;
+            line-height: 1.65 !important;
+            color: var(--geo-ink-light) !important;
+          }
+
+          .accordion-body p,
+          .accordion-body ul,
+          .accordion-body ol {
+            max-width: 75ch !important;
+          }
+
+          .accordion-body h5 {
+            font-size: 1.05rem !important;
+            font-weight: 700 !important;
+            color: var(--geo-ink) !important;
+            margin-bottom: 0.75rem !important;
+          }
+
+          .accordion-body h6 {
+            font-size: 0.9rem !important;
+            font-weight: 650 !important;
+            color: var(--geo-slate) !important;
+            margin-top: 1rem !important;
+            margin-bottom: 0.5rem !important;
+          }
+
+          /* --- Morph Legend Box --- */
+          .morph-legend-box {
+            background: #FFFFFF !important;
+            border: 1px solid var(--geo-border) !important;
+            border-radius: var(--geo-radius) !important;
+            padding: 10px 12px !important;
+            box-shadow: none !important;
+          }
+
+          /* --- Code Display Terminal --- */
           pre#code_text_display,
           #code_text_display {
-            background-color: #0f172a !important;
-            color: #f8fafc !important;
-            border: 1px solid #334155 !important;
-            border-radius: 8px !important;
+            background-color: #12161A !important;
+            color: #E6EDF3 !important;
+            border: 1px solid #28333E !important;
+            border-radius: var(--geo-radius) !important;
             padding: 18px 20px !important;
-            font-family: 'Fira Code', Consolas, Monaco, monospace !important;
-            font-size: 0.88rem !important;
+            font-family: 'JetBrains Mono', Consolas, Monaco, monospace !important;
+            font-size: 0.84rem !important;
             line-height: 1.6 !important;
             max-height: 580px !important;
             overflow-x: auto !important;
             overflow-y: auto !important;
             white-space: pre !important;
-            word-break: normal !important;
-            word-wrap: normal !important;
             display: block !important;
           }
+
           pre#code_text_display *,
           #code_text_display * {
-            color: #f8fafc !important;
+            color: #E6EDF3 !important;
             background-color: transparent !important;
             font-family: inherit !important;
           }
-          .accordion-button:not(.collapsed) {
-            background-color: #e0f2fe;
-            color: #0369a1;
-            font-weight: 600;
+
+          /* --- Tables --- */
+          .table {
+            font-size: 0.82rem !important;
+            color: var(--geo-ink) !important;
           }
-          .morph-legend-box {
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            padding: 10px 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+
+          .table th {
+            font-weight: 650 !important;
+            color: var(--geo-slate) !important;
+            border-bottom: 2px solid var(--geo-border) !important;
+            background-color: #FAFAF8 !important;
+            padding: 6px 10px !important;
           }
-          .navbar .shiny-input-container {
-            margin-bottom: 0 !important;
-          }
-          .navbar .selectize-control {
-            margin-bottom: 0 !important;
-          }
-          .navbar .selectize-input {
-            padding: 4px 10px !important;
-            font-size: 0.85rem !important;
-            min-height: 32px !important;
-            line-height: 1.3 !important;
+
+          .table td {
+            padding: 6px 10px !important;
+            border-bottom: 1px solid var(--geo-border) !important;
+            font-family: 'JetBrains Mono', monospace !important;
+            font-size: 0.8rem !important;
           }
         "))
       ),
@@ -668,7 +1128,7 @@ walk_app <- function(network = NULL,
       shiny::conditionalPanel(
         condition = "input.param_repair == true",
         shiny::tags$div(
-          style = "padding: 8px 12px; margin-top: -6px; margin-bottom: 12px; background-color: rgba(0, 95, 115, 0.05); border-left: 3px solid #005F73; border-radius: 4px;",
+          class = "walk-subpanel",
           shiny::checkboxInput(
             inputId = "param_planarize",
             label = .app_i18n("param_planarize_label", initial_lang),
@@ -684,7 +1144,7 @@ walk_app <- function(network = NULL,
           ),
           shiny::tags$small(
             id = "i18n_param_snap_tol_help",
-            style = "font-size: 0.75rem; color: #555; display: block; margin-top: -4px;",
+            style = "font-size: 0.75rem; color: #546270; display: block; margin-top: -4px;",
             .app_i18n("param_snap_tol_help", initial_lang)
           )
         )
@@ -708,9 +1168,8 @@ walk_app <- function(network = NULL,
         class = "btn-sm btn-outline-secondary w-100 mt-2",
         icon = shiny::icon("download")
       ),
-      shiny::hr(),
       shiny::tags$div(
-        style = "font-size: 0.8rem; color: #6c757d;",
+        class = "walk-sidebar-footer",
         shiny::tags$p(id = "i18n_sidebar_footer_rust", .app_i18n("sidebar_footer_rust", initial_lang)),
         shiny::tags$p(id = "i18n_sidebar_footer_mapgl", .app_i18n("sidebar_footer_mapgl", initial_lang))
       )
@@ -1955,7 +2414,7 @@ walk_app <- function(network = NULL,
           lens_clean, seq_len(nrow(edges_wgs))
         )
       } else {
-        edges_wgs$color <- "#0A9396"
+        edges_wgs$color <- "#546270"
         edges_wgs$tooltip_text <- sprintf(
           .app_i18n("reach_tooltip_base", current_lang()),
           seq_len(nrow(edges_wgs)), edges_wgs$length_m
@@ -1999,7 +2458,7 @@ walk_app <- function(network = NULL,
         m <- m |> mapgl::add_categorical_legend(
           legend_title = .app_i18n("reach_legend_title", current_lang()),
           values = c(.app_i18n("reach_legend_base", current_lang())),
-          colors = c("#0A9396"),
+          colors = c("#546270"),
           patch_shape = "line",
           position = "bottom-right"
         )
@@ -2052,10 +2511,9 @@ walk_app <- function(network = NULL,
       }
 
       shiny::tags$div(
-        class = "alert alert-info py-1 px-2 my-2",
-        style = "font-size: 0.8rem;",
-        shiny::tags$strong(src_label), " ",
-        shiny::tags$span(style = "font-weight: 700; color: #005F73;", paste0(cuts, " min", collapse = ", "))
+        style = "font-size: 0.8rem; background: #FFFFFF; border: 1px solid #E2DFD7; border-radius: 4px; padding: 6px 10px; margin: 8px 0;",
+        shiny::tags$strong(style = "color: #546270;", src_label), " ",
+        shiny::tags$span(style = "font-weight: 700; font-family: 'JetBrains Mono', monospace; color: #E27D18;", paste0(cuts, " min", collapse = ", "))
       )
     })
 
@@ -2137,15 +2595,15 @@ walk_app <- function(network = NULL,
         mapgl::add_line_layer(
           id = "bg_streets",
           source = edges_wgs,
-          line_color = "#90A4AE",
+          line_color = "#546270",
           line_width = 1.2,
-          line_opacity = 0.45
+          line_opacity = 0.35
         )
 
       iso <- iso_res()
       if (!is.null(iso)) {
         polys_wgs <- sf::st_transform(iso$polygons, 4326)
-        band_colors <- c("#2A9D8F", "#E76F51", "#7209B7", "#005F73", "#E9D8A6")
+        band_colors <- c("#1E6B52", "#2B6CB0", "#E27D18", "#C93B2B", "#6B46C1")
         polys_wgs$color <- band_colors[(seq_len(nrow(polys_wgs)) - 1) %% length(band_colors) + 1]
 
         if (is_en) {
@@ -2175,13 +2633,13 @@ walk_app <- function(network = NULL,
             line_width = 2
           )
 
-        # Plot origin marker
+        # Plot origin marker with wayfinding amber styling
         orig_wgs <- sf::st_transform(iso$origin, 4326)
         m <- m |>
           mapgl::add_circle_layer(
             id = "iso_center",
             source = orig_wgs,
-            circle_color = "#E63946",
+            circle_color = "#E27D18",
             circle_radius = 6,
             circle_stroke_width = 2,
             circle_stroke_color = "#FFFFFF"
@@ -2286,9 +2744,9 @@ walk_app <- function(network = NULL,
         mapgl::add_line_layer(
           id = "route_bg_streets",
           source = edges_wgs,
-          line_color = "#475569",
-          line_width = 1.8,
-          line_opacity = 0.40
+          line_color = "#546270",
+          line_width = 1.6,
+          line_opacity = 0.35
         )
 
       # Usar isolate para no re-renderizar el mapa base ni resetear el zoom
@@ -2301,8 +2759,8 @@ walk_app <- function(network = NULL,
         m <- m |> mapgl::add_circle_layer(
           id = "marker_a",
           source = pt_a_sf,
-          circle_color = "#10B981",
-          circle_radius = 9,
+          circle_color = "#1E6B52",
+          circle_radius = 8,
           circle_stroke_width = 2.5,
           circle_stroke_color = "#FFFFFF"
         )
@@ -2313,8 +2771,8 @@ walk_app <- function(network = NULL,
         m <- m |> mapgl::add_circle_layer(
           id = "marker_b",
           source = pt_b_sf,
-          circle_color = "#F97316",
-          circle_radius = 9,
+          circle_color = "#E27D18",
+          circle_radius = 8,
           circle_stroke_width = 2.5,
           circle_stroke_color = "#FFFFFF"
         )
@@ -2333,14 +2791,14 @@ walk_app <- function(network = NULL,
             id = "route_path_casing",
             source = path_wgs,
             line_color = "#FFFFFF",
-            line_width = 7.5,
+            line_width = 7.0,
             line_opacity = 0.95
           ) |>
           mapgl::add_line_layer(
             id = "route_path",
             source = path_wgs,
-            line_color = "#E63946",
-            line_width = 5.0,
+            line_color = "#E27D18",
+            line_width = 4.5,
             line_opacity = 1.0,
             tooltip = "tooltip_text"
           )
@@ -2350,7 +2808,7 @@ walk_app <- function(network = NULL,
       m |> mapgl::add_categorical_legend(
         legend_title = .app_i18n("route_legend_title", current_lang()),
         values = c(.app_i18n("route_legend_path", current_lang()), .app_i18n("route_legend_base", current_lang())),
-        colors = c("#E63946", "#475569"),
+        colors = c("#E27D18", "#546270"),
         position = "bottom-right"
       )
     })
@@ -2492,7 +2950,7 @@ walk_app <- function(network = NULL,
 
       # Color classification
       pal_deg <- function(d) {
-        ifelse(d == 1, "#E63946", ifelse(d == 3, "#457B9D", "#2A9D8F"))
+        ifelse(d == 1, "#C93B2B", ifelse(d == 3, "#546270", "#1E6B52"))
       }
       if (nrow(nodes_filtered) > 0) {
         nodes_filtered$color <- pal_deg(nodes_filtered$degree)
@@ -2511,9 +2969,9 @@ walk_app <- function(network = NULL,
         mapgl::add_line_layer(
           id = "morph_streets",
           source = edges_wgs,
-          line_color = "#B0BEC5",
+          line_color = "#546270",
           line_width = 1.2,
-          line_opacity = 0.5
+          line_opacity = 0.35
         )
 
       if (nrow(nodes_filtered) > 0) {
@@ -2537,7 +2995,7 @@ walk_app <- function(network = NULL,
           .app_i18n("morph_legend_v3", current_lang()),
           .app_i18n("morph_legend_v4", current_lang())
         ),
-        colors = c("#E63946", "#457B9D", "#2A9D8F"),
+        colors = c("#C93B2B", "#546270", "#1E6B52"),
         patch_shape = "circle",
         position = "bottom-right"
       )
@@ -2981,9 +3439,9 @@ walk_app <- function(network = NULL,
             mapgl::add_line_layer(
               id = "scen_default_streets",
               source = edges_wgs,
-              line_color = "#005F73",
-              line_width = 2.0,
-              line_opacity = 0.7
+              line_color = "#546270",
+              line_width = 1.8,
+              line_opacity = 0.5
             )
         }
 
