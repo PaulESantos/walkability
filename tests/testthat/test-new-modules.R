@@ -194,6 +194,15 @@ test_that("walk_app components initialize properly in Spanish and English", {
   server_en <- walkability:::.create_walk_app_server(initial_lang = "en")
   expect_true(is.function(server_en))
 
+  utils::data(streets_cusco)
+  net_test <- walk_build_network(streets_cusco, verbose = FALSE)
+  srv_inst <- walkability:::.create_walk_app_server(net_test, initial_lang = "es")
+  shiny::testServer(srv_inst, {
+    session$flushReact()
+    expect_match(output$reach_stat_mean, "^[0-9]+(\\.[0-9]+)?\\s*km$")
+    expect_match(output$reach_stat_max, "^[0-9]+(\\.[0-9]+)?\\s*km$")
+  })
+
   # 4. Helper dictionary
   expect_equal(walkability:::.app_i18n("tab_reach", "es"), "\U0001f6b6 Alcance Peatonal (Reach)")
   expect_equal(walkability:::.app_i18n("tab_reach", "en"), "\U0001f6b6 Pedestrian Reach")

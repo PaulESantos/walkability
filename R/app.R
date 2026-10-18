@@ -106,6 +106,7 @@ walk_app <- function(network = NULL,
     comp_all = "Todos los segmentos (conservar red GIS completa)",
     comp_largest = "Solo componente continuo principal (islas excluidas)",
     dl_net_edges_label = "Descargar Red Activa (GeoJSON)",
+    btn_stop_app = "Detener aplicaci\u00f3n",
     sidebar_footer_rust = "Motor Rust multi-hilo compilado con Rayon.",
     sidebar_footer_mapgl = "Renderizado cartogr\u00e1fico acelerado por GPU con MapLibre GL v\u00eda mapgl.",
 
@@ -287,6 +288,7 @@ walk_app <- function(network = NULL,
     comp_all = "All segments (retain complete GIS network)",
     comp_largest = "Largest connected component only (isolated islands excluded)",
     dl_net_edges_label = "Download Active Network (GeoJSON)",
+    btn_stop_app = "Stop application",
     sidebar_footer_rust = "Multi-threaded Rust kernel powered by Rayon.",
     sidebar_footer_mapgl = "GPU-accelerated vector cartography with MapLibre GL via mapgl.",
 
@@ -465,12 +467,28 @@ walk_app <- function(network = NULL,
     code_font = bslib::font_google("JetBrains Mono")
   )
 
+  # Compact metric component. bslib::value_box reserves a large showcase area
+  # that is useful for dashboards, but disproportionate in a map workbench.
+  .metric_card <- function(title, output_id, accent = "amber") {
+    shiny::tags$div(
+      class = paste("walk-metric-card", paste0("walk-metric-card--", accent)),
+      shiny::tags$div(class = "walk-metric-card__title", title),
+      shiny::tags$div(
+        class = "walk-metric-card__value",
+        shiny::textOutput(output_id, inline = TRUE)
+      )
+    )
+  }
+
   bslib::page_navbar(
     title = shiny::div(
       class = "walk-brand-container",
       shiny::tags$span(class = "walk-brand-mark"),
-      shiny::tags$span(class = "walk-brand-title", "walkability"),
-      shiny::tags$span(id = "i18n_nav_subtitle", class = "walk-brand-subtitle", .app_i18n("nav_subtitle", initial_lang))
+      shiny::tags$div(
+        class = "walk-brand-copy",
+        shiny::tags$span(class = "walk-brand-title", "walkability"),
+        shiny::tags$span(id = "i18n_nav_subtitle", class = "walk-brand-subtitle", .app_i18n("nav_subtitle", initial_lang))
+      )
     ),
     header = shiny::tagList(
       shiny::tags$head(
@@ -482,45 +500,41 @@ walk_app <- function(network = NULL,
         shiny::tags$link(rel = "stylesheet", href = "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"),
         shiny::tags$script(defer = NA, src = "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"),
         shiny::tags$script(defer = NA, src = "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"),
-        # MathJax inline configuration
-        shiny::tags$script(type = "text/x-mathjax-config", shiny::HTML("
-          MathJax.Hub.Config({
-            tex2jax: {
-              inlineMath: [['$','$'], ['\\\\(','\\\\)']],
-              displayMath: [['$$','$$'], ['\\\\[','\\\\]']],
-              processEscapes: true,
-              ignoreClass: 'tex2jax_ignore|no-math',
-              processClass: 'tex2jax_process'
-            }
-          });
-        ")),
+        # Scoped KaTeX rendering strictly on documentation accordions
         shiny::tags$script(shiny::HTML("
           function typesetWalkabilityMath() {
-            if (window.renderMathInElement) {
-              renderMathInElement(document.body, {
+            if (!window.renderMathInElement) return;
+            var containers = document.querySelectorAll('.accordion-body, .walk-doc-math');
+            containers.forEach(function(el) {
+              renderMathInElement(el, {
                 delimiters: [
                   {left: '$$', right: '$$', display: true},
-                  {left: '\\[', right: '\\]', display: true},
-                  {left: '$', right: '$', display: false},
-                  {left: '\\(', right: '\\)', display: false}
+                  {left: '$', right: '$', display: false}
                 ],
                 ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-                ignoredClasses: ['tex2jax_ignore', 'no-math', 'shiny-text-output', 'language-r'],
                 throwOnError: false
               });
-            }
-            if (window.MathJax && window.MathJax.Hub) {
-              window.MathJax.Hub.Queue(['Typeset', window.MathJax.Hub]);
-            } else if (window.MathJax && window.MathJax.typesetPromise) {
-              window.MathJax.typesetPromise();
-            }
+            });
           }
           document.addEventListener('DOMContentLoaded', function() {
-            window.setTimeout(typesetWalkabilityMath, 200);
+            window.setTimeout(typesetWalkabilityMath, 250);
+            classifyWalkabilityLayouts();
           });
-          $(document).on('shiny:connected shown.bs.tab shiny:value shiny:idle', function() {
-            window.setTimeout(typesetWalkabilityMath, 150);
+          $(document).on('shown.bs.collapse shown.bs.tab', function() {
+            window.setTimeout(typesetWalkabilityMath, 80);
+            classifyWalkabilityLayouts();
           });
+
+          // Give the application shell and the contextual tool panel distinct
+          // roles.  bslib renders both as sidebar layouts, but they should not
+          // look like two independent windows nested inside one another.
+          function classifyWalkabilityLayouts() {
+            var layouts = document.querySelectorAll('.bslib-sidebar-layout');
+            layouts.forEach(function(layout, index) {
+              layout.classList.toggle('walk-app-shell', index === 0);
+              layout.classList.toggle('walk-module-shell', index > 0);
+            });
+          }
 
           // Bilingual Live DOM updater handler
           if (window.Shiny) {
@@ -611,6 +625,14 @@ walk_app <- function(network = NULL,
             gap: 10px;
           }
 
+          .walk-brand-copy {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1px;
+            line-height: 1;
+          }
+
           .walk-brand-mark {
             width: 10px;
             height: 10px;
@@ -629,11 +651,11 @@ walk_app <- function(network = NULL,
           }
 
           .walk-brand-subtitle {
-            font-size: 0.8rem !important;
+            font-size: 0.68rem !important;
             font-weight: 500 !important;
             color: var(--geo-slate) !important;
-            border-left: 1px solid var(--geo-border);
-            padding-left: 10px;
+            border-left: 0;
+            padding-left: 0;
             letter-spacing: -0.01em;
           }
 
@@ -675,6 +697,12 @@ walk_app <- function(network = NULL,
             box-shadow: none !important;
           }
 
+          .navbar .walk-stop-button {
+            width: 34px;
+            min-width: 34px;
+            padding: 0.28rem !important;
+          }
+
           /* --- Sidebar Styling --- */
           .bslib-sidebar-layout > .sidebar,
           .sidebar {
@@ -693,6 +721,366 @@ walk_app <- function(network = NULL,
             margin-bottom: 12px !important;
           }
 
+          /* --- Workspace hierarchy ------------------------------------------------
+             The network configuration is persistent application context. Each
+             tab's controls are contextual tools, not a second application shell.
+             Flattening these two bslib layouts removes the visual nesting effect
+             while keeping the existing inputs and interactions.
+          ------------------------------------------------------------------------- */
+          .walk-app-shell {
+            background: var(--geo-stone) !important;
+          }
+
+          .walk-app-shell > .sidebar {
+            background: #202A33 !important;
+            border-right: 0 !important;
+            box-shadow: inset -1px 0 0 rgba(255,255,255,0.08) !important;
+            padding: 1.35rem 1rem 1.5rem !important;
+          }
+
+          .walk-app-shell > .sidebar .sidebar-title,
+          .walk-app-shell > .sidebar .form-label,
+          .walk-app-shell > .sidebar .control-label,
+          .walk-app-shell > .sidebar .form-check-label {
+            color: #F6F4EF !important;
+          }
+
+          .walk-app-shell > .sidebar .sidebar-title {
+            border-color: rgba(255,255,255,0.16) !important;
+            font-size: 0.9rem !important;
+          }
+
+          .walk-app-shell > .sidebar hr,
+          .walk-app-shell > .sidebar .walk-sidebar-footer {
+            border-color: rgba(255,255,255,0.14) !important;
+          }
+
+          .walk-app-shell > .sidebar .walk-sidebar-footer,
+          .walk-app-shell > .sidebar .walk-subpanel small {
+            color: #BEC7CE !important;
+          }
+
+          .walk-app-shell > .sidebar .walk-subpanel {
+            background: rgba(255,255,255,0.06) !important;
+            border-left-color: var(--geo-amber) !important;
+          }
+
+          .walk-app-shell > .main {
+            padding: 1.25rem 1.5rem 1.75rem !important;
+            background: var(--geo-stone) !important;
+          }
+
+          .walk-module-shell {
+            background: transparent !important;
+            border: 0 !important;
+            gap: 1.25rem !important;
+          }
+
+          .walk-module-shell > .sidebar {
+            background: transparent !important;
+            border-right: 1px solid var(--geo-border) !important;
+            padding: 0.35rem 1.25rem 0.5rem 0 !important;
+          }
+
+          .walk-module-shell > .sidebar .sidebar-title {
+            font-size: 1.05rem !important;
+            padding-bottom: 0.7rem !important;
+            margin-bottom: 1rem !important;
+          }
+
+          .walk-module-shell > .main {
+            min-width: 0;
+            padding: 0 !important;
+          }
+
+          .walk-module-shell .card {
+            border-radius: 8px !important;
+            box-shadow: 0 8px 24px rgba(22, 28, 34, 0.055) !important;
+          }
+
+          .walk-module-shell .card-header {
+            background: #FFFFFF !important;
+            padding: 0.9rem 1.1rem !important;
+          }
+
+          .walk-module-shell .accordion-item {
+            background: #FFFFFF !important;
+            margin-top: 0.75rem !important;
+          }
+
+          @media (max-width: 991.98px) {
+            .walk-app-shell > .main {
+              padding: 1rem !important;
+            }
+
+            .walk-app-shell > .sidebar {
+              background: #202A33 !important;
+            }
+
+            .walk-module-shell > .sidebar {
+              border-right: 0 !important;
+              border-bottom: 1px solid var(--geo-border) !important;
+              padding: 0 0 1rem !important;
+              margin-bottom: 1rem !important;
+            }
+          }
+
+          /* The persistent network rail and the analysis workspace stay on the
+             same light surface. Contrast comes from typography and spacing, not
+             from a dark panel that makes form controls hard to scan. */
+          .walk-app-shell > .sidebar {
+            background: #FFFFFF !important;
+            border-right: 1px solid var(--geo-border) !important;
+            box-shadow: none !important;
+          }
+
+          .walk-app-shell > .sidebar .sidebar-title,
+          .walk-app-shell > .sidebar .form-label,
+          .walk-app-shell > .sidebar .control-label,
+          .walk-app-shell > .sidebar .form-check-label {
+            color: var(--geo-ink) !important;
+          }
+
+          .walk-app-shell > .sidebar .sidebar-title,
+          .walk-app-shell > .sidebar hr,
+          .walk-app-shell > .sidebar .walk-sidebar-footer {
+            border-color: var(--geo-border) !important;
+          }
+
+          .walk-app-shell > .sidebar .walk-sidebar-footer,
+          .walk-app-shell > .sidebar .walk-subpanel small {
+            color: var(--geo-slate) !important;
+          }
+
+          .walk-app-shell > .sidebar .walk-subpanel {
+            background: var(--geo-amber-tint) !important;
+          }
+
+          /* Network setup is a compact form, not a series of isolated cards.
+             Keep related controls close and make separators do only one job. */
+          .walk-app-shell > .sidebar {
+            padding: 1rem !important;
+            gap: 0 !important;
+          }
+
+          .walk-app-shell > .sidebar .shiny-input-container,
+          .walk-app-shell > .sidebar .form-group {
+            margin-bottom: 0.7rem !important;
+          }
+
+          .walk-app-shell > .sidebar hr {
+            margin: 0.75rem 0 !important;
+          }
+
+          .walk-app-shell > .sidebar .checkbox {
+            margin: 0.15rem 0 0.6rem !important;
+          }
+
+          .walk-app-shell > .sidebar .walk-subpanel {
+            padding: 0.7rem 0.75rem !important;
+            margin: 0.1rem 0 0.7rem !important;
+          }
+
+          .walk-app-shell > .sidebar .walk-subpanel .shiny-input-container {
+            margin-bottom: 0.55rem !important;
+          }
+
+          .walk-app-shell > .sidebar .walk-sidebar-footer {
+            margin-top: 0.75rem !important;
+            padding-top: 0.75rem !important;
+          }
+
+          /* A real workspace grid replaces the per-tab bslib sidebar layouts.
+             Controls, map, and disclosures are siblings in one composition. */
+          .walk-analysis-workspace {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.75rem;
+            width: 100%;
+          }
+
+          .walk-analysis-controls {
+            flex: 0 0 290px;
+            min-width: 0;
+            padding: 0.35rem 1.5rem 1rem 0;
+            border-right: 1px solid var(--geo-border);
+          }
+
+          .walk-analysis-content {
+            flex: 1 1 0;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+          }
+
+          .walk-panel-title {
+            color: var(--geo-ink);
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            padding-bottom: 0.8rem;
+            margin-bottom: 1.15rem;
+            border-bottom: 1px solid var(--geo-border);
+          }
+
+          .walk-analysis-content > .card {
+            min-width: 0;
+          }
+
+          .walk-analysis-content > .accordion {
+            min-width: 0;
+          }
+
+          /* Compact metric cards keep labels and values proportional to their
+             content. They intentionally replace bslib value boxes in the map
+             workbench, where large showcase icons waste vertical space. */
+          .walk-metric-card {
+            min-height: 0;
+            padding: 0.7rem 0.8rem;
+            border: 1px solid var(--geo-border);
+            border-left: 3px solid var(--geo-amber);
+            border-radius: 6px;
+            background: #FFFFFF;
+            box-shadow: 0 1px 2px rgba(22, 28, 34, 0.035);
+          }
+
+          .walk-metric-card--slate { border-left-color: var(--geo-slate); }
+          .walk-metric-card--spruce { border-left-color: var(--geo-spruce); }
+          .walk-metric-card--vermilion { border-left-color: var(--geo-vermilion); }
+
+          .walk-metric-card__title {
+            color: var(--geo-slate);
+            font-size: 0.72rem;
+            font-weight: 650;
+            line-height: 1.25;
+            margin-bottom: 0.2rem;
+          }
+
+          .walk-metric-card__value {
+            color: var(--geo-ink);
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            font-size: 1.05rem;
+            font-weight: 700;
+            line-height: 1.2;
+            overflow-wrap: anywhere;
+          }
+
+          .walk-analysis-controls .walk-metric-card {
+            margin-bottom: 0.45rem;
+          }
+
+          /* Simulation results belong to the map they describe, not to the
+             configuration column.  This compact strip keeps all four metrics
+             visible without creating a tall stack of status cards. */
+          .walk-scenario-metrics {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.75rem;
+          }
+
+          .walk-scenario-metrics .bslib-value-box,
+          .walk-scenario-metrics .value-box {
+            min-height: 0 !important;
+            height: auto !important;
+            margin: 0 !important;
+            padding: 0.7rem 0.8rem !important;
+            overflow: visible !important;
+          }
+
+          .walk-scenario-metrics .value-box-showcase,
+          .walk-scenario-metrics .showcase {
+            display: none !important;
+          }
+
+          .walk-scenario-metrics .value-box-title,
+          .walk-scenario-metrics .value-box-area span[id^=\"i18n_box\"] {
+            display: block;
+            font-size: 0.69rem !important;
+            line-height: 1.25 !important;
+            white-space: normal !important;
+            word-break: normal !important;
+          }
+
+          .walk-scenario-metrics .value-box-value,
+          .walk-scenario-metrics .shiny-text-output {
+            font-size: 1rem !important;
+            line-height: 1.2 !important;
+            white-space: normal !important;
+            overflow-wrap: anywhere;
+          }
+
+          .walk-scenario-metrics .walk-metric-card {
+            min-width: 0;
+          }
+
+          .walk-analysis-controls .bslib-value-box,
+          .walk-analysis-controls .value-box {
+            background: var(--geo-stone-card) !important;
+            min-height: 0 !important;
+            height: auto !important;
+            padding: 0.6rem 0.7rem !important;
+            margin-bottom: 0.45rem !important;
+            display: block !important;
+            overflow: visible !important;
+          }
+
+          .walk-analysis-controls .bslib-value-box .value-box-showcase,
+          .walk-analysis-controls .bslib-value-box .showcase {
+            display: none !important;
+          }
+
+          .walk-analysis-controls .bslib-value-box .value-box-area {
+            display: block !important;
+            width: 100% !important;
+            min-width: 0 !important;
+          }
+
+          .walk-analysis-controls .bslib-value-box .value-box-title,
+          .walk-analysis-controls .bslib-value-box .value-box-area span[id^=\"i18n_box\"] {
+            font-size: 0.68rem !important;
+            line-height: 1.2 !important;
+            margin-bottom: 0.12rem !important;
+            white-space: normal !important;
+            overflow-wrap: normal !important;
+            word-break: normal !important;
+          }
+
+          .walk-analysis-controls .bslib-value-box .value-box-value,
+          .walk-analysis-controls .bslib-value-box .shiny-text-output {
+            font-size: 1.05rem !important;
+            line-height: 1.15 !important;
+            white-space: nowrap !important;
+          }
+
+          @media (max-width: 991.98px) {
+            .walk-analysis-workspace {
+              display: block;
+            }
+
+            .walk-analysis-controls {
+              border-right: 0;
+              border-bottom: 1px solid var(--geo-border);
+              padding: 0 0 1rem;
+              margin-bottom: 1rem;
+            }
+
+            .walk-analysis-content > .card,
+            .walk-analysis-content > .accordion {
+              margin-bottom: 1rem;
+            }
+
+            .walk-scenario-metrics {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+          }
+
+          @media (max-width: 575.98px) {
+            .walk-scenario-metrics {
+              grid-template-columns: 1fr;
+            }
+          }
+
           .walk-subpanel {
             padding: 10px 12px;
             margin-top: -6px;
@@ -709,6 +1097,129 @@ walk_app <- function(network = NULL,
             padding-top: 10px;
             margin-top: 14px;
             line-height: 1.45;
+          }
+
+          /* --- Network Status Telemetry Card --- */
+          .walk-network-card {
+            background-color: #FFFFFF;
+            border: 1px solid var(--geo-border);
+            border-radius: var(--geo-radius);
+            padding: 10px 12px;
+            margin-top: 10px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            transition: all 0.15s ease-in-out;
+          }
+
+          .walk-network-card:hover {
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
+          }
+
+          .walk-network-card-active {
+            border-left: 3px solid var(--geo-spruce) !important;
+          }
+
+          .walk-network-card-warning {
+            border-left: 3px solid var(--geo-amber) !important;
+            background-color: #FFFDF9;
+          }
+
+          .walk-network-card-danger {
+            border-left: 3px solid var(--geo-vermilion) !important;
+            background-color: #FFF9F9;
+          }
+
+          .walk-network-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(226, 223, 215, 0.6);
+          }
+
+          .walk-network-card-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--geo-ink);
+            letter-spacing: -0.01em;
+          }
+
+          .walk-status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+          }
+
+          .walk-status-dot-active {
+            background-color: var(--geo-spruce);
+            box-shadow: 0 0 0 2px var(--geo-spruce-tint);
+          }
+
+          .walk-status-dot-warning {
+            background-color: var(--geo-amber);
+            box-shadow: 0 0 0 2px var(--geo-amber-tint);
+          }
+
+          .walk-status-dot-danger {
+            background-color: var(--geo-vermilion);
+            box-shadow: 0 0 0 2px var(--geo-vermilion-tint);
+          }
+
+          .walk-badge-crs {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--geo-slate);
+            background: var(--geo-stone);
+            border: 1px solid var(--geo-border);
+            padding: 1px 6px;
+            border-radius: 3px;
+          }
+
+          .walk-network-metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            background: var(--geo-stone);
+            border-radius: var(--geo-radius);
+            padding: 8px 4px;
+            text-align: center;
+            margin-bottom: 6px;
+          }
+
+          .walk-metric-cell {
+            padding: 0 2px;
+          }
+
+          .walk-metric-cell:not(:last-child) {
+            border-right: 1px solid var(--geo-border);
+          }
+
+          .walk-metric-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--geo-ink);
+            line-height: 1.15;
+          }
+
+          .walk-metric-lbl {
+            font-size: 0.64rem;
+            font-weight: 650;
+            color: var(--geo-slate);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-top: 2px;
+          }
+
+          .walk-network-card-footer {
+            font-size: 0.72rem;
+            color: var(--geo-slate);
+            line-height: 1.35;
+            display: flex;
+            align-items: center;
           }
 
           /* --- Form Controls & Inputs --- */
@@ -1066,8 +1577,7 @@ walk_app <- function(network = NULL,
             font-size: 0.8rem !important;
           }
         "))
-      ),
-      shiny::withMathJax()
+      )
     ),
     theme = theme,
     fillable = TRUE,
@@ -1172,17 +1682,18 @@ walk_app <- function(network = NULL,
         class = "walk-sidebar-footer",
         shiny::tags$p(id = "i18n_sidebar_footer_rust", .app_i18n("sidebar_footer_rust", initial_lang)),
         shiny::tags$p(id = "i18n_sidebar_footer_mapgl", .app_i18n("sidebar_footer_mapgl", initial_lang))
-      )
+      ),
     ),
 
     # 1. PESTANA: ALCANCE PEATONAL
     bslib::nav_panel(
       title = shiny::span(id = "i18n_tab_reach", .app_i18n("tab_reach", initial_lang)),
       value = "tab_reach",
-      bslib::layout_sidebar(
-        sidebar = bslib::sidebar(
-          title = shiny::span(id = "i18n_sidebar_reach_title", .app_i18n("sidebar_reach_title", initial_lang)),
-          width = 280,
+      shiny::tags$div(
+        class = "walk-analysis-workspace",
+        shiny::tags$aside(
+          class = "walk-analysis-controls",
+          shiny::tags$div(class = "walk-panel-title", shiny::span(id = "i18n_sidebar_reach_title", .app_i18n("sidebar_reach_title", initial_lang))),
           shiny::sliderInput(
             inputId = "reach_time_min",
             label = .app_i18n("reach_time_label", initial_lang),
@@ -1204,20 +1715,12 @@ walk_app <- function(network = NULL,
             icon = shiny::icon("download")
           ),
           shiny::hr(),
-          bslib::value_box(
-            title = shiny::span(id = "i18n_box_reach_mean", .app_i18n("box_reach_mean", initial_lang)),
-            value = shiny::textOutput("reach_stat_mean"),
-            showcase = shiny::icon("person-walking"),
-            theme = "primary"
-          ),
-          bslib::value_box(
-            title = shiny::span(id = "i18n_box_reach_max", .app_i18n("box_reach_max", initial_lang)),
-            value = shiny::textOutput("reach_stat_max"),
-            showcase = shiny::icon("award"),
-            theme = "secondary"
-          )
+          .metric_card(shiny::span(id = "i18n_box_reach_mean", .app_i18n("box_reach_mean", initial_lang)), "reach_stat_mean", "amber"),
+          .metric_card(shiny::span(id = "i18n_box_reach_max", .app_i18n("box_reach_max", initial_lang)), "reach_stat_max", "slate")
         ),
-        bslib::card(
+        shiny::tags$div(
+          class = "walk-analysis-content",
+          bslib::card(
           full_screen = TRUE,
           bslib::card_header(shiny::span(id = "i18n_card_reach_header", .app_i18n("card_reach_header", initial_lang))),
           mapgl::maplibreOutput("map_reach", height = "640px")
@@ -1230,6 +1733,7 @@ walk_app <- function(network = NULL,
             icon = shiny::icon("circle-info"),
             shiny::div(id = "i18n_reach_doc_content", shiny::HTML(.app_i18n("reach_doc_html", initial_lang)))
           )
+          )
         )
       )
     ),
@@ -1238,10 +1742,11 @@ walk_app <- function(network = NULL,
     bslib::nav_panel(
       title = shiny::span(id = "i18n_tab_iso", .app_i18n("tab_iso", initial_lang)),
       value = "tab_iso",
-      bslib::layout_sidebar(
-        sidebar = bslib::sidebar(
-          title = shiny::span(id = "i18n_sidebar_iso_title", .app_i18n("sidebar_iso_title", initial_lang)),
-          width = 300,
+      shiny::tags$div(
+        class = "walk-analysis-workspace",
+        shiny::tags$aside(
+          class = "walk-analysis-controls",
+          shiny::tags$div(class = "walk-panel-title", shiny::span(id = "i18n_sidebar_iso_title", .app_i18n("sidebar_iso_title", initial_lang))),
           shiny::tags$p(
             id = "i18n_iso_help_click",
             style = "font-size: 0.85rem; color: #495057;",
@@ -1295,7 +1800,9 @@ walk_app <- function(network = NULL,
             icon = shiny::icon("download")
           )
         ),
-        bslib::card(
+        shiny::tags$div(
+          class = "walk-analysis-content",
+          bslib::card(
           full_screen = TRUE,
           bslib::card_header(shiny::span(id = "i18n_card_iso_header", .app_i18n("card_iso_header", initial_lang))),
           mapgl::maplibreOutput("map_iso", height = "640px")
@@ -1314,6 +1821,7 @@ walk_app <- function(network = NULL,
             icon = shiny::icon("circle-info"),
             shiny::div(id = "i18n_accord_iso_doc_content", shiny::HTML(.app_i18n("iso_doc_html", initial_lang)))
           )
+          )
         )
       )
     ),
@@ -1322,10 +1830,11 @@ walk_app <- function(network = NULL,
     bslib::nav_panel(
       title = shiny::span(id = "i18n_tab_route", .app_i18n("tab_route", initial_lang)),
       value = "tab_route",
-      bslib::layout_sidebar(
-        sidebar = bslib::sidebar(
-          title = shiny::span(id = "i18n_sidebar_route_title", .app_i18n("sidebar_route_title", initial_lang)),
-          width = 300,
+      shiny::tags$div(
+        class = "walk-analysis-workspace",
+        shiny::tags$aside(
+          class = "walk-analysis-controls",
+          shiny::tags$div(class = "walk-panel-title", shiny::span(id = "i18n_sidebar_route_title", .app_i18n("sidebar_route_title", initial_lang))),
           shiny::radioButtons(
             inputId = "route_mode",
             label = .app_i18n("route_mode_label", initial_lang),
@@ -1354,26 +1863,13 @@ walk_app <- function(network = NULL,
             icon = shiny::icon("download")
           ),
           shiny::hr(),
-          bslib::value_box(
-            title = shiny::span(id = "i18n_box_route_dist", .app_i18n("box_route_dist", initial_lang)),
-            value = shiny::textOutput("route_dist"),
-            showcase = shiny::icon("road"),
-            theme = "primary"
-          ),
-          bslib::value_box(
-            title = shiny::span(id = "i18n_box_route_time", .app_i18n("box_route_time", initial_lang)),
-            value = shiny::textOutput("route_time"),
-            showcase = shiny::icon("stopwatch"),
-            theme = "secondary"
-          ),
-          bslib::value_box(
-            title = shiny::span(id = "i18n_box_route_circuity", .app_i18n("box_route_circuity", initial_lang)),
-            value = shiny::textOutput("route_circuity"),
-            showcase = shiny::icon("arrows-split-up-and-left"),
-            theme = "warning"
-          )
+          .metric_card(shiny::span(id = "i18n_box_route_dist", .app_i18n("box_route_dist", initial_lang)), "route_dist", "amber"),
+          .metric_card(shiny::span(id = "i18n_box_route_time", .app_i18n("box_route_time", initial_lang)), "route_time", "slate"),
+          .metric_card(shiny::span(id = "i18n_box_route_circuity", .app_i18n("box_route_circuity", initial_lang)), "route_circuity", "amber")
         ),
-        bslib::card(
+        shiny::tags$div(
+          class = "walk-analysis-content",
+          bslib::card(
           full_screen = TRUE,
           bslib::card_header(shiny::span(id = "i18n_card_route_header", .app_i18n("card_route_header", initial_lang))),
           mapgl::maplibreOutput("map_route", height = "640px")
@@ -1386,6 +1882,7 @@ walk_app <- function(network = NULL,
             icon = shiny::icon("circle-info"),
             shiny::div(id = "i18n_accord_route_doc_content", shiny::HTML(.app_i18n("route_doc_html", initial_lang)))
           )
+          )
         )
       )
     ),
@@ -1394,10 +1891,11 @@ walk_app <- function(network = NULL,
     bslib::nav_panel(
       title = shiny::span(id = "i18n_tab_morph", .app_i18n("tab_morph", initial_lang)),
       value = "tab_morph",
-      bslib::layout_sidebar(
-        sidebar = bslib::sidebar(
-          title = shiny::span(id = "i18n_sidebar_morph_title", .app_i18n("sidebar_morph_title", initial_lang)),
-          width = 320,
+      shiny::tags$div(
+        class = "walk-analysis-workspace",
+        shiny::tags$aside(
+          class = "walk-analysis-controls",
+          shiny::tags$div(class = "walk-panel-title", shiny::span(id = "i18n_sidebar_morph_title", .app_i18n("sidebar_morph_title", initial_lang))),
           shiny::checkboxGroupInput(
             inputId = "morph_classes",
             label = .app_i18n("morph_classes_label", initial_lang),
@@ -1424,26 +1922,13 @@ walk_app <- function(network = NULL,
             icon = shiny::icon("download")
           ),
           shiny::hr(),
-          bslib::value_box(
-            title = shiny::span(id = "i18n_box_morph_density", .app_i18n("box_morph_density", initial_lang)),
-            value = shiny::textOutput("morph_density"),
-            showcase = shiny::icon("map-location-dot"),
-            theme = "primary"
-          ),
-          bslib::value_box(
-            title = shiny::span(id = "i18n_box_morph_culdesac", .app_i18n("box_morph_culdesac", initial_lang)),
-            value = shiny::textOutput("morph_culdesac"),
-            showcase = shiny::icon("ban"),
-            theme = "danger"
-          ),
-          bslib::value_box(
-            title = shiny::span(id = "i18n_box_morph_ortho", .app_i18n("box_morph_ortho", initial_lang)),
-            value = shiny::textOutput("morph_ortho"),
-            showcase = shiny::icon("draw-polygon"),
-            theme = "success"
-          )
+          .metric_card(shiny::span(id = "i18n_box_morph_density", .app_i18n("box_morph_density", initial_lang)), "morph_density", "amber"),
+          .metric_card(shiny::span(id = "i18n_box_morph_culdesac", .app_i18n("box_morph_culdesac", initial_lang)), "morph_culdesac", "vermilion"),
+          .metric_card(shiny::span(id = "i18n_box_morph_ortho", .app_i18n("box_morph_ortho", initial_lang)), "morph_ortho", "spruce")
         ),
-        bslib::card(
+        shiny::tags$div(
+          class = "walk-analysis-content",
+          bslib::card(
           full_screen = TRUE,
           bslib::card_header(shiny::span(id = "i18n_card_morph_header", .app_i18n("card_morph_header", initial_lang))),
           mapgl::maplibreOutput("map_morph", height = "640px")
@@ -1456,6 +1941,7 @@ walk_app <- function(network = NULL,
             icon = shiny::icon("circle-info"),
             shiny::div(id = "i18n_accord_morph_doc_content", shiny::HTML(.app_i18n("morph_doc_html", initial_lang)))
           )
+          )
         )
       )
     ),
@@ -1464,10 +1950,11 @@ walk_app <- function(network = NULL,
     bslib::nav_panel(
       title = shiny::span(id = "i18n_tab_scen", .app_i18n("tab_scen", initial_lang)),
       value = "tab_scen",
-      bslib::layout_sidebar(
-        sidebar = bslib::sidebar(
-          title = shiny::span(id = "i18n_sidebar_scen_title", .app_i18n("sidebar_scen_title", initial_lang)),
-          width = 330,
+      shiny::tags$div(
+        class = "walk-analysis-workspace",
+        shiny::tags$aside(
+          class = "walk-analysis-controls",
+          shiny::tags$div(class = "walk-panel-title", shiny::span(id = "i18n_sidebar_scen_title", .app_i18n("sidebar_scen_title", initial_lang))),
           shiny::radioButtons(
             inputId = "scen_view_mode",
             label = .app_i18n("scen_view_label", initial_lang),
@@ -1586,37 +2073,21 @@ walk_app <- function(network = NULL,
             label = shiny::span(id = "i18n_dl_scen_sf", .app_i18n("dl_scen_sf", initial_lang)),
             class = "btn-sm btn-outline-secondary w-100 mt-1",
             icon = shiny::icon("download")
-          ),
-          shiny::hr(),
-          bslib::value_box(
-            title = shiny::span(id = "i18n_box_scen_bottleneck", .app_i18n("box_scen_bottleneck", initial_lang)),
-            value = shiny::textOutput("scen_top_base_stat"),
-            showcase = shiny::icon("bridge"),
-            theme = "primary"
-          ),
-          bslib::value_box(
-            title = shiny::span(id = "i18n_box_scen_diverted", .app_i18n("box_scen_diverted", initial_lang)),
-            value = shiny::textOutput("scen_top_sim_stat"),
-            showcase = shiny::icon("arrows-split-up-and-left"),
-            theme = "danger"
-          ),
-          bslib::value_box(
-            title = shiny::span(id = "i18n_box_scen_closed_len", .app_i18n("box_scen_closed_len", initial_lang)),
-            value = shiny::textOutput("scen_closed_len"),
-            showcase = shiny::icon("scissors"),
-            theme = "secondary"
-          ),
-          bslib::value_box(
-            title = shiny::span(id = "i18n_box_scen_mean_bw", .app_i18n("box_scen_mean_bw", initial_lang)),
-            value = shiny::textOutput("scen_delta_bw_stat"),
-            showcase = shiny::icon("chart-line"),
-            theme = "warning"
           )
         ),
-        bslib::card(
+        shiny::tags$div(
+          class = "walk-analysis-content",
+          bslib::card(
           full_screen = TRUE,
           bslib::card_header(shiny::span(id = "i18n_card_scen_header", .app_i18n("card_scen_header", initial_lang))),
           mapgl::maplibreOutput("map_scenarios", height = "640px")
+        ),
+        shiny::tags$div(
+          class = "walk-scenario-metrics",
+          .metric_card(shiny::span(id = "i18n_box_scen_bottleneck", .app_i18n("box_scen_bottleneck", initial_lang)), "scen_top_base_stat", "amber"),
+          .metric_card(shiny::span(id = "i18n_box_scen_diverted", .app_i18n("box_scen_diverted", initial_lang)), "scen_top_sim_stat", "vermilion"),
+          .metric_card(shiny::span(id = "i18n_box_scen_closed_len", .app_i18n("box_scen_closed_len", initial_lang)), "scen_closed_len", "slate"),
+          .metric_card(shiny::span(id = "i18n_box_scen_mean_bw", .app_i18n("box_scen_mean_bw", initial_lang)), "scen_delta_bw_stat", "amber")
         ),
         bslib::accordion(
           open = FALSE,
@@ -1637,6 +2108,7 @@ walk_app <- function(network = NULL,
             value = "panel_scen_doc",
             icon = shiny::icon("circle-info"),
             shiny::div(id = "i18n_accord_scen_doc_content", shiny::HTML(.app_i18n("scen_doc_html", initial_lang)))
+          )
           )
         )
       )
@@ -1716,7 +2188,13 @@ walk_app <- function(network = NULL,
     bslib::nav_item(
       shiny::div(
         style = "display: flex; align-items: center; gap: 6px; padding: 0 4px;",
-        shiny::tags$span(style = "font-size: 1.15rem; line-height: 1;", "\U0001f310"),
+        shiny::actionButton(
+          inputId = "btn_stop_app",
+          label = shiny::tags$span(class = "visually-hidden", id = "i18n_btn_stop_app", .app_i18n("btn_stop_app", initial_lang)),
+          class = "btn-sm btn-outline-danger walk-stop-button",
+          icon = shiny::icon("power-off"),
+          title = .app_i18n("btn_stop_app", initial_lang)
+        ),
         shiny::tags$div(
           style = "min-width: 110px;",
           shiny::selectInput(
@@ -2108,6 +2586,7 @@ walk_app <- function(network = NULL,
           i18n_custom_crs_help = .app_i18n("custom_crs_help", new_lang),
           i18n_param_snap_tol_help = .app_i18n("param_snap_tol_help", new_lang),
           i18n_dl_net_edges = .app_i18n("dl_net_edges_label", new_lang),
+          i18n_btn_stop_app = .app_i18n("btn_stop_app", new_lang),
           i18n_sidebar_footer_rust = .app_i18n("sidebar_footer_rust", new_lang),
           i18n_sidebar_footer_mapgl = .app_i18n("sidebar_footer_mapgl", new_lang),
 
@@ -2181,7 +2660,7 @@ walk_app <- function(network = NULL,
     }, ignoreInit = TRUE)
 
     shiny::observe({
-      city <- input$city_choice
+      city <- input$city_choice %||% "cusco"
       if (city == "custom") {
         if (is.null(input$user_file)) {
           network_error(NULL)
@@ -2280,17 +2759,23 @@ walk_app <- function(network = NULL,
     })
 
     # Network status badge in sidebar
+    # Network status badge in sidebar (Structured telemetry card)
     output$network_status_badge <- shiny::renderUI({
       err <- network_error()
       is_en <- current_lang() == "en"
 
       if (!is.null(err)) {
         return(shiny::tags$div(
-          class = "alert alert-danger p-2 mt-2",
-          style = "font-size: 0.85rem;",
-          shiny::tags$strong(if (is_en) "Network loading error: " else "Error al cargar red: "), err,
+          class = "walk-network-card walk-network-card-danger",
           shiny::tags$div(
-            style = "font-size: 0.78rem; margin-top: 4px;",
+            class = "d-flex align-items-center gap-2 mb-1",
+            shiny::tags$span(class = "walk-status-dot walk-status-dot-danger"),
+            shiny::tags$strong(class = "text-danger", if (is_en) "Network loading error" else "Error al cargar red")
+          ),
+          shiny::tags$div(class = "small text-danger mb-1", err),
+          shiny::tags$div(
+            class = "text-muted",
+            style = "font-size: 0.74rem; line-height: 1.35;",
             if (is_en) {
               "Ensure the ZIP archive contains a .shp (with .dbf and .shx), or is a GeoPackage (.gpkg) with line geometries."
             } else {
@@ -2300,12 +2785,19 @@ walk_app <- function(network = NULL,
         ))
       }
 
-      if (input$city_choice == "custom" && is.null(input$user_file)) {
+      if ((input$city_choice %||% "") == "custom" && is.null(input$user_file)) {
         return(shiny::tags$div(
-          class = "alert alert-warning p-2 mt-2",
-          style = "font-size: 0.85rem;",
-          shiny::tags$strong(if (is_en) "Awaiting dataset: " else "Esperando archivo: "),
-          if (is_en) "Upload your GeoPackage (.gpkg), Shapefile (.zip), or GeoJSON from the sidebar." else "Sube tu GeoPackage (.gpkg), Shapefile (.zip) o GeoJSON en el panel lateral."
+          class = "walk-network-card walk-network-card-warning",
+          shiny::tags$div(
+            class = "d-flex align-items-center gap-2 mb-1",
+            shiny::tags$span(class = "walk-status-dot walk-status-dot-warning"),
+            shiny::tags$strong(style = "color: var(--geo-amber);", if (is_en) "Awaiting spatial file" else "Esperando archivo")
+          ),
+          shiny::tags$div(
+            class = "text-muted",
+            style = "font-size: 0.76rem; line-height: 1.35;",
+            if (is_en) "Upload your GeoPackage (.gpkg), Shapefile (.zip), or GeoJSON from the sidebar." else "Sube tu GeoPackage (.gpkg), Shapefile (.zip) o GeoJSON en el panel lateral."
+          )
         ))
       }
 
@@ -2313,36 +2805,64 @@ walk_app <- function(network = NULL,
       if (is.null(net)) return(NULL)
 
       meta <- network_meta()
-      crs_info <- if (!is.null(meta$crs_note) && nzchar(meta$crs_note)) {
-        paste0(" | ", meta$crs_note)
-      } else {
-        ""
-      }
+      epsg_val <- if (!is.null(meta$epsg) && !is.na(meta$epsg)) paste0("EPSG:", meta$epsg) else (meta$crs_note %||% "Proyectado")
 
       raw_n <- meta$raw_features
       curr_n <- nrow(net$edges)
       n_omitted <- if (!is.null(raw_n) && raw_n > curr_n) raw_n - curr_n else 0
+      tot_len_km <- sum(net$edges$length_m, na.rm = TRUE) / 1000
 
-      comp_txt <- if (!is.null(net$total_components) && net$total_components > 1) {
+      comp_badge <- if (!is.null(net$total_components) && net$total_components > 1) {
         if (n_omitted > 0) {
-          if (is_en) sprintf(" | %d disconnected islands excluded", n_omitted) else sprintf(" | %d islas/tramos desconectados excluidos", n_omitted)
+          if (is_en) sprintf("%d isolated segments excluded", n_omitted) else sprintf("%d tramos aislados excluidos", n_omitted)
         } else {
-          if (is_en) sprintf(" (%d connected components)", net$total_components) else sprintf(" (%d componentes/islas conexas)", net$total_components)
+          if (is_en) sprintf("%d connected components", net$total_components) else sprintf("%d componentes conexas", net$total_components)
         }
       } else {
-        ""
+        if (is_en) "1 connected component" else "1 componente conexa"
       }
 
       shiny::tags$div(
-        class = "alert alert-success p-2 mt-2",
-        style = "font-size: 0.85rem;",
-        shiny::tags$strong(if (is_en) "Active Network: " else "Red cargada: "),
-        sprintf(if (is_en) "%s nodes | %s edges (%.1f km)%s%s" else "%s nodos | %s tramos (%.1f km)%s%s",
-          nrow(net$nodes), curr_n, sum(net$edges$length_m) / 1000, comp_txt, crs_info)
+        class = "walk-network-card walk-network-card-active",
+        shiny::tags$div(
+          class = "walk-network-card-header",
+          shiny::tags$div(
+            class = "d-flex align-items-center gap-2",
+            shiny::tags$span(class = "walk-status-dot walk-status-dot-active"),
+            shiny::tags$span(class = "walk-network-card-title", if (is_en) "Active Network" else "Red Cargada")
+          ),
+          shiny::tags$span(class = "walk-badge-crs", epsg_val)
+        ),
+        shiny::tags$div(
+          class = "walk-network-metrics-grid",
+          shiny::tags$div(
+            class = "walk-metric-cell",
+            shiny::tags$div(class = "walk-metric-num", format(nrow(net$nodes), big.mark = ",")),
+            shiny::tags$div(class = "walk-metric-lbl", if (is_en) "Nodes" else "Nodos")
+          ),
+          shiny::tags$div(
+            class = "walk-metric-cell",
+            shiny::tags$div(class = "walk-metric-num", format(curr_n, big.mark = ",")),
+            shiny::tags$div(class = "walk-metric-lbl", if (is_en) "Edges" else "Tramos")
+          ),
+          shiny::tags$div(
+            class = "walk-metric-cell",
+            shiny::tags$div(class = "walk-metric-num", sprintf("%.1f km", tot_len_km)),
+            shiny::tags$div(class = "walk-metric-lbl", if (is_en) "Length" else "Longitud")
+          )
+        ),
+        shiny::tags$div(
+          class = "walk-network-card-footer",
+          shiny::icon("circle-nodes", class = "me-1 text-muted"),
+          shiny::tags$span(comp_badge)
+        )
       )
     })
 
-    # Download handler for active network GeoJSON
+    shiny::observeEvent(input$btn_stop_app, {
+      shiny::stopApp()
+    }, ignoreInit = TRUE)
+
     output$dl_net_edges <- shiny::downloadHandler(
       filename = function() {
         paste0("red_activa_walkability_", input$city_choice, "_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".geojson")
@@ -2382,13 +2902,17 @@ walk_app <- function(network = NULL,
     output$reach_stat_mean <- shiny::renderText({
       r <- reach_res()
       if (is.null(r)) return("--")
-      sprintf("%.2f km", r$summary$mean_reach_km)
+      val <- if (!is.null(r$summary$mean_km)) r$summary$mean_km else r$summary$mean_reach_km
+      if (is.null(val) || is.na(val)) return("--")
+      sprintf("%.2f km", val)
     })
 
     output$reach_stat_max <- shiny::renderText({
       r <- reach_res()
       if (is.null(r)) return("--")
-      sprintf("%.2f km", r$summary$max_reach_km)
+      val <- if (!is.null(r$summary$max_km)) r$summary$max_km else r$summary$max_reach_km
+      if (is.null(val) || is.na(val)) return("--")
+      sprintf("%.2f km", val)
     })
 
     output$map_reach <- mapgl::renderMaplibre({
