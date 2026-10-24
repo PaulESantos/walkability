@@ -234,6 +234,7 @@ walk_diagnose_network <- function(data, snap_search_radius_m = 10.0, crs = NULL)
 #'
 #' @param x A `walk_diagnosis` object.
 #' @param ... Additional arguments.
+#' @return The `walk_diagnosis` object `x`, invisibly, after printing its summary.
 #' @export
 print.walk_diagnosis <- function(x, ...) {
   cli::cli_h1("Walkability Network Health Diagnosis")

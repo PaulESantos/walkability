@@ -239,6 +239,7 @@ walk_build_network <- function(data,
 #'
 #' @param x A `walk_network` object.
 #' @param ... Additional arguments.
+#' @return The `walk_network` object `x`, invisibly, after printing its summary.
 #' @export
 print.walk_network <- function(x, ...) {
   cli::cli_h1("Walkability Network")

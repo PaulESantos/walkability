@@ -21,6 +21,9 @@ rust_shortest_path(n_nodes, head_num, to, wt, wl, src_node, dst_node)
 
 \item{dst_node}{Destination node (0-indexed).}
 }
+\value{
+A named \code{list} with logical \code{found}, zero-based \code{node_path} and \code{edge_indices} vectors, and numeric \code{total_time_s} and \code{total_length_m}. When no path is found, paths are empty and totals are \code{NaN}.
+}
 \description{
 Compute shortest path between source and target nodes using Dijkstra.
 }

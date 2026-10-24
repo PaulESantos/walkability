@@ -21,6 +21,9 @@ rust_isochrone_subgraph(n_nodes, head_num, to, wt, wl, src_node, cutoff)
 
 \item{cutoff}{Travel time cutoff in seconds.}
 }
+\value{
+A named \code{list} with \code{reached_nodes} and their \code{node_times}, plus \code{edge_from}, \code{edge_to}, \code{edge_fraction}, \code{edge_length}, and \code{edge_reached_length} describing reachable portions of street edges. Node IDs are zero based, times are seconds, and lengths are meters.
+}
 \description{
 Extract reachable edges and nodes within cutoff time from an origin node.
 }

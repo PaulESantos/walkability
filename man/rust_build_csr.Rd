@@ -19,6 +19,9 @@ rust_build_csr(n_nodes, u, v, wt, wl)
 
 \item{wl}{Physical length in meters for each edge.}
 }
+\value{
+A named \code{list} containing CSR arrays \code{head}, \code{to}, \code{wt}, and \code{wl}; node component IDs \code{comp}; and graph summaries \code{n_edges_collapsed}, \code{giant_comp_id}, \code{giant_comp_size}, and \code{total_components}. Node and component IDs are zero based.
+}
 \description{
 Build Compressed Sparse Row (CSR) graph representation.
 Drops self-loops, collapses parallel edges to minimum travel time,

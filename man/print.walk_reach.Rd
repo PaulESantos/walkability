@@ -11,6 +11,9 @@
 
 \item{...}{Additional arguments.}
 }
+\value{
+The \code{walk_reach} object \code{x}, invisibly, after printing its summary.
+}
 \description{
 Print Method for Walk Reach Metric
 }

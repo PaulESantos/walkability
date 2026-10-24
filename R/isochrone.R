@@ -237,6 +237,7 @@ walk_isochrone <- function(network,
 #'
 #' @param x A `walk_isochrone` object.
 #' @param ... Additional arguments.
+#' @return The `walk_isochrone` object `x`, invisibly, after printing its summary.
 #' @export
 print.walk_isochrone <- function(x, ...) {
   cli::cli_h1("Walkability Isochrones")

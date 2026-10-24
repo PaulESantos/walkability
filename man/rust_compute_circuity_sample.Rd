@@ -35,6 +35,9 @@ rust_compute_circuity_sample(
 
 \item{cutoff}{Travel time cutoff in seconds.}
 }
+\value{
+A named \code{list} with \code{node_id}, \code{mean_circuity}, \code{max_circuity}, and \code{destinations_reached} vectors. Each position summarizes the network to straight-line distance ratios for one sampled origin.
+}
 \description{
 Circuity is defined as actual network shortest path distance divided by
 Euclidean straight-line distance. Values close to 1.0 indicate highly direct

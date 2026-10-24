@@ -190,6 +190,7 @@ walk_betweenness <- function(network,
 #'
 #' @param x A \code{walk_betweenness} object.
 #' @param ... Additional arguments.
+#' @return The `walk_betweenness` object `x`, invisibly, after printing its summary.
 #' @export
 print.walk_betweenness <- function(x, ...) {
   cli::cli_h1("Walkability: Centralidad de Intermediaci\u00f3n (Edge Betweenness)")
@@ -443,6 +444,7 @@ walk_scenario_betweenness <- function(network,
 #'
 #' @param x A \code{walk_scenario_betweenness} object.
 #' @param ... Additional arguments.
+#' @return The `walk_scenario_betweenness` object `x`, invisibly, after printing its summary.
 #' @export
 print.walk_scenario_betweenness <- function(x, ...) {
   cli::cli_h1("Walkability: Simulaci\u00f3n de Cierres e Intermediaci\u00f3n")

@@ -13,6 +13,9 @@ theme_walkability(base_size = 11, base_family = "", dark = TRUE)
 
 \item{dark}{Logical. If \code{TRUE} (default), uses a sleek dark theme. If \code{FALSE}, uses a clean white theme.}
 }
+\value{
+A \code{ggplot2} theme object that styles plot backgrounds, text, and legends for walkability maps.
+}
 \description{
 Clean theme optimized for geospatial network visualizations with ggplot2.
 }

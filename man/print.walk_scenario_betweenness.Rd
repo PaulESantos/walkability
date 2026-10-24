@@ -11,6 +11,9 @@
 
 \item{...}{Additional arguments.}
 }
+\value{
+The \code{walk_scenario_betweenness} object \code{x}, invisibly, after printing its summary.
+}
 \description{
 Print Method for Walk Scenario Betweenness
 }

@@ -147,6 +147,7 @@ walk_compute_reach <- function(network,
 #'
 #' @param x A `walk_reach` object.
 #' @param ... Additional arguments.
+#' @return The `walk_reach` object `x`, invisibly, after printing its summary.
 #' @export
 print.walk_reach <- function(x, ...) {
   s <- x$summary

@@ -121,6 +121,7 @@ walk_intersection_density <- function(network, study_area = NULL) {
 #'
 #' @param x A `walk_morphology` object.
 #' @param ... Additional arguments.
+#' @return The `walk_morphology` object `x`, invisibly, after printing its summary.
 #' @export
 print.walk_morphology <- function(x, ...) {
   s <- x$summary

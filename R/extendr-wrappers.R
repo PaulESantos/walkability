@@ -14,6 +14,7 @@ NULL
 #' @param v To-node vector (0-indexed).
 #' @param wt Travel time in seconds for each edge.
 #' @param wl Physical length in meters for each edge.
+#' @return A named `list` containing CSR arrays `head`, `to`, `wt`, and `wl`; node component IDs `comp`; and graph summaries `n_edges_collapsed`, `giant_comp_id`, `giant_comp_size`, and `total_components`. Node and component IDs are zero based.
 #' @export
 rust_build_csr <- function(n_nodes, u, v, wt, wl) .Call(wrap__rust_build_csr, n_nodes, u, v, wt, wl)
 
@@ -28,6 +29,7 @@ rust_build_csr <- function(n_nodes, u, v, wt, wl) .Call(wrap__rust_build_csr, n_
 #' @param cutoff Walk travel-time budget (seconds, default 600.0 = 10 min).
 #' @param num_threads Number of worker threads (1 or 2; values outside this
 #'   range are clamped to the supported range by the native implementation).
+#' @return A numeric vector, one value per `target_nodes` entry, giving reachable street length in meters within `cutoff`. Invalid target nodes yield `NaN`.
 #' @export
 rust_compute_reachable_length <- function(n_nodes, head_num, to, wt, wl, target_nodes, cutoff, num_threads) .Call(wrap__rust_compute_reachable_length, n_nodes, head_num, to, wt, wl, target_nodes, cutoff, num_threads)
 
@@ -46,6 +48,7 @@ rust_compute_reachable_length <- function(n_nodes, head_num, to, wt, wl, target_
 #' @param coords_y Vector of node Y coordinates (meters).
 #' @param sample_nodes Nodes from which to measure circuity.
 #' @param cutoff Travel time cutoff in seconds.
+#' @return A named `list` with `node_id`, `mean_circuity`, `max_circuity`, and `destinations_reached` vectors. Each position summarizes the network to straight-line distance ratios for one sampled origin.
 #' @export
 rust_compute_circuity_sample <- function(n_nodes, head_num, to, wt, wl, coords_x, coords_y, sample_nodes, cutoff) .Call(wrap__rust_compute_circuity_sample, n_nodes, head_num, to, wt, wl, coords_x, coords_y, sample_nodes, cutoff)
 
@@ -58,6 +61,7 @@ rust_compute_circuity_sample <- function(n_nodes, head_num, to, wt, wl, coords_x
 #' @param wl CSR length array (meters).
 #' @param src_node Origin node (0-indexed).
 #' @param dst_node Destination node (0-indexed).
+#' @return A named `list` with logical `found`, zero-based `node_path` and `edge_indices` vectors, and numeric `total_time_s` and `total_length_m`. When no path is found, paths are empty and totals are `NaN`.
 #' @export
 rust_shortest_path <- function(n_nodes, head_num, to, wt, wl, src_node, dst_node) .Call(wrap__rust_shortest_path, n_nodes, head_num, to, wt, wl, src_node, dst_node)
 
@@ -70,6 +74,7 @@ rust_shortest_path <- function(n_nodes, head_num, to, wt, wl, src_node, dst_node
 #' @param wl CSR length array (meters).
 #' @param src_node Origin node (0-indexed).
 #' @param cutoff Travel time cutoff in seconds.
+#' @return A named `list` with `reached_nodes` and their `node_times`, plus `edge_from`, `edge_to`, `edge_fraction`, `edge_length`, and `edge_reached_length` describing reachable portions of street edges. Node IDs are zero based, times are seconds, and lengths are meters.
 #' @export
 rust_isochrone_subgraph <- function(n_nodes, head_num, to, wt, wl, src_node, cutoff) .Call(wrap__rust_isochrone_subgraph, n_nodes, head_num, to, wt, wl, src_node, cutoff)
 
@@ -85,6 +90,7 @@ rust_isochrone_subgraph <- function(n_nodes, head_num, to, wt, wl, src_node, cut
 #' @param cutoff Travel time cutoff in seconds.
 #' @param num_threads Number of worker threads (1 or 2; values outside this
 #'   range are clamped to the supported range by the native implementation).
+#' @return A named `list` with numeric `accessible_count` and `min_time_s` vectors, one element per target node. These give weighted reachable POI counts and travel time in seconds to the nearest reachable POI, respectively.
 #' @export
 rust_compute_access_multi <- function(n_nodes, head_num, to, wt, target_nodes, poi_nodes, poi_weights, cutoff, num_threads) .Call(wrap__rust_compute_access_multi, n_nodes, head_num, to, wt, target_nodes, poi_nodes, poi_weights, cutoff, num_threads)
 

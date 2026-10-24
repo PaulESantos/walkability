@@ -132,6 +132,7 @@ walk_shortest_path <- function(network, from, to) {
 #'
 #' @param x A `walk_path` object.
 #' @param ... Additional arguments.
+#' @return The `walk_path` object `x`, invisibly, after printing its summary.
 #' @export
 print.walk_path <- function(x, ...) {
   cli::cli_h1("Walkability Shortest Path")

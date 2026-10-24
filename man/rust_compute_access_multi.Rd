@@ -36,6 +36,9 @@ rust_compute_access_multi(
 \item{num_threads}{Number of worker threads (1 or 2; values outside this
 range are clamped to the supported range by the native implementation).}
 }
+\value{
+A named \code{list} with numeric \code{accessible_count} and \code{min_time_s} vectors, one element per target node. These give weighted reachable POI counts and travel time in seconds to the nearest reachable POI, respectively.
+}
 \description{
 Compute cumulative POI accessibility for target nodes in parallel.
 }

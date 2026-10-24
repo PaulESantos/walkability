@@ -50,7 +50,7 @@ The application provides dedicated, fully documented workspaces for:
 }
 }
 \examples{
-\dontrun{
+if (interactive()) {
 # Launch with default language (Spanish):
 walk_app()
 

@@ -5,6 +5,7 @@
 #' @param base_size Base font size.
 #' @param base_family Base font family.
 #' @param dark Logical. If `TRUE` (default), uses a sleek dark theme. If `FALSE`, uses a clean white theme.
+#' @return A `ggplot2` theme object that styles plot backgrounds, text, and legends for walkability maps.
 #' @export
 theme_walkability <- function(base_size = 11, base_family = "", dark = TRUE) {
   bg_color <- if (dark) "#0f172a" else "#ffffff"

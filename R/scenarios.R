@@ -196,6 +196,7 @@ walk_compare_scenarios <- function(base, scenario, time_min = 10.0, verbose = TR
 #'
 #' @param x A `walk_comparison` object.
 #' @param ... Additional arguments.
+#' @return The `walk_comparison` object `x`, invisibly, after printing its summary.
 #' @export
 print.walk_comparison <- function(x, ...) {
   cli::cli_h1("Walkability Scenario Comparison")

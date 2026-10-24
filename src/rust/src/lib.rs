@@ -206,6 +206,7 @@ fn find_components(n: usize, src: &[usize], dst: &[usize]) -> Vec<usize> {
 /// @param v To-node vector (0-indexed).
 /// @param wt Travel time in seconds for each edge.
 /// @param wl Physical length in meters for each edge.
+/// @return A named list containing CSR arrays and connected-component summaries.
 /// @export
 #[extendr]
 fn rust_build_csr(
@@ -329,6 +330,7 @@ fn rust_build_csr(
 /// @param target_nodes Indices of nodes to compute metric for (0-indexed).
 /// @param cutoff Walk travel-time budget (seconds, default 600.0 = 10 min).
 /// @param num_threads Number of worker threads (limited to 1 or 2).
+/// @return A numeric vector of reachable street lengths in meters, one per target node.
 /// @export
 #[extendr]
 fn rust_compute_reachable_length(
@@ -390,6 +392,7 @@ fn rust_compute_reachable_length(
 /// @param coords_y Vector of node Y coordinates (meters).
 /// @param sample_nodes Nodes from which to measure circuity.
 /// @param cutoff Travel time cutoff in seconds.
+/// @return A named list of sampled node IDs, mean and maximum circuity, and destination counts.
 /// @export
 #[extendr]
 #[allow(unused_variables)]
@@ -506,6 +509,7 @@ fn rust_compute_circuity_sample(
 /// @param wl CSR length array (meters).
 /// @param src_node Origin node (0-indexed).
 /// @param dst_node Destination node (0-indexed).
+/// @return A named list with path availability, node and edge IDs, travel time, and length.
 /// @export
 #[extendr]
 fn rust_shortest_path(
@@ -685,6 +689,7 @@ fn rust_shortest_path(
 /// @param wl CSR length array (meters).
 /// @param src_node Origin node (0-indexed).
 /// @param cutoff Travel time cutoff in seconds.
+/// @return A named list of reachable nodes, times, and traversable edge portions.
 /// @export
 #[extendr]
 fn rust_isochrone_subgraph(
@@ -707,7 +712,9 @@ fn rust_isochrone_subgraph(
             node_times = Vec::<f64>::new(),
             edge_from = Vec::<i32>::new(),
             edge_to = Vec::<i32>::new(),
-            edge_fraction = Vec::<f64>::new()
+            edge_fraction = Vec::<f64>::new(),
+            edge_length = Vec::<f64>::new(),
+            edge_reached_length = Vec::<f64>::new()
         );
     }
 
@@ -863,6 +870,7 @@ fn rust_isochrone_subgraph(
 /// @param poi_weights Vector of weights/counts for each POI node.
 /// @param cutoff Travel time cutoff in seconds.
 /// @param num_threads Number of worker threads (limited to 1 or 2).
+/// @return A named list of reachable POI counts and nearest POI times per target node.
 /// @export
 #[extendr]
 fn rust_compute_access_multi(
