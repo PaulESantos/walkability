@@ -38,3 +38,10 @@ rust_isochrone_subgraph(n_nodes, head_num, to, wt, wl, src_node, cutoff)
 - cutoff:
 
   Travel time cutoff in seconds.
+
+## Value
+
+A named `list` with `reached_nodes` and their `node_times`, plus
+`edge_from`, `edge_to`, `edge_fraction`, `edge_length`, and
+`edge_reached_length` describing reachable portions of street edges.
+Node IDs are zero based, times are seconds, and lengths are meters.

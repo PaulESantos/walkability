@@ -56,3 +56,9 @@ rust_compute_access_multi(
 
   Number of worker threads (1 or 2; values outside this range are
   clamped to the supported range by the native implementation).
+
+## Value
+
+A named `list` with numeric `accessible_count` and `min_time_s` vectors,
+one element per target node. These give weighted reachable POI counts
+and travel time in seconds to the nearest reachable POI, respectively.

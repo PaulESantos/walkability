@@ -18,3 +18,7 @@ print(x, ...)
 - ...:
 
   Additional arguments.
+
+## Value
+
+The `walk_comparison` object `x`, invisibly, after printing its summary.

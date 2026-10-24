@@ -80,7 +80,7 @@ The application provides dedicated, fully documented workspaces for:
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+if (interactive()) {
 # Launch with default language (Spanish):
 walk_app()
 
@@ -91,5 +91,5 @@ walk_app(lang = "en")
 utils::data(streets_cusco)
 net <- walk_build_network(streets_cusco, verbose = FALSE)
 walk_app(net, lang = "es")
-} # }
+}
 ```

@@ -18,3 +18,8 @@ print(x, ...)
 - ...:
 
   Additional arguments.
+
+## Value
+
+The `walk_betweenness` object `x`, invisibly, after printing its
+summary.

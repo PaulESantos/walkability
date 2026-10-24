@@ -50,12 +50,12 @@ if (requireNamespace("sfnetworks", quietly = TRUE)) {
 #> # Node data: 562 × 4 (active)
 #>   node_id component is_giant           geometry
 #>     <int>     <int> <lgl>           <POINT [m]>
-#> 1       0       232 TRUE     (178123.7 8503446)
-#> 2       1       232 TRUE     (177744.5 8503236)
-#> 3       2       232 TRUE     (177513.6 8503650)
-#> 4       3       232 TRUE     (178153.6 8503156)
-#> 5       4       232 TRUE     (177922.9 8503815)
-#> 6       5       232 TRUE     (177437.7 8503781)
+#> 1       0       297 TRUE     (178123.7 8503446)
+#> 2       1       297 TRUE     (177744.5 8503236)
+#> 3       2       297 TRUE     (177513.6 8503650)
+#> 4       3       297 TRUE     (178153.6 8503156)
+#> 5       4       297 TRUE     (177922.9 8503815)
+#> 6       5       297 TRUE     (177437.7 8503781)
 #> # ℹ 556 more rows
 #> #
 #> # Edge data: 288 × 12

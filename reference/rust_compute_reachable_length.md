@@ -52,3 +52,9 @@ rust_compute_reachable_length(
 
   Number of worker threads (1 or 2; values outside this range are
   clamped to the supported range by the native implementation).
+
+## Value
+
+A numeric vector, one value per `target_nodes` entry, giving reachable
+street length in meters within `cutoff`. Invalid target nodes yield
+`NaN`.

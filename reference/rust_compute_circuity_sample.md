@@ -58,3 +58,9 @@ rust_compute_circuity_sample(
 - cutoff:
 
   Travel time cutoff in seconds.
+
+## Value
+
+A named `list` with `node_id`, `mean_circuity`, `max_circuity`, and
+`destinations_reached` vectors. Each position summarizes the network to
+straight-line distance ratios for one sampled origin.

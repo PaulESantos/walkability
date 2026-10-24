@@ -31,3 +31,10 @@ rust_build_csr(n_nodes, u, v, wt, wl)
 - wl:
 
   Physical length in meters for each edge.
+
+## Value
+
+A named `list` containing CSR arrays `head`, `to`, `wt`, and `wl`; node
+component IDs `comp`; and graph summaries `n_edges_collapsed`,
+`giant_comp_id`, `giant_comp_size`, and `total_components`. Node and
+component IDs are zero based.
