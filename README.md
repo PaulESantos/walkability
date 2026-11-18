@@ -12,6 +12,8 @@ MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.or
 Engine](https://img.shields.io/badge/Rust-Rayon%20Multi--threaded-orange.svg)](https://rust-lang.org/)
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html)
+[![](https://cranlogs.r-pkg.org/badges/grand-total/walkability?color=green)](https://cran.r-project.org/package=walkability)
+[![](https://cranlogs.r-pkg.org/badges/last-week/walkability?color=green)](https://cran.r-project.org/package=walkability)
 <!-- badges: end -->
 
 > **Quantify, diagnose, and map 10-minute pedestrian reach across urban
