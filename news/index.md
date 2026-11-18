@@ -2,6 +2,8 @@
 
 ## walkability 0.1.0
 
+CRAN release: 2026-11-17
+
 - Initial release of the `walkability` R package.
 - Implemented multi-threaded Dijkstra kernel in Rust using `rextendr`
   and `rayon` with exact partial-edge credits.

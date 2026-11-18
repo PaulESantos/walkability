@@ -38,7 +38,7 @@ proyectada en coordenadas métricas UTM Zona 19S (`EPSG:32719`):
 
 library(walkability)
 library(sf)
-#> Linking to GEOS 3.12.1, GDAL 3.8.4, PROJ 9.4.0; sf_use_s2() is TRUE
+#> Linking to GEOS 3.14.1, GDAL 3.12.2, PROJ 9.7.1; sf_use_s2() is TRUE
 
 # Cargar dataset real empaquetado
 data(streets_cusco)
@@ -356,12 +356,12 @@ if (requireNamespace("sfnetworks", quietly = TRUE)) {
 #> # Node data: 566 × 4 (active)
 #>   node_id component is_giant           geometry
 #>     <int>     <int> <lgl>           <POINT [m]>
-#> 1       0       550 FALSE    (178123.7 8503446)
-#> 2       1       520 TRUE     (177744.5 8503236)
-#> 3       2       520 TRUE     (177510.2 8503648)
+#> 1       0       442 FALSE    (178123.7 8503446)
+#> 2       1       460 TRUE     (177744.5 8503236)
+#> 3       2       460 TRUE     (177510.2 8503648)
 #> 4       3       496 FALSE    (178153.6 8503156)
-#> 5       4       550 FALSE    (177925.3 8503817)
-#> 6       5       520 TRUE     (177432.4 8503780)
+#> 5       4       442 FALSE    (177925.3 8503817)
+#> 6       5       460 TRUE     (177432.4 8503780)
 #> # ℹ 560 more rows
 #> #
 #> # Edge data: 234 × 12
@@ -386,16 +386,16 @@ if (requireNamespace("tidygraph", quietly = TRUE)) {
 #> # Node Data: 566 × 4 (active)
 #>    node_id component is_giant           geometry
 #>      <int>     <int> <lgl>           <POINT [m]>
-#>  1       0       550 FALSE    (178123.7 8503446)
-#>  2       1       520 TRUE     (177744.5 8503236)
-#>  3       2       520 TRUE     (177510.2 8503648)
+#>  1       0       442 FALSE    (178123.7 8503446)
+#>  2       1       460 TRUE     (177744.5 8503236)
+#>  3       2       460 TRUE     (177510.2 8503648)
 #>  4       3       496 FALSE    (178153.6 8503156)
-#>  5       4       550 FALSE    (177925.3 8503817)
-#>  6       5       520 TRUE     (177432.4 8503780)
-#>  7       6       520 TRUE     (177312.1 8503514)
+#>  5       4       442 FALSE    (177925.3 8503817)
+#>  6       5       460 TRUE     (177432.4 8503780)
+#>  7       6       460 TRUE     (177312.1 8503514)
 #>  8       7       367 FALSE    (177724.3 8503413)
 #>  9       8       368 FALSE    (178002.4 8503664)
-#> 10       9       520 TRUE     (177493.5 8503190)
+#> 10       9       460 TRUE     (177493.5 8503190)
 #> # ℹ 556 more rows
 #> #
 #> # Edge Data: 234 × 12
